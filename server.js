@@ -307,6 +307,26 @@ io.on("connection", (socket) => {
       processedMessage.quote.userId = quoteUserId;
     }
 
+    // 处理被@用户的ID列表
+    if (data.mentionedUserIds && Array.isArray(data.mentionedUserIds)) {
+      // 保留客户端发送的被@用户ID列表
+      processedMessage.mentionedUserIds = data.mentionedUserIds;
+      
+      // 确保mentionedUsers数组也存在，保持向后兼容性
+      if (!processedMessage.mentions) {
+        processedMessage.mentions = [];
+        // 尝试从mentionedUserIds映射回用户名
+        data.mentionedUserIds.forEach(userId => {
+          const username = Array.from(userInfoMap.entries()).find(([_, userInfo]) => 
+            userInfo.userId === userId
+          )?.[0];
+          if (username && !processedMessage.mentions.includes(username)) {
+            processedMessage.mentions.push(username);
+          }
+        });
+      }
+    }
+
     // 保存历史消息
     chatHistory.push(processedMessage);
     if (chatHistory.length > MAX_HISTORY) {

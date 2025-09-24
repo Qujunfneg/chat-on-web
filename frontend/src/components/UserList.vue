@@ -76,8 +76,8 @@ export default {
   setup(props, { emit }) {
     // 获取用户消息数量（热度）
     const getMessageCount = (user) => {
-      const username = typeof user === 'string' ? user : user.username;
-      return props.messages.filter((m) => m.username === username).length;
+      const userId = user.userId
+      return props.messages.filter((m) => m.userId === userId).length;
     };
 
     // 获取显示的用户名（优先使用昵称）
@@ -174,9 +174,9 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #f8f9fa;
+  background-color: var(--user-list-back-color);
   border-radius: 8px;
-  padding: 16px;
+  padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
@@ -185,7 +185,7 @@ export default {
   margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
 }
@@ -203,7 +203,7 @@ export default {
   height: calc(100vh - 90px);
   /* Firefox浏览器滚动条样式 */
   scrollbar-width: thin;
-  scrollbar-color: #c1c1c1 #f1f1f1;
+  scrollbar-color: var(--border-color) var(--background-tertiary);
 }
 
 /* WebKit浏览器 (Chrome, Safari, Edge) 滚动条样式 */
@@ -213,18 +213,18 @@ export default {
 }
 
 .user-items::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--background-tertiary);
   border-radius: 4px;
 }
 
 .user-items::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--border-color);
   border-radius: 4px;
   transition: background-color 0.3s ease;
 }
 
 .user-items::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--accent-primary-light);
 }
 
 .user-item {
@@ -232,7 +232,7 @@ export default {
   align-items: center;
   padding: 8px;
   margin-bottom: 8px;
-  background-color: white;
+  background-color: var(--background-secondary);
   border-radius: 8px;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -240,15 +240,19 @@ export default {
   border: 2px solid transparent;
 }
 
+.theme-dark .user-list .user-item:not(.current-user) {
+  border-color: var(--user-border-color);
+}
+
 .user-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #e6f7ff;
+  border-color: var(--accent-primary-light);
 }
 
 .user-item.current-user {
-  background-color: #e6f7ff;
-  border-color: #1890ff;
+  background-color: var(--user-back-color);
+  border-color: var(--accent-primary);
 }
 
 .avatar {
@@ -270,7 +274,7 @@ export default {
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background-color: #52c41a;
+  background-color: var(--success-color);
   color: white;
   font-size: 10px;
   padding: 2px 6px;
@@ -278,13 +282,13 @@ export default {
   font-weight: normal;
   min-width: 18px;
   text-align: center;
-  border: 2px solid white;
+  border: 2px solid var(--background-secondary);
 }
 
 .username {
   flex: 1;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -293,9 +297,9 @@ export default {
 
 .hotness {
   font-size: 12px;
-  color: #fa8c16;
+  color: var(--user-fire-color);
   font-weight: 500;
-  background-color: #fff7e6;
+  background-color: var(--background-tertiary);
   padding: 2px 8px;
   border-radius: 12px;
   display: flex;
@@ -311,7 +315,7 @@ export default {
   align-items: center;
   padding: 12px;
   margin-bottom: 8px;
-  background-color: white;
+  background-color: var(--background-secondary);
   border-radius: 8px;
 }
 
@@ -338,6 +342,19 @@ export default {
   background-color: #fff7e6;
   border-radius: 10px;
   animation: skeleton-loading 1.5s infinite;
+}
+
+/* 暗黑模式下的骨架屏样式 */
+.theme-dark .skeleton-avatar {
+  background-color: var(--background-tertiary);
+}
+
+.theme-dark .skeleton-username {
+  background-color: var(--background-tertiary);
+}
+
+.theme-dark .skeleton-hotness {
+  background-color: var(--background-tertiary);
 }
 
 @keyframes skeleton-loading {

@@ -1,0 +1,96 @@
+// 主题变量定义
+
+// 基础主题色板
+$theme-palette: (
+  // 默认主题色板
+  default: (
+    // 背景颜色
+    background-primary: #F7F7F7,
+    background-secondary: #FFFFFF,
+    background-tertiary: #F5F5F5,
+    background-message-area: #F7F7F7,
+    background-message-self: #95EC69,
+    background-message-other: #FFFFFF,
+    user-back-color: #E6F7FF,
+    user-list-back-color: #f8f9fa,
+    
+    // 文字颜色
+    text-primary: #333333,
+    text-secondary: #666666,
+    text-tertiary: #999999,
+    text-muted: #BBBBBB,
+    
+    // 边框颜色
+    border-color: #E0E0E0,
+    
+    // 阴影
+    shadow-light: rgba(0, 0, 0, 0.05),
+    shadow-medium: rgba(0, 0, 0, 0.1),
+    
+    // 交互颜色
+    accent-primary: #2196F3,
+    accent-hover: #1976D2,
+    accent-disabled: #CCCCCC,
+    
+    // 状态颜色
+    status-success: #52c41a,
+    status-error: #f5222d,
+    status-info: #1890ff,
+  ),
+  
+  // 暗黑主题色板
+  dark: (
+    // 背景颜色
+    background-primary: #1E1E1E,
+    background-secondary: #2D2D30,
+    background-tertiary: #3E3E42,
+    background-message-area: #1E1E1E,
+    background-message-self: #0078D7,
+    background-message-other: #2D2D30,
+    user-back-color: #2D2D30,
+    user-list-back-color: #f8f9fa,
+    
+    // 文字颜色
+    text-primary: #FFFFFF,
+    text-secondary: #CCCCCC,
+    text-tertiary: #999999,
+    text-muted: #666666,
+    
+    // 边框颜色
+    border-color: #424242,
+    
+    // 阴影
+    shadow-light: rgba(0, 0, 0, 0.2),
+    shadow-medium: rgba(0, 0, 0, 0.3),
+    
+    // 交互颜色
+    accent-primary: #0078D7,
+    accent-hover: #106ebe,
+    accent-disabled: #555555,
+    
+    // 状态颜色
+    status-success: #3cb371,
+    status-error: #dc143c,
+    status-info: #1e90ff,
+  )
+);
+
+// 获取当前主题色值的函数
+@function get-theme-color($color-name, $theme: 'default') {
+  // 确保$theme-palette是一个map
+  @if not map-has-key($theme-palette, $theme) {
+    @warn "主题 '#{$theme}' 不存在，使用默认主题。";
+    $theme: 'default';
+  }
+  
+  // 获取主题map
+  $theme-map: map-get($theme-palette, $theme);
+  
+  // 确保颜色存在于主题map中
+  @if not map-has-key($theme-map, $color-name) {
+    @warn "颜色 '#{$color-name}' 在主题 '#{$theme}' 中不存在。";
+    @return null;
+  }
+  
+  @return map-get($theme-map, $color-name);
+}

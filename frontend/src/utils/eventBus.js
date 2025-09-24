@@ -114,4 +114,5 @@ export const GLOBAL_EVENTS = {
   CHAT_MESSAGE_SEND: 'chat:message:send',
   CHAT_MESSAGE_RECEIVE: 'chat:message:receive',
   SYSTEM_NOTIFICATION: 'system:notification',
+  THEME_CHANGED: 'theme:changed',
 };

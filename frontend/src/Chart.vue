@@ -4,11 +4,21 @@
     v-bind="$attrs"
     element-loading-background="rgba(122, 122, 122, 0.6)"
   >
+    <!-- 手机端用户列表切换按钮 -->
+    <button 
+      class="mobile-user-list-toggle"
+      @click.stop="toggleUserList"
+      @touchstart.stop="toggleUserList"
+      title="显示/隐藏用户列表"
+    >
+      <span v-if="showUserList">✕</span>
+      <span v-else>👥</span>
+    </button>
     <!-- 聊天室主界面 -->
     <div class="chat-container" v-if="isLoggedIn">
       <div class="chat-main">
         <!-- 左侧用户列表 -->
-        <div class="user-list-container">
+        <div class="user-list-container" :class="{ show: showUserList }">
           <div class="user-list-wrapper">
             <UserList
               :users="users"
@@ -24,11 +34,12 @@
         </div>
 
         <!-- 右侧聊天区域 -->
-        <div class="message-area">
+        <div class="message-area" @click="onMessageAreaClick" @touchstart="onMessageAreaClick">
           <!-- 聊天头部 -->
           <div class="chat-header">
             <h2>公共大厅</h2> 
             <div class="chat-header-right">
+              <ThemeSelector />
               <button
                 v-if="showAudioPermissionButton"
                 class="audio-permission-button"
@@ -69,13 +80,15 @@
 
               <!-- 上传图片按钮 -->
               <el-upload
+                ref="uploadRef"
                 class="avatar-uploader"
                 action=""
                 :show-file-list="false"
-                :before-upload="handleImageUpload"
+                :on-change="handleImageSelect"
                 accept="image/*"
+                :auto-upload="false"
               >
-                <el-button>上传图片</el-button>
+                <el-button class="pic-upload-btn"><el-icon><camera-filled /></el-icon></el-button>
               </el-upload>
             </div>
             <div class="input-container">
@@ -83,10 +96,11 @@
                 v-model="inputMessage"
                 type="textarea"
                 placeholder="输入消息（Shift+Enter换行，Enter发送）"
-                :rows="3"
-                :autosize="{ minRows: 3, maxRows: 5 }"
+                :rows="10"
+                :autosize="{ minRows: 3, maxRows: 20 }"
                 @keydown.enter.native="handleEnter"
                 @paste="handlePasteImage"
+                resize="none"
                 @input="handleInputChange"
               ></el-input>
               <el-button
@@ -245,6 +259,7 @@ import UserList from "./components/UserList.vue";
 import ContextMenu from "./components/ContextMenu.vue";
 import MentionPanel from "./components/MentionPanel.vue";
 import NameDialog from "./components/NameDialog.vue";
+import ThemeSelector from './components/ThemeSelector.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -264,6 +279,7 @@ export default {
     ContextMenu,
     MentionPanel,
     NameDialog,
+    ThemeSelector
   },
   setup() {
     // 基本状态
@@ -274,6 +290,7 @@ export default {
     const isLoggedIn = ref(false);
     const messages = ref([]);
     const inputMessage = ref("");
+    const uploadRef = ref(null);
     const users = ref([]);
     const userInfoMap = ref({});
     // loading状态
@@ -337,6 +354,24 @@ export default {
     // 修改昵称相关
     const showNicknameDialog = ref(false);
     const editNicknameInitialValue = ref("");
+    
+    // 手机端用户列表显示控制
+    const showUserList = ref(false);
+    
+    // 切换用户列表显示/隐藏
+    const toggleUserList = () => {
+      showUserList.value = !showUserList.value;
+    };
+    
+    // 点击聊天区域关闭用户列表
+    const onMessageAreaClick = () => {
+      if (showUserList.value) {
+        showUserList.value = false;
+      }
+    };
+
+    // 心跳包计时器ID
+    let heartbeatInterval;
 
     // 初始化WebSocket连接
     const initSocket = () => {
@@ -344,6 +379,11 @@ export default {
       if (socket) {
         socket.disconnect();
         socket = null;
+      }
+      // 清除之前的心跳包计时器
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
       }
       // 从localStorage获取userId和username
       const storedUserId = localStorage.getItem("userId");
@@ -532,11 +572,19 @@ export default {
       // 连接断开
       socket.on("disconnect", () => {
         console.log("WebSocket连接断开");
+        // 清除心跳包计时器
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
       });
 
       // 心跳包，保持连接活跃
-      setInterval(() => {
-        socket.emit("heartbeat");
+      heartbeatInterval = setInterval(() => {
+        // 检查socket是否存在且已连接
+        if (socket && socket.connected) {
+          socket.emit("heartbeat");
+        }
       }, 30000); // 每30秒发送一次
     };
 
@@ -700,6 +748,14 @@ export default {
       }
     };
 
+    // 处理图片选择
+    const handleImageSelect = async (file) => {
+      // 手动触发上传流程
+      await handleImageUpload(file.raw);
+      // 清除选择，允许重复选择同一文件
+      uploadRef.value.clearFiles();
+    };
+
     // 处理图片上传
     const handleImageUpload = async (file) => {
       // 1. 前端基本验证
@@ -804,8 +860,6 @@ export default {
             messages.value[index].imgUrl = imageUrl;
             messages.value[index].uploading = false;
           }
-
-          ElMessage.success("图片发送成功");
         }
 
         return true; // 发送成功返回true
@@ -1424,13 +1478,128 @@ export default {
       editNicknameInitialValue,
       handleEditNickname,
       handleSaveNickname,
-      handleLogout
+      handleLogout,
+      showUserList,
+      toggleUserList,
+      handleImageSelect
     };
   },
 };
 </script>
 <style scoped>
 .chat-input-area {
-  width: calc(100vw - 400px);
+  width: 100%
+}
+</style>
+
+<style scoped>
+/* 响应式媒体查询 - 手机端布局优化 */
+@media screen and (max-width: 768px) {
+  /* 聊天室容器采用垂直布局 */
+  .chat-container {
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  /* 聊天主区域也采用垂直布局 */
+  .chat-main {
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  /* 隐藏左侧用户列表，通过按钮切换显示 */
+  .user-list-container {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: left 0.3s ease;
+  }
+  
+  /* 用户列表显示状态 */
+  .user-list-container.show {
+    left: 0;
+  }
+  
+  /* 消息区域高度自适应并确保可滚动 */
+  .message-area {
+    height: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  /* 确保聊天消息区域可以正常滚动 */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch; /* 优化iOS设备上的滚动体验 */
+  }
+  /* 聊天输入区域宽度调整为适应手机屏幕 */
+  .chat-input-area {
+    width: 100%;
+  }
+  
+  /* 输入框容器样式调整 */
+  .input-container {
+    flex-direction: column;
+  }
+  
+  /* 输入框样式调整 */
+  .input-container .el-input {
+    flex: none !important;
+    margin-bottom: 10px;
+  }
+  
+  /* 手机端添加用户列表切换按钮 */
+  .mobile-user-list-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 移动端遮罩层样式 */
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    display: block;
+  }
+  
+  /* 确保用户列表在遮罩层之上 */
+  .user-list-container.show {
+    z-index: 30;
+  }
+  
+  /* 手机端修改昵称按钮样式调整 */
+  .mobile-edit-nickname-button {
+    margin-left: 10px;
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+}
+
+/* PC端样式保持不变 */
+@media screen and (min-width: 769px) {
+  /* 确保在PC端不显示手机端专用按钮 */
+  .mobile-user-list-toggle {
+    display: none;
+  }
 }
 </style>

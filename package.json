@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "cd frontend && npm install && npm run build && cd .."
+    "build": "cd frontend && npm install && npm run build && cd ..",
+    "web": "cd frontend && npm run dev"
   },
   "dependencies": {
     "express": "^4.18.2",

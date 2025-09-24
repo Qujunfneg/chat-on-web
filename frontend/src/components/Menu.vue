@@ -1,19 +1,22 @@
 <template>
-  <ul class="munu">
-    <li
-      v-for="item in menuList"
-      :class="{ active: currentMenu === item.name }"
-      @click="setActiveMenu(item.name)"
-      :key="item.name"
-    >
-      <el-icon v-if="item.icon === 'chart'"><ChatLineRound /></el-icon>
-      <el-icon v-if="item.icon === 'music'"><Service /></el-icon>
-      {{ item.label }}
-    </li>
-  </ul>
+  <div class="menu-container">
+    <ul class="menu">
+      <li
+        v-for="item in menuList"
+        :class="{ active: currentMenu === item.name }"
+        @click="setActiveMenu(item.name)"
+        :key="item.name"
+      >
+        <el-icon v-if="item.icon === 'chart'" class="icon"><ChatLineRound /></el-icon>
+        <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
+        {{ item.label }}
+      </li>
+    </ul>
+  </div>
 </template>
 <script setup>
 import { ref } from "vue";
+import { ChatLineRound, Service, Setting } from '@element-plus/icons-vue';
 
 const menuList = [
   {
@@ -44,23 +47,31 @@ function setActiveMenu(name) {
 </script>
 <style scoped>
 /* 菜单容器样式 */
-.munu {
-  width: 180px;
-  background-color: #fff;
-  border-right: 1px solid #e0e0e0;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+/* 菜单列表样式 */
+.menu {
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
   margin: 0;
-  padding: 16px 0;
+  padding: 8px 0;
   list-style: none;
   border-radius: 0 4px 4px 0;
+  flex: 0 0 180px
 }
 
 /* 菜单项基础样式 */
-.munu li {
+.menu li {
   padding: 12px 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
   border-left: 3px solid transparent;
   display: flex;
@@ -69,18 +80,51 @@ function setActiveMenu(name) {
 }
 
 /* 菜单项悬停效果 */
-.munu li:hover {
-  background-color: #f5f5f5;
-  color: #1890ff;
+.menu li:hover {
+  background-color: var(--background-tertiary);
+  color: var(--accent-primary);
   padding-left: 28px;
 }
 
 /* 菜单项激活状态 */
-.munu li.active {
-  background-color: #e6f7ff;
-  color: #1890ff;
-  border-left-color: #1890ff;
+.menu li.active {
+  background-color: var(--background-tertiary);
+  color: var(--accent-primary);
+  border-left-color: var(--accent-primary);
   font-weight: 500;
+}
+
+/* 图标样式 */
+.icon {
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+.menu li:hover .icon,
+.menu li.active .icon {
+  color: var(--accent-primary);
+}
+
+/* 主题选择器容器样式 */
+.theme-selector-container {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--background-tertiary);
+}
+
+.theme-selector {
+  display: flex;
+  justify-content: center;
+}
+
+.theme-select {
+  width: 100%;
+  max-width: 140px;
 }
 
 /* 添加图标增强视觉效果 */  
@@ -88,25 +132,29 @@ function setActiveMenu(name) {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .munu {
+  .menu-container {
+    display: none;
+  }
+  
+  .menu {
     width: 100%;
     display: flex;
     border-right: none;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
     border-radius: 4px 4px 0 0;
     padding: 0;
   }
 
-  .munu li {
+  .menu li {
     flex: 1;
     justify-content: center;
     border-left: none;
     border-bottom: 3px solid transparent;
   }
 
-  .munu li.active {
+  .menu li.active {
     border-left-color: transparent;
-    border-bottom-color: #1890ff;
+    border-bottom-color: var(--accent-primary);
     background-color: transparent;
   }
 }

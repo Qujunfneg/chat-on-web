@@ -133,7 +133,7 @@ const onCancel = () => {
   padding: 30px;
   max-width: 600px;
   margin: 0 auto;
-  background: #fff;
+  background: var(--background-secondary);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
@@ -152,7 +152,7 @@ const onCancel = () => {
 }
 
 .settings-header h2 {
-  color: #303133;
+  color: var(--text-primary);
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -168,7 +168,7 @@ const onCancel = () => {
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, #67c23a 0%, #409eff 100%);
+  background: linear-gradient(90deg, var(--success-color) 0%, var(--accent-primary) 100%);
   border-radius: 2px;
 }
 
@@ -181,14 +181,14 @@ const onCancel = () => {
 }
 
 .form-item-animation:hover .el-input__wrapper {
-  border-color: #409eff;
+  border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 
 .form-hint {
   margin-top: 8px;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -197,13 +197,13 @@ const onCancel = () => {
   justify-content: center;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid #f5f7fa;
+  border-top: 1px solid var(--border-color);
 }
 
 .submit-button {
   width: 120px;
   margin-right: 15px;
-  background: linear-gradient(90deg, #67c23a 0%, #409eff 100%);
+  background: linear-gradient(90deg, var(--success-color) 0%, var(--accent-primary) 100%);
   border: none;
   transition: all 0.3s ease;
 }

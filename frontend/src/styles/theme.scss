@@ -1,0 +1,224 @@
+// 主题样式 - 定义CSS变量
+:root {
+  // 默认主题
+  --theme-default-background-primary: #F7F7F7;
+  --theme-default-background-secondary: #FFFFFF;
+  --theme-default-background-tertiary: #F5F5F5;
+  --theme-default-text-primary: #333333;
+  --theme-default-text-secondary: #666666;
+  --theme-default-border-color: #E0E0E0;
+  --theme-default-accent-primary: #2196F3;
+  --theme-default-accent-primary-light: #42A5F5;
+  --theme-default-accent-primary-dark: #1976D2;
+  --theme-default-accent-light: #E3F2FD;
+  --theme-default-success-color: #4CAF50;
+  --theme-default-error-color: #F44336;
+  --theme-default-user-back-color: #E6F7FF;
+  --theme-default-user-list-back-color: #f8f9fa;
+  --theme-default-user-fire-color: #fa8c16;
+  
+  // 暗黑主题
+  --theme-dark-background-primary: #1E1E1E;
+  --theme-dark-background-secondary: #2D2D30;
+  --theme-dark-background-tertiary: #3E3E42;
+  --theme-dark-text-primary: #FFFFFF;
+  --theme-dark-text-secondary: #CCCCCC;
+  --theme-dark-border-color: #424242;
+  --theme-dark-accent-primary: #0078D7;
+  --theme-dark-accent-primary-light: #1189E7;
+  --theme-dark-accent-primary-dark: #005A9E;
+  --theme-dark-accent-light: #0A2463;
+  --theme-dark-success-color: #3CAEA3;
+  --theme-dark-error-color: #E4003A;
+  --theme-dark-user-back-color: #2D2D30;
+  --theme-dark-user-border-color: #3E3E42;
+}
+
+// 应用主题类
+.theme-default {
+  --background-primary: var(--theme-default-background-primary);
+  --background-secondary: var(--theme-default-background-secondary);
+  --background-tertiary: var(--theme-default-background-tertiary);
+  --text-primary: var(--theme-default-text-primary);
+  --text-secondary: var(--theme-default-text-secondary);
+  --border-color: var(--theme-default-border-color);
+  --accent-primary: var(--theme-default-accent-primary);
+  --accent-primary-light: var(--theme-default-accent-primary-light);
+  --accent-primary-dark: var(--theme-default-accent-primary-dark);
+  --accent-light: var(--theme-default-accent-light);
+  --success-color: var(--theme-default-success-color);
+  --error-color: var(--theme-default-error-color);
+  --user-back-color: var(--theme-default-user-back-color);
+  --user-list-back-color: var(--theme-default-user-list-back-color);
+  --user-fire-color: var(--theme-default-user-fire-color);
+}
+
+.theme-dark {
+  --background-primary: var(--theme-dark-background-primary);
+  --background-secondary: var(--theme-dark-background-secondary);
+  --background-tertiary: var(--theme-dark-background-tertiary);
+  --text-primary: var(--theme-dark-text-primary);
+  --text-secondary: var(--theme-dark-text-secondary);
+  --border-color: var(--theme-dark-border-color);
+  --accent-primary: var(--theme-dark-accent-primary);
+  --accent-primary-light: var(--theme-dark-accent-primary-light);
+  --accent-primary-dark: var(--theme-dark-accent-primary-dark);
+  --accent-light: var(--theme-dark-accent-light);
+  --success-color: var(--theme-dark-success-color);
+  --error-color: var(--theme-dark-error-color);
+  --user-back-color: var(--theme-dark-user-back-color);
+  --user-border-color: var(--theme-dark-user-border-color);
+}
+
+.theme-blue {
+  --background-primary: var(--theme-blue-background-primary);
+  --background-secondary: var(--theme-blue-background-secondary);
+  --background-tertiary: var(--theme-blue-background-tertiary);
+  --text-primary: var(--theme-blue-text-primary);
+  --text-secondary: var(--theme-blue-text-secondary);
+  --border-color: var(--theme-blue-border-color);
+  --accent-primary: var(--theme-blue-accent-primary);
+  --accent-primary-light: var(--theme-blue-accent-primary-light);
+  --accent-primary-dark: var(--theme-blue-accent-primary-dark);
+  --accent-light: var(--theme-blue-accent-light);
+  --success-color: var(--theme-blue-success-color);
+  --error-color: var(--theme-blue-error-color);
+}
+
+.theme-purple {
+  --background-primary: var(--theme-purple-background-primary);
+  --background-secondary: var(--theme-purple-background-secondary);
+  --background-tertiary: var(--theme-purple-background-tertiary);
+  --text-primary: var(--theme-purple-text-primary);
+  --text-secondary: var(--theme-purple-text-secondary);
+  --border-color: var(--theme-purple-border-color);
+  --accent-primary: var(--theme-purple-accent-primary);
+  --accent-primary-light: var(--theme-purple-accent-primary-light);
+  --accent-primary-dark: var(--theme-purple-accent-primary-dark);
+  --accent-light: var(--theme-purple-accent-light);
+  --success-color: var(--theme-purple-success-color);
+  --error-color: var(--theme-purple-error-color);
+}
+
+// 全局样式应用
+body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  transition: background-color 0.5s ease, color 0.5s ease;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 为主题切换添加平滑过渡效果 */
+* {
+  /* 为大多数CSS变量添加过渡效果 */
+  transition: background-color 0.5s ease, 
+              color 0.5s ease, 
+              border-color 0.5s ease, 
+              fill 0.5s ease, 
+              stroke 0.5s ease;
+}
+
+/* 确保组件容器有过渡效果 */
+.chat-container,
+.user-list-container,
+.message-area,
+.chat-header,
+.chat-input-area,
+.menu {
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+/* 聊天室容器样式 */
+.chat-container {
+  background-color: var(--background-primary);
+}
+
+/* 用户列表容器样式 */
+.user-list-container {
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+/* 消息区域样式 */
+.message-area {
+  background-color: var(--background-primary);
+}
+
+/* 聊天头部样式 */
+.chat-header {
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-header h2 {
+  color: var(--text-primary);
+}
+
+/* 聊天输入区域样式 */
+.chat-input-area {
+  background-color: var(--background-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* 菜单样式 */
+.menu {
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+.menu li {
+  color: var(--text-primary);
+}
+
+.menu li:hover {
+  background-color: var(--background-tertiary);
+  color: var(--accent-primary);
+}
+
+.menu li.active {
+  background-color: var(--background-tertiary);
+  color: var(--accent-primary);
+  border-left-color: var(--accent-primary);
+}
+
+/* 用户名输入页面样式 */
+.username-input-container {
+  background-color: var(--background-primary);
+}
+
+.username-input-container h2 {
+  color: var(--text-primary);
+}
+
+/* 确保所有元素都可以响应主题变化 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 完善主题下的Element Plus组件样式 */
+.el-button--primary {
+  --el-button-bg-color: var(--accent-primary);
+  --el-button-border-color: var(--accent-primary);
+  --el-button-hover-bg-color: var(--accent-primary-light);
+  --el-button-hover-border-color: var(--accent-primary-light);
+  --el-button-active-bg-color: var(--accent-primary-dark);
+  --el-button-active-border-color: var(--accent-primary-dark);
+}
+
+.el-input__wrapper {
+  --el-input-bg-color: var(--background-secondary);
+  --el-input-text-color-placeholder: var(--text-secondary);
+  --el-input-border: var(--border-color);
+  --el-input-focus-border: var(--accent-primary);
+  --el-input-hover-border: var(--accent-primary-light);
+}
+
+.el-select {
+  --el-select-dropdown-bg-color: var(--background-secondary);
+  --el-select-dropdown-border-color: var(--border-color);
+  --el-select-option-hover-bg-color: var(--background-tertiary);
+  --el-select-text-color: var(--text-primary);
+  --el-select-placeholder-color: var(--text-secondary);
+}
