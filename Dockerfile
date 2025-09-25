@@ -14,7 +14,7 @@ COPY . .
 RUN cd frontend; npm ci && npm run build
 
 # 安装后端依赖
-RUN npm ci
+RUN npm install
 
 # 🚀 运行阶段：只复制构建产物和必要依赖
 FROM node:18-slim AS runner
