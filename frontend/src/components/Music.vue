@@ -188,7 +188,7 @@ export default {
 
 .music-header {
   padding: 10px 20px;
-  background-color: var(--el-bg-color-overlay);
+  background-color: var(--background-secondary);
   border-bottom: 1px solid var(--el-border-color);
   display: flex;
   align-items: center;
@@ -201,7 +201,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--el-text-color-primary);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
