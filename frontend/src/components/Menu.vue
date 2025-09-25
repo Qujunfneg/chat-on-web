@@ -9,6 +9,7 @@
       >
         <el-icon v-if="item.icon === 'chart'" class="icon"><ChatLineRound /></el-icon>
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
+        <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
         {{ item.label }}
       </li>
     </ul>
@@ -28,7 +29,12 @@ const menuList = [
     label: "音乐台",
     name: "music",
     icon: "music",
-  }
+  },
+  {
+    label: "设置",
+    name: "settings",
+    icon: "settings",
+  },
 ];
 const currentMenu = ref("chart");
 const emit = defineEmits(["menuClick"]);
@@ -40,8 +46,8 @@ function setActiveMenu(name) {
   } else if (name === 'music') {
     window.location.href = '#/music';
   } else if (name === 'settings') {
-    // 触发设置菜单事件，将在Chart.vue中处理
-    window.dispatchEvent(new CustomEvent('show-settings'));
+    // 通过emit和路由更新来确保设置页面正确显示
+    // 不再依赖Chart.vue中的事件处理
   }
 }
 </script>

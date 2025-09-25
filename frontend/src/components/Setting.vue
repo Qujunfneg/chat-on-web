@@ -1,237 +1,388 @@
 <template>
-  <div class="settings-container">
-    <div class="settings-header">
-      <h2>个人设置</h2>
-    </div>
-    <el-form
-      class="settings-form"
-      :model="form"
-      label-width="100px"
-      :rules="rules"
-    >
-      <el-form-item label="昵称" prop="name" class="form-item-animation">
-        <el-input
-          v-model="form.name"
-          placeholder="请输入您的昵称"
-          prefix-icon="InfoFilled"
-        >
-        </el-input>
-        <div class="form-hint">
-          设置一个个性化的昵称，让其他用户更容易记住您
+  <div class="setting-container">
+    <el-card class="setting-card">
+      <template #header>
+        <div class="card-header">
+          <span class="card-title"><el-icon><SettingIcon /></el-icon> 应用设置</span>
         </div>
-      </el-form-item>
-
-      <el-form-item class="form-actions">
-        <el-button
-          type="primary"
-          @click="onSubmit"
-          :loading="loading"
-          class="submit-button"
+      </template>
+      
+      <el-form 
+        ref="settingForm"
+        :model="settings"
+        label-width="100px"
+        class="setting-form"
+        size="medium"
+      >
+        <!-- 音乐源设置 -->
+        <el-form-item 
+          label="音乐源"
+          prop="musicSource"
+          :rules="[{ required: true, message: '请选择音乐源', trigger: 'change' }]"
         >
-          保存设置
-        </el-button>
-        <el-button @click="onCancel" class="cancel-button"> 取消 </el-button>
-      </el-form-item>
-    </el-form>
+          <el-select v-model="settings.musicSource" placeholder="请选择音乐源" class="w-full" @change="onMusicSourceChange">
+            <el-option 
+              v-for="source in musicSources"
+              :key="source.name"
+              :label="source.name"
+              :value="source.url"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- 当前配置信息 -->
+        <el-divider content-position="left">当前配置信息</el-divider>
+        
+        <el-form-item label="当前音乐源">
+          <el-input 
+            v-model="currentMusicSourceName"
+            disabled
+            placeholder="加载中..."
+          ></el-input>
+        </el-form-item>
+
+        <el-form-item label="音乐源URL">
+          <el-input 
+            v-model="settings.musicSource"
+            disabled
+            placeholder="加载中..."
+          ></el-input>
+        </el-form-item>
+
+        <!-- 按钮组 -->
+        <div class="form-actions">
+          <el-button type="primary" @click="saveSettings" :loading="saving">
+            保存设置
+          </el-button>
+          <el-button @click="resetSettings">
+            重置
+          </el-button>
+          <el-button @click="cancel">
+            取消
+          </el-button>
+        </div>
+      </el-form>
+    </el-card>
   </div>
 </template>
 
-<script setup>
-import { reactive, ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { InfoFilled } from '@element-plus/icons-vue';
+<script>
+import { ref, reactive, onMounted, computed } from 'vue';
+import { ElMessage } from 'element-plus';
 
-// 定义事件发射器，用于通知父组件更新用户昵称
-const emit = defineEmits(['nickname-updated']);
+// 从element-plus导入所有需要的图标
+import { Setting as SettingIcon } from '@element-plus/icons-vue';
 
-const loading = ref(false);
-
-// 表单数据
-const form = reactive({
-  name: "",
-});
-
-// 表单验证规则
-const rules = {
-  name: [
-    { required: true, message: "请输入昵称", trigger: "blur" },
-    {
-      min: 2,
-      max: 10,
-      message: "昵称长度应在 2 到 10 个字符之间",
-      trigger: "blur",
-    },
-  ],
-};
-
-// 组件初始化时，从localStorage获取昵称
-onMounted(() => {
-  const nickname = localStorage.getItem('nickname');
-  const username = localStorage.getItem('username');
-  // 如果没有昵称，则使用用户名作为默认昵称
-  form.name = nickname || username || "";
-});
-
-const onSubmit = async () => {
-  loading.value = true;
-  
-  try {
-    // 获取用户认证信息
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
+export default {
+  name: 'Setting',
+  components: {
+    SettingIcon
+  },
+  emits: ['close', 'settings-changed'],
+  setup(props, { emit }) {
+    const settingForm = ref(null);
+    const saving = ref(false);
     
-    if (!token || !username) {
-      ElMessage.error("请先登录");
-      loading.value = false;
-      return;
-    }
+    // 音乐源列表
+    const musicSources = ref([
+      { name: '布谷音乐', url: 'https://www.buguyy.top/' },
+      { name: 'qqmp3', url: 'https://www.qqmp3.vip/' }
+    ]);
     
-    // 调用后端API更新昵称
-    const response = await fetch('/api/update-nickname', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'x-username': username
-      },
-      body: JSON.stringify({ nickname: form.name.trim() })
+    // 设置数据模型
+    const settings = reactive({
+      musicSource: musicSources.value[0].url // 默认使用第一个音乐源
     });
     
-    const data = await response.json();
+    // 计算当前选中的音乐源名称
+    const currentMusicSourceName = computed(() => {
+      const source = musicSources.value.find(item => item.url === settings.musicSource);
+      return source ? source.name : '未知音乐源';
+    });
     
-    if (data.success) {
-      // 更新localStorage中的昵称
-      localStorage.setItem('nickname', form.name.trim());
+    // 组件挂载时从localStorage加载设置
+    onMounted(() => {
+      loadSettings();
+    });
+    
+    // 从localStorage加载设置
+    const loadSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem('appSettings');
+        if (savedSettings) {
+          const parsedSettings = JSON.parse(savedSettings);
+          Object.assign(settings, parsedSettings);
+        } else {
+          // 如果没有保存的设置，使用默认值并保存
+          saveSettingsToStorage();
+        }
+      } catch (error) {
+        console.error('加载设置失败:', error);
+        ElMessage.error('加载设置失败');
+      }
+    };
+    
+    // 保存设置到localStorage
+    const saveSettings = async () => {
+      saving.value = true;
       
-      // 发送事件通知父组件更新用户昵称
-      emit('nickname-updated', form.name.trim());
+      try {
+        // 验证表单
+        await settingForm.value.validate();
+        
+        // 保存到localStorage
+        saveSettingsToStorage();
+        
+        // 触发设置变更事件，父组件可以监听此事件
+        emit('settings-changed', { ...settings });
+        
+        // 发送全局事件，通知Music组件重新加载
+        window.dispatchEvent(new CustomEvent('music-source-changed', {
+          detail: { musicSource: settings.musicSource }
+        }));
+        
+        // 显示保存成功提示
+        ElMessage.success('设置保存成功，音乐源已更新');
+      } catch (error) {
+        console.error('保存设置失败:', error);
+        ElMessage.error('保存设置失败，请检查输入');
+      } finally {
+        saving.value = false;
+      }
+    };
+    
+    // 单独的保存到localStorage的函数
+    const saveSettingsToStorage = () => {
+      localStorage.setItem('appSettings', JSON.stringify(settings));
+    };
+    
+    // 当音乐源变更时的处理
+    const onMusicSourceChange = () => {
+      // 可以在这里添加临时预览或其他逻辑
+    };
+    
+    // 重置设置
+    const resetSettings = () => {
+      // 重置表单验证
+      settingForm.value.resetFields();
       
-      // 显示成功消息
-      ElMessage.success("昵称设置成功！");
-    } else {
-      ElMessage.error(data.message || "昵称更新失败");
-    }
-  } catch (error) {
-    console.error("更新昵称失败:", error);
-    ElMessage.error("网络错误，请稍后重试");
-  } finally {
-    loading.value = false;
+      // 重置为默认值
+      Object.assign(settings, {
+        musicSource: musicSources.value[0].url
+      });
+      
+      ElMessage.info('设置已重置为默认值');
+    };
+    
+    // 取消操作
+    const cancel = () => {
+      // 重新加载保存的设置
+      loadSettings();
+      
+      // 触发关闭事件
+      emit('close');
+    };
+    
+    return {
+      settingForm,
+      saving,
+      settings,
+      musicSources,
+      currentMusicSourceName,
+      saveSettings,
+      resetSettings,
+      cancel,
+      onMusicSourceChange
+    };
   }
-};
-
-const onCancel = () => {
-  // 取消时恢复原来的昵称
-  const nickname = localStorage.getItem('nickname');
-  const username = localStorage.getItem('username');
-  form.name = nickname || username || "";
-  ElMessage.info("已取消设置");
 };
 </script>
 
 <style scoped>
-.settings-container {
-  padding: 30px;
+.setting-container {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: var(--background-primary);
+  transition: background-color 0.3s ease;
+}
+
+.setting-card {
   max-width: 600px;
   margin: 0 auto;
-  background: var(--background-secondary);
-  border-radius: 12px;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
   transition: all 0.3s ease;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
-.settings-container:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+.setting-card:hover {
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.settings-header {
-  text-align: center;
-  margin-bottom: 30px;
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
 }
 
-.settings-header h2 {
-  color: var(--text-primary);
-  font-size: 24px;
+.card-title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
   font-weight: 600;
-  margin: 0;
-  position: relative;
-  display: inline-block;
+  color: var(--text-primary);
 }
 
-.settings-header h2::after {
-  content: "";
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--success-color) 0%, var(--accent-primary) 100%);
-  border-radius: 2px;
+.card-title .el-icon {
+  margin-right: 10px;
+  font-size: 20px;
+  color: var(--accent-primary);
 }
 
-.settings-form {
-  padding: 0 20px;
+.setting-form {
+  padding: 30px 20px;
 }
 
-.form-item-animation {
-  transition: all 0.3s ease;
-}
-
-.form-item-animation:hover .el-input__wrapper {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-}
-
-.form-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+.setting-form .el-divider {
+  margin: 25px 0;
+  background-color: var(--border-color);
 }
 
 .form-actions {
   display: flex;
-  justify-content: center;
-  margin-top: 40px;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid var(--border-color);
 }
 
-.submit-button {
-  width: 120px;
-  margin-right: 15px;
-  background: linear-gradient(90deg, var(--success-color) 0%, var(--accent-primary) 100%);
-  border: none;
+/* 动画效果 */
+.el-form-item {
   transition: all 0.3s ease;
 }
 
-.submit-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(64, 158, 255, 0.3);
-}
-
-.cancel-button {
-  width: 120px;
-  transition: all 0.3s ease;
-}
-
-.cancel-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 输入框动画效果 */
-.el-input__wrapper {
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
-}
-
-/* 按钮动画效果 */
 .el-button {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.el-select .el-input__wrapper {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.el-input .el-input__wrapper {
+  border-radius: 8px;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .setting-container {
+    padding: 10px;
+  }
+  
+  .setting-card {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .form-actions .el-button {
+    width: 100%;
+  }
+  
+  .card-title {
+    font-size: 16px;
+  }
+  
+  .setting-form {
+    padding: 20px 15px;
+  }
+}
+
+/* 暗黑主题适配 - Element Plus组件 */
+/* 输入框基础样式 */
+.theme-dark :deep(.el-input__wrapper) {
+  background-color: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark :deep(.el-input__wrapper:hover) {
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.1) !important;
+}
+
+.theme-dark :deep(.el-input__inner) {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+/* 禁用的输入框样式 */
+.theme-dark :deep(.el-input__wrapper.is-disabled) {
+  background-color: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark :deep(.el-input__wrapper.is-disabled .el-input__inner) {
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
+  background-color: transparent !important;
+}
+
+/* 选择器样式 - 增强穿透 */
+.theme-dark :deep(.el-select .el-input__wrapper) {
+  background-color: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark :deep(.el-select .el-input__inner) {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+/* 按钮样式 - 增强穿透 */
+.theme-dark :deep(.el-button) {
+  background-color: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-dark :deep(.el-button:hover) {
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 主要按钮保持原有样式 */
+.theme-dark :deep(.el-button--primary) {
+  background-color: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: white !important;
+}
+
+.theme-dark :deep(.el-button--primary:hover) {
+  background-color: var(--accent-primary-light) !important;
+  border-color: var(--accent-primary-light) !important;
+}
+
+/* 确保表单元素在暗黑模式下完全适配 */
+.theme-dark :deep(.el-form-item__label) {
+  color: var(--text-primary) !important;
+}
+
+.theme-dark :deep(.el-divider__text) {
+  color: var(--text-primary) !important;
 }
 </style>

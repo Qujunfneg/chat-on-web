@@ -28,6 +28,7 @@
       <div class="content-area">
         <Chart v-show="currentMenu === 'chart'"></Chart>
         <Music v-show="currentMenu === 'music'"/>
+        <Setting v-if="currentMenu === 'settings'"/>
       </div>
     </div>
   </div>
