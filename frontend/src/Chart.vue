@@ -128,40 +128,47 @@
                 trigger="click"
               >
                 <div class="danmu-box">
-                  <el-input
-                    v-model="danmuContent"
-                    placeholder="输入弹幕（最多30字）"
-                    :maxlength="30"
-                    show-word-limit
-                    @keydown.enter.native="sendDanmu"
-                  ></el-input>
-                  <div class="danmu-color-picker">
-                    <span
-                      style="font-size: 12px; color: #666; margin-right: 8px"
-                      >颜色:</span
-                    >
-                    <div class="color-options">
-                      <div
-                        v-for="color in danmuColors"
-                        :key="color"
-                        class="color-option"
-                        :class="{ active: danmuColor === color }"
-                        :style="{ backgroundColor: color }"
-                        @click="danmuColor = color"
-                        :title="color"
-                      ></div>
+                    <div class="danmu-header">
+                      <h4>发送弹幕</h4>
                     </div>
+                    <el-input
+                      v-model="danmuContent"
+                      placeholder="输入弹幕内容（最多30字）"
+                      :maxlength="30"
+                      show-word-limit
+                      @keydown.enter.native="sendDanmu"
+                      class="danmu-input"
+                    ></el-input>
+                    <div class="danmu-color-picker">
+                      <span>选择颜色:</span>
+                      <div class="color-options">
+                        <div
+                          v-for="color in danmuColors"
+                          :key="color"
+                          class="color-option"
+                          :class="{ active: danmuColor === color }"
+                          :style="{ backgroundColor: color }"
+                          @click="danmuColor = color"
+                          :title="color.toUpperCase()"
+                        >
+                          <div v-if="danmuColor === color" class="selected-indicator">
+                            <el-icon><check /></el-icon>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="danmu-tips">
+                      <small>💡 弹幕会在聊天区域上方滚动显示</small>
+                    </div>
+                    <el-button
+                      type="primary"
+                      :disabled="!danmuContent.trim()"
+                      @click="sendDanmu"
+                      class="send-danmu-button"
+                    >
+                      发射弹幕
+                    </el-button>
                   </div>
-                  <el-button
-                    type="primary"
-                    size="small"
-                    style="margin-top: 10px; width: 100%"
-                    :disabled="!danmuContent.trim()"
-                    @click="sendDanmu"
-                  >
-                    发送
-                  </el-button>
-                </div>
                 <template #reference>
                   <el-button class="pic-upload-btn" style="margin-left: 10px;"
                     ><el-icon><chat-dot-round /></el-icon
@@ -325,7 +332,7 @@
 
 <script>
 import { io } from "socket.io-client";
-import { ref, onMounted, onUnmounted, nextTick, getCurrentInstance } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance } from "vue";
 import { ElMessage, ElIcon } from "element-plus";
 import { useEventBus, useGlobalEvents } from "./utils/eventBus.js";
 import { Delete, CircleCloseFilled } from "@element-plus/icons-vue";
@@ -1165,16 +1172,55 @@ export default {
     const danmuContent = ref("");
     const danmuColor = ref("#303133");
     const danmuList = ref([]);
-    const danmuColors = [
-      "#303133",
-      "#E6A23C",
-      "#F56C6C",
-      "#409EFF",
-      "#67C23A",
-      "#909399",
-      "#C06C84",
-      "#7C5CBF",
-    ];
+    const isDarkTheme = ref(false);
+    
+    // 监听主题变化
+    onMounted(() => {
+      // 检查当前主题
+      isDarkTheme.value = document.documentElement.classList.contains('theme-dark');
+      
+      // 监听主题变化
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+          if (mutation.attributeName === 'class') {
+            isDarkTheme.value = document.documentElement.classList.contains('theme-dark');
+          }
+        });
+      });
+      
+      observer.observe(document.documentElement, { attributes: true });
+      
+      return () => observer.disconnect();
+    });
+    
+    // 动态计算适合当前主题的弹幕颜色列表
+    const danmuColors = computed(() => {
+      // 默认主题颜色 - 移除了白色
+      const defaultColors = [
+        "#303133", // 深灰色
+        "#E6A23C", // 橙色
+        "#F56C6C", // 红色
+        "#409EFF", // 蓝色
+        "#67C23A", // 绿色
+        "#909399", // 浅灰色
+        "#C06C84", // 粉色
+        "#7C5CBF", // 紫色
+      ];
+      
+      // 暗黑主题颜色 - 移除了黑色，使用更适合暗黑背景的颜色
+      const darkColors = [
+        "#E4E7ED", // 浅灰色
+        "#E6A23C", // 橙色
+        "#F56C6C", // 红色
+        "#409EFF", // 蓝色
+        "#67C23A", // 绿色
+        "#909399", // 中灰色
+        "#C06C84", // 粉色
+        "#7C5CBF", // 紫色
+      ];
+      
+      return isDarkTheme.value ? darkColors : defaultColors;
+    });
 
     // 发送弹幕
     const sendDanmu = () => {
@@ -1682,75 +1728,168 @@ export default {
   }
 }
 
+/* 弹幕发送框整体样式 */
+.danmu-box {
+  padding: 16px;
+  background-color: var(--background-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+}
+
+/* 弹幕发送框头部 */
+.danmu-header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.danmu-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
 /* 弹幕输入框样式 */
-.danmu-box .el-input {
-  margin-bottom: 10px;
-  border-radius: 6px;
-  transition: all 0.3s;
+.danmu-input {
+  margin-bottom: 16px;
 }
 
 .danmu-box .el-input__inner {
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 8px;
+  padding: 10px 14px;
   font-size: 14px;
-  transition: all 0.3s;
-  border: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+  background-color: var(--background-primary);
   color: var(--text-primary);
+}
+
+.danmu-box .el-input__inner:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 }
 
 /* 弹幕颜色选择器样式 */
 .danmu-color-picker {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .danmu-color-picker span {
   color: var(--text-secondary);
-  margin-right: 8px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .color-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 4px;
+  gap: 10px;
+  padding: 10px;
   background-color: var(--background-tertiary);
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
+  justify-content: center;
 }
 
 .color-option {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   border: 3px solid transparent;
   transition: all 0.3s ease;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .color-option:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
 .color-option.active {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2), 0 2px 6px rgba(64, 158, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2), 0 3px 8px rgba(64, 158, 255, 0.3);
   transform: scale(1.2);
 }
 
+/* 选中指示器 */
+.selected-indicator {
+  color: white;
+  font-size: 14px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* 弹幕提示信息 */
+.danmu-tips {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.danmu-tips small {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+/* 弹幕发送按钮样式 */
+.send-danmu-button {
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.send-danmu-button:hover:not(:disabled) {
+  /* 为默认主题添加明确的hover颜色，确保有足够对比度 */
+  background-color: #1e88e5;
+  border-color: #1e88e5;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
+}
+
+.send-danmu-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.send-danmu-button:disabled {
+  background-color: var(--background-disabled);
+  border-color: var(--border-color);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
 /* 适配暗黑主题 */
-.theme-dark .danmu-box .el-input__inner {
+.theme-dark .danmu-box {
   background-color: var(--background-secondary);
   border-color: var(--border-color);
+  box-shadow: var(--shadow-dark);
+}
+
+.theme-dark .danmu-header h4 {
   color: var(--text-primary);
+}
+
+.theme-dark .danmu-box .el-input__inner {
+  background-color: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-dark .danmu-box .el-input__inner:focus {
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
 }
 
 .theme-dark .danmu-color-picker span {
@@ -1759,42 +1898,24 @@ export default {
 
 .theme-dark .color-options {
   background-color: var(--background-tertiary);
+  border-color: var(--border-color);
 }
 
 .theme-dark .color-option {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .theme-dark .color-option:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
 .theme-dark .color-option.active {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3), 0 2px 6px rgba(64, 158, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3), 0 3px 8px rgba(64, 158, 255, 0.4);
 }
 
-/* 弹幕发送按钮样式优化 */
-.danmu-box .el-button {
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.danmu-box .el-button--primary {
-  background-color: #409eff;
-  border-color: #409eff;
-}
-
-.danmu-box .el-button--primary:hover {
-  background-color: #66b1ff;
-  border-color: #66b1ff;
-}
-
-.danmu-box .el-button--primary:disabled {
-  background-color: #c0c4cc;
-  border-color: #c0c4cc;
+.theme-dark .danmu-tips small {
+  color: var(--text-tertiary);
 }
 </style>
 
