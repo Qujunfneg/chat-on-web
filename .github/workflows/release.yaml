@@ -4,6 +4,9 @@ on:
   release:
     types: [published]  # 当创建或发布 release 时触发
 
+permissions:
+  contents: write  # 👈 必须加上这个！
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
