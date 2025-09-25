@@ -1,0 +1,40 @@
+name: Build and Upload on Release
+
+on:
+  release:
+    types: [published]  # 当创建或发布 release 时触发
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. 前端 安装依赖 & 构建
+      - name: Build frontend
+        run: cd frontend; npm ci && npm run build
+
+      - name: Install server dependencies
+        run: npm install
+
+      # 4. 打包为 ZIP（按需调整内容）
+      - name: Create zip package
+        run: |
+          zip -r online-chat-room.zip package*.json public/ node_modules/ server.js
+
+      # 5. 上传 ZIP 到刚刚创建的 Release
+      - name: Upload zip to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: online-chat-room.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

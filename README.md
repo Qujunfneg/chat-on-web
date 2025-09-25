@@ -67,6 +67,32 @@ npm install
 cd ..
 ```
 
+### Docker启动
+
+1. 获取最新镜像
+
+```bash
+docker pull ty13363959807/chat-on-web:latest
+```
+
+2. 启动
+   
+```bash
+docker run -d --name chat-room --net host \
+    -e PORT=3000 \
+    -e BIND_ADDRESS=0.0.0.0 \
+    -e CDN_SIZE_LIMIT_MB=2048 \
+    ty13363959807/chat-on-web:latest
+```
+
+3. 支持的env
+   
+| 名称  | 说明  |
+|---|---|
+| PORT  |  监听的端口 |
+| BIND_ADDRESS  | 监听的地址  |
+| CDN_SIZE_LIMIT_MB  | 图片缓存目录的最大值，单位是MB  |
+
 ## 🚀 使用说明
 
 ### 开发环境
