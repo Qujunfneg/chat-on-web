@@ -5,7 +5,7 @@
     element-loading-background="rgba(122, 122, 122, 0.6)"
   >
     <!-- 手机端用户列表切换按钮 -->
-    <button 
+    <button
       class="mobile-user-list-toggle"
       @click.stop="toggleUserList"
       @touchstart.stop="toggleUserList"
@@ -34,10 +34,14 @@
         </div>
 
         <!-- 右侧聊天区域 -->
-        <div class="message-area" @click="onMessageAreaClick" @touchstart="onMessageAreaClick">
+        <div
+          class="message-area"
+          @click="onMessageAreaClick"
+          @touchstart="onMessageAreaClick"
+        >
           <!-- 聊天头部 -->
           <div class="chat-header">
-            <h2>公共大厅</h2> 
+            <h2>公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
               <button
@@ -48,9 +52,34 @@
               >
                 🔊 启用提示音
               </button>
-              <el-button type="primary" style="cursor: pointer;" link @click="handleLogout" title="注销">
+              <el-button
+                type="primary"
+                style="cursor: pointer"
+                link
+                @click="handleLogout"
+                title="注销"
+              >
                 注销
               </el-button>
+            </div>
+          </div>
+
+          <!-- 弹幕显示区域 -->
+          <div class="danmu-display-area">
+            <div
+              v-for="danmu in danmuList"
+              :key="danmu.id"
+              class="danmu-item"
+              :style="{
+                color: danmu.color,
+                left: danmu.position + 'px',
+                top: danmu.top + 'px',
+                animationDuration: danmu.speed + 's',
+                fontSize: danmu.fontSize + 'px',
+              }"
+              @animationend="removeDanmu(danmu.id)"
+            >
+              {{ danmu.content }}
             </div>
           </div>
 
@@ -88,8 +117,57 @@
                 accept="image/*"
                 :auto-upload="false"
               >
-                <el-button class="pic-upload-btn"><el-icon><camera-filled /></el-icon></el-button>
+                <el-button class="pic-upload-btn"
+                  ><el-icon><camera-filled /></el-icon
+                ></el-button>
               </el-upload>
+              <el-popover
+                placement="bottom"
+                title="弹幕"
+                :width="300"
+                trigger="click"
+              >
+                <div class="danmu-box">
+                  <el-input
+                    v-model="danmuContent"
+                    placeholder="输入弹幕（最多30字）"
+                    :maxlength="30"
+                    show-word-limit
+                    @keydown.enter.native="sendDanmu"
+                  ></el-input>
+                  <div class="danmu-color-picker">
+                    <span
+                      style="font-size: 12px; color: #666; margin-right: 8px"
+                      >颜色:</span
+                    >
+                    <div class="color-options">
+                      <div
+                        v-for="color in danmuColors"
+                        :key="color"
+                        class="color-option"
+                        :class="{ active: danmuColor === color }"
+                        :style="{ backgroundColor: color }"
+                        @click="danmuColor = color"
+                        :title="color"
+                      ></div>
+                    </div>
+                  </div>
+                  <el-button
+                    type="primary"
+                    size="small"
+                    style="margin-top: 10px; width: 100%"
+                    :disabled="!danmuContent.trim()"
+                    @click="sendDanmu"
+                  >
+                    发送
+                  </el-button>
+                </div>
+                <template #reference>
+                  <el-button class="pic-upload-btn" style="margin-left: 10px;"
+                    ><el-icon><chat-dot-round /></el-icon
+                  ></el-button>
+                </template>
+              </el-popover>
             </div>
             <div class="input-container">
               <el-input
@@ -259,7 +337,7 @@ import UserList from "./components/UserList.vue";
 import ContextMenu from "./components/ContextMenu.vue";
 import MentionPanel from "./components/MentionPanel.vue";
 import NameDialog from "./components/NameDialog.vue";
-import ThemeSelector from './components/ThemeSelector.vue';
+import ThemeSelector from "./components/ThemeSelector.vue";
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -279,7 +357,7 @@ export default {
     ContextMenu,
     MentionPanel,
     NameDialog,
-    ThemeSelector
+    ThemeSelector,
   },
   setup() {
     // 基本状态
@@ -354,15 +432,15 @@ export default {
     // 修改昵称相关
     const showNicknameDialog = ref(false);
     const editNicknameInitialValue = ref("");
-    
+
     // 手机端用户列表显示控制
     const showUserList = ref(false);
-    
+
     // 切换用户列表显示/隐藏
     const toggleUserList = () => {
       showUserList.value = !showUserList.value;
     };
-    
+
     // 点击聊天区域关闭用户列表
     const onMessageAreaClick = () => {
       if (showUserList.value) {
@@ -586,6 +664,11 @@ export default {
           socket.emit("heartbeat");
         }
       }, 30000); // 每30秒发送一次
+
+      // 接收弹幕消息
+      socket.on("danmu_message", (data) => {
+        addDanmu(data);
+      });
     };
 
     // 获取通知内容
@@ -1078,6 +1161,73 @@ export default {
       quotedMessage.value = null;
     };
 
+    // 弹幕相关数据
+    const danmuContent = ref("");
+    const danmuColor = ref("#303133");
+    const danmuList = ref([]);
+    const danmuColors = [
+      "#303133",
+      "#E6A23C",
+      "#F56C6C",
+      "#409EFF",
+      "#67C23A",
+      "#909399",
+      "#C06C84",
+      "#7C5CBF",
+    ];
+
+    // 发送弹幕
+    const sendDanmu = () => {
+      if (!danmuContent.value.trim() || !socket || !socket.connected) {
+        return;
+      }
+
+      const danmuData = {
+        content: danmuContent.value.trim(),
+        color: danmuColor.value,
+        username: username.value,
+        userId: userId.value,
+        timestamp: Date.now(),
+      };
+
+      // 发送弹幕到服务器
+      socket.emit("danmu_message", danmuData);
+
+      // 清空输入框
+      danmuContent.value = "";
+    };
+
+    // 添加弹幕到显示列表
+    const addDanmu = (data) => {
+      const displayArea = document.querySelector(".danmu-display-area");
+      if (!displayArea) return;
+
+      const displayWidth = displayArea.clientWidth;
+      const displayHeight = displayArea.clientHeight;
+      const fontSize = 20;
+      const speed = 4 + Math.random() * 3; // 4-7秒，更快的速度
+
+      // 随机垂直位置，但确保在显示区域内
+      const top = Math.floor(Math.random() * (displayHeight - fontSize * 2));
+
+      const danmu = {
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        content: data.content,
+        color: data.color || "#303133",
+        position: displayWidth,
+        top: Math.max(0, top),
+        speed: speed,
+        fontSize: fontSize,
+      };
+
+      danmuList.value.push(danmu);
+    };
+
+    // 移除已完成动画的弹幕
+    const removeDanmu = (id) => {
+      danmuList.value = danmuList.value.filter((danmu) => danmu.id !== id);
+    };
+
     // 处理输入变化
     const handleInputChange = () => {
       // 这里可以添加输入变化的处理逻辑，例如自动完成@用户等
@@ -1481,14 +1631,170 @@ export default {
       handleLogout,
       showUserList,
       toggleUserList,
-      handleImageSelect
+      handleImageSelect,
+      danmuContent,
+      danmuColor,
+      danmuList,
+      danmuColors,
+      sendDanmu,
+      removeDanmu,
     };
   },
 };
 </script>
 <style scoped>
 .chat-input-area {
-  width: 100%
+  width: 100%;
+}
+
+/* 弹幕显示区域样式 */
+.danmu-display-area {
+  position: absolute;
+  top: 10%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 弹幕项目样式 */
+.danmu-item {
+  position: absolute;
+  white-space: nowrap;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  left: 100%;
+  transform: translateX(0);
+  animation: danmuMove linear;
+}
+
+/* 弹幕动画 */
+@keyframes danmuMove {
+  from {
+    transform: translateX(0);
+    left: 100%;
+  }
+  to {
+    transform: translateX(-100%);
+    left: 0;
+  }
+}
+
+/* 弹幕输入框样式 */
+.danmu-box .el-input {
+  margin-bottom: 10px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.danmu-box .el-input__inner {
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: all 0.3s;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+/* 弹幕颜色选择器样式 */
+.danmu-color-picker {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.danmu-color-picker span {
+  color: var(--text-secondary);
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+  background-color: var(--background-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.color-option:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.color-option.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2), 0 2px 6px rgba(64, 158, 255, 0.3);
+  transform: scale(1.2);
+}
+
+/* 适配暗黑主题 */
+.theme-dark .danmu-box .el-input__inner {
+  background-color: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-dark .danmu-color-picker span {
+  color: var(--text-secondary);
+}
+
+.theme-dark .color-options {
+  background-color: var(--background-tertiary);
+}
+
+.theme-dark .color-option {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.theme-dark .color-option:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.theme-dark .color-option.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3), 0 2px 6px rgba(64, 158, 255, 0.4);
+}
+
+/* 弹幕发送按钮样式优化 */
+.danmu-box .el-button {
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.danmu-box .el-button--primary {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.danmu-box .el-button--primary:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
+}
+
+.danmu-box .el-button--primary:disabled {
+  background-color: #c0c4cc;
+  border-color: #c0c4cc;
 }
 </style>
 
@@ -1500,13 +1806,13 @@ export default {
     flex-direction: column;
     height: 100vh;
   }
-  
+
   /* 聊天主区域也采用垂直布局 */
   .chat-main {
     flex-direction: column;
     height: 100%;
   }
-  
+
   /* 隐藏左侧用户列表，通过按钮切换显示 */
   .user-list-container {
     position: fixed;
@@ -1516,12 +1822,12 @@ export default {
     z-index: 100;
     transition: left 0.3s ease;
   }
-  
+
   /* 用户列表显示状态 */
   .user-list-container.show {
     left: 0;
   }
-  
+
   /* 消息区域高度自适应并确保可滚动 */
   .message-area {
     height: auto;
@@ -1530,7 +1836,7 @@ export default {
     flex-direction: column;
     overflow-y: auto;
   }
-  
+
   /* 确保聊天消息区域可以正常滚动 */
   .chat-messages {
     flex: 1;
@@ -1541,18 +1847,18 @@ export default {
   .chat-input-area {
     width: 100%;
   }
-  
+
   /* 输入框容器样式调整 */
   .input-container {
     flex-direction: column;
   }
-  
+
   /* 输入框样式调整 */
   .input-container .el-input {
     flex: none !important;
     margin-bottom: 10px;
   }
-  
+
   /* 手机端添加用户列表切换按钮 */
   .mobile-user-list-toggle {
     position: fixed;
@@ -1569,7 +1875,7 @@ export default {
     justify-content: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* 移动端遮罩层样式 */
   .mobile-overlay {
     position: fixed;
@@ -1581,12 +1887,12 @@ export default {
     z-index: 20;
     display: block;
   }
-  
+
   /* 确保用户列表在遮罩层之上 */
   .user-list-container.show {
     z-index: 30;
   }
-  
+
   /* 手机端修改昵称按钮样式调整 */
   .mobile-edit-nickname-button {
     margin-left: 10px;

@@ -337,6 +337,32 @@ io.on("connection", (socket) => {
     io.emit("chat_message", processedMessage);
   });
 
+  // 处理弹幕消息
+  socket.on('danmu_message', (data) => {
+    // 验证用户是否在线
+    const username = onlineUsers.get(socket.id);
+    const userInfo = userInfoMap.get(username);
+    
+    if (!userInfo || userInfo.userId !== data.userId) {
+      console.log(`弹幕发送验证失败：用户ID不匹配或用户不存在`);
+      return;
+    }
+
+    console.log(`${username} 发送了弹幕: ${data.content}`);
+
+    // 构建弹幕数据
+    const danmuData = {
+      content: data.content,
+      color: data.color,
+      username: username,
+      userId: data.userId,
+      timestamp: data.timestamp
+    };
+
+    // 广播弹幕消息给所有用户
+    io.emit('danmu_message', danmuData);
+  });
+
   // 用户断开连接
   socket.on("disconnect", () => {
     const username = onlineUsers.get(socket.id);
