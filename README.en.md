@@ -67,6 +67,32 @@ npm install
 cd ..
 ```
 
+### Docker Support
+
+1. Get image
+
+```bash
+docker pull ty13363959807/chat-on-web:latest
+```
+
+2. Start
+   
+```bash
+docker run -d --name chat-room --net host \
+    -e PORT=3000 \
+    -e BIND_ADDRESS=0.0.0.0 \
+    -e CDN_SIZE_LIMIT_MB=2048 \
+    ty13363959807/chat-on-web:latest
+```
+
+3. Support envs
+   
+| name  | desc  |
+|---|---|
+| PORT  |  Listener port |
+| BIND_ADDRESS  | Listener port  |
+| CDN_SIZE_LIMIT_MB  | The maximum value of the image cache directory, measured in MB.  |
+
 ## 🚀 Usage Instructions
 
 ### Development Environment
