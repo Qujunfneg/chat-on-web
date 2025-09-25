@@ -1699,7 +1699,7 @@ export default {
   top: 10%;
   left: 0;
   right: 0;
-  height: 60%;
+  height: 30%;
   overflow: hidden;
   pointer-events: none;
   z-index: 10;
