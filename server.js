@@ -631,7 +631,7 @@ app.get("/api/emojis/:category", (req, res) => {
   try {
     const { category } = req.params;
     // 构建表情包目录的绝对路径
-    const targetDir = path.join(__dirname, "public", "emojis", category);
+    const targetDir = path.join(__dirname, "data", "emojis", category);
     
     // 检查目录是否存在
     if (!fs.existsSync(targetDir)) {
