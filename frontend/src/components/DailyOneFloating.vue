@@ -4,9 +4,6 @@
       <div class="popup-card" role="dialog" aria-live="polite">
         <button class="close-btn" @click="close" aria-label="关闭每日一语">&times;</button>
 
-        <div class="icon-area">💡</div>
-        <h3 class="title">每日一语</h3>
-
         <div v-if="loading" class="loading">正在加载每日灵感...</div>
 
         <div v-else-if="error" class="error">
@@ -61,13 +58,31 @@ export default {
       this.from = "";
 
       try {
-        const res = await fetch("https://api.xygeng.cn/one", { cache: "no-store" });
+        const weekday = new Date().getDay(); // 周日=0, 周四=4
+        let url = "https://api.shadiao.pro/du";
+        let isThursday = false;
+        if (weekday === 4) {
+          // ✅ 周四切换接口（你替换成真实地址）
+          url = "https://api.shadiao.pro/kfc";
+          isThursday = true;
+        }
+        const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
 
-        this.oneText =
-          data.content || data?.data?.content || "暂无内容";
-        this.from = data.origin || data?.data?.origin || "";
+        if (isThursday) {
+          // 🧠 假设周四接口返回格式是：
+          // { text: "一句话", type: "疯狂星期四"}
+          this.oneText = data.data.text || "暂无内容";
+          this.from = data.type || "";
+        } else {
+          // 📅 普通日接口解析（原来的格式）
+          this.oneText =
+            data.text || data?.data?.text || "暂无内容";
+          this.from = data.type || data?.data?.type || "";
+        }
+
+
       } catch (e) {
         console.error("fetchOne error", e);
         this.error = true;
