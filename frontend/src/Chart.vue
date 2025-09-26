@@ -4,6 +4,8 @@
     v-bind="$attrs"
     element-loading-background="rgba(122, 122, 122, 0.6)"
   >
+    <!-- 悬浮窗组件（放在页面任意位置即可） -->
+    <DailyOneFloating />
     <!-- 手机端用户列表切换按钮 -->
     <button
       class="mobile-user-list-toggle"
@@ -337,6 +339,7 @@ import { ElMessage, ElIcon } from "element-plus";
 import { useEventBus, useGlobalEvents } from "./utils/eventBus.js";
 import { Delete, CircleCloseFilled } from "@element-plus/icons-vue";
 
+
 // 导入组件
 import MessageList from "./components/MessageList.vue";
 import EmojiPanel from "./components/EmojiPanel.vue";
@@ -345,6 +348,7 @@ import ContextMenu from "./components/ContextMenu.vue";
 import MentionPanel from "./components/MentionPanel.vue";
 import NameDialog from "./components/NameDialog.vue";
 import ThemeSelector from "./components/ThemeSelector.vue";
+import DailyOneFloating from './components/DailyOneFloating.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -365,6 +369,7 @@ export default {
     MentionPanel,
     NameDialog,
     ThemeSelector,
+    DailyOneFloating,
   },
   setup() {
     // 基本状态
