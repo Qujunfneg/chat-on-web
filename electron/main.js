@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -141,6 +141,37 @@ staticApp.use('/cdn-images', createProxyMiddleware({
 // 启动静态文件服务器
 staticServer.listen(PORT, () => {
   console.log(`静态文件服务启动在 http://localhost:${PORT}`);
+}).on('error', (err) => {
+  // 检查是否是端口被占用的错误
+  if (err.code === 'EADDRINUSE') {
+    console.log('端口9999已被占用，应用程序可能已经在运行。');
+    // 创建一个对话框提示用户应用已启动
+    // 确保app已经准备就绪
+    if (app.isReady()) {
+      dialog.showMessageBoxSync({
+        title: '应用已启动',
+        message: 'Chat on Web应用程序已经在运行中。\n请检查任务栏或系统托盘。',
+        type: 'info',
+        buttons: ['确定']
+      });
+    } else {
+      // 如果app还没准备好，先等待app.ready事件
+      app.once('ready', () => {
+        dialog.showMessageBoxSync({
+          title: '应用已启动',
+          message: 'Chat on Web应用程序已经在运行中。\n请检查任务栏或系统托盘。',
+          type: 'info',
+          buttons: ['确定']
+        });
+      });
+    }
+    // 终止当前错误进程
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  } else {
+    console.error('启动服务器时出错:', err);
+  }
 });
 
 // 全局变量
