@@ -43,7 +43,7 @@
       "target": [
         "portable"
       ],
-      "icon": "electron/5gvf9-50r4l-001.ico"
+      "icon": "electron/app.ico"
     }
   }
 }
