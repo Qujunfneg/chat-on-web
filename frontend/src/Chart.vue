@@ -41,6 +41,7 @@
           @click="onMessageAreaClick"
           @touchstart="onMessageAreaClick"
         >
+          <AnnouncementBar />
           <!-- 聊天头部 -->
           <div class="chat-header">
             <h2>公共大厅</h2>
@@ -349,6 +350,7 @@ import MentionPanel from "./components/MentionPanel.vue";
 import NameDialog from "./components/NameDialog.vue";
 import ThemeSelector from "./components/ThemeSelector.vue";
 import DailyOneFloating from './components/DailyOneFloating.vue';
+import AnnouncementBar from './components/AnnouncementBar.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -370,6 +372,7 @@ export default {
     NameDialog,
     ThemeSelector,
     DailyOneFloating,
+    AnnouncementBar,
   },
   setup() {
     // 基本状态

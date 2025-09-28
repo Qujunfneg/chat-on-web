@@ -556,6 +556,17 @@ app.get("/api/users", validateUserId, (req, res) => {
   res.json({ users: Array.from(onlineUsers.values()) });
 });
 
+// 获取公告API
+app.get('/api/notices', (req, res) => {
+  const filePath = path.join(__dirname, 'notice.md');
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    res.send({ content: content });
+  } else {
+    res.send({ content: '' }); // 不存在返回空
+  }
+});
+
 // 更新用户昵称API
 app.post("/api/update-nickname", validateUserId, (req, res) => {
   try {
