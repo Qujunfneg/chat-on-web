@@ -5,35 +5,108 @@ const http = require('http');
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// 获取应用程序目录（对于便携版，这是exe文件所在目录）
-let appDir = process.resourcesPath;
-if (process.platform === 'win32') {
-  // 在Windows上，对于便携版应用，exe文件和resources文件夹在同一目录
-  appDir = path.dirname(process.execPath);
+// 获取应用程序目录
+let appDir = path.dirname(process.execPath);
+console.log(`应用程序根目录: ${appDir}`);
+console.log(`当前执行路径: ${process.execPath}`);
+
+// 配置文件路径 - 对于便携版，我们需要特殊处理
+let confPath;
+
+// 检查是否是便携版运行模式（运行在临时目录）
+if (process.platform === 'win32' && appDir.includes('AppData\\Local\\Temp')) {
+  // 对于便携版，尝试从exe文件的原始位置读取配置
+  // 从命令行参数中获取原始exe路径
+  const originalExePath = process.argv[0];
+  const originalExeDir = path.dirname(originalExePath);
+  
+  // 检查原始exe目录是否包含配置文件
+  const originalConfPath = path.join(originalExeDir, 'conf.json');
+  if (fs.existsSync(originalConfPath)) {
+    confPath = originalConfPath;
+    console.log(`检测到便携版运行模式，使用原始exe目录下的配置文件: ${confPath}`);
+  } else {
+    // 如果原始目录没有配置文件，使用临时目录下的配置
+    confPath = path.join(appDir, 'conf.json');
+    console.log(`便携版运行模式，但原始目录没有配置文件，使用临时目录配置: ${confPath}`);
+  }
+} else {
+  // 非便携版，使用常规的应用程序根目录
+  confPath = path.join(appDir, 'conf.json');
+  console.log(`标准运行模式，使用应用程序根目录配置: ${confPath}`);
 }
 
-// 外部配置文件路径（在应用程序目录下）
-const externalConfPath = path.join(appDir, 'conf.json');
-// 内部配置文件路径（作为默认配置）
+// 内部默认配置文件路径（作为备选）
 const internalConfPath = path.join(__dirname, 'conf.json');
 
-// 读取配置文件，优先使用外部配置
+console.log(`配置文件路径: ${confPath}`);
+console.log(`内部默认配置文件路径: ${internalConfPath}`);
+
+// 检查配置文件是否存在
+console.log(`根目录配置文件是否存在: ${fs.existsSync(confPath)}`);
+console.log(`内部默认配置文件是否存在: ${fs.existsSync(internalConfPath)}`);
+
+// 读取配置文件，只使用根目录配置文件和内部默认配置
 let config, serverUrl;
-if (fs.existsSync(externalConfPath)) {
-  // 使用外部配置文件
-  config = JSON.parse(fs.readFileSync(externalConfPath, 'utf-8'));
-} else {
-  // 使用内部配置文件作为默认配置
-  config = JSON.parse(fs.readFileSync(internalConfPath, 'utf-8'));
-  // 如果外部配置文件不存在，创建一个默认的
-  try {
-    fs.writeFileSync(externalConfPath, JSON.stringify(config, null, 2), 'utf-8');
-    console.log(`已在应用程序目录下创建默认配置文件: ${externalConfPath}`);
-  } catch (error) {
-    console.error('创建外部配置文件失败:', error.message);
+let configLoadedFrom = '';
+
+try {
+  // 优先尝试加载根目录配置文件
+  if (fs.existsSync(confPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(confPath, 'utf-8'));
+      configLoadedFrom = '根目录配置文件';
+      console.log(`成功加载根目录配置文件: ${confPath}`);
+    } catch (error) {
+      console.error(`根目录配置文件格式错误: ${error.message}`);
+      // 尝试加载内部默认配置
+      config = JSON.parse(fs.readFileSync(internalConfPath, 'utf-8'));
+      configLoadedFrom = '内部默认配置 (根目录配置文件格式错误)';
+      console.log('使用内部默认配置');
+      
+      // 尝试修复根目录配置文件
+      try {
+        fs.writeFileSync(confPath, JSON.stringify(config, null, 2), 'utf-8');
+        console.log(`已修复根目录配置文件: ${confPath}`);
+      } catch (repairError) {
+        console.error('修复根目录配置文件失败:', repairError.message);
+      }
+    }
+  } else {
+    // 根目录没有配置文件，使用内部默认配置
+    config = JSON.parse(fs.readFileSync(internalConfPath, 'utf-8'));
+    configLoadedFrom = '内部默认配置';
+    console.log('根目录配置文件不存在，使用内部默认配置');
+    
+    // 尝试在根目录创建配置文件，方便用户修改
+    try {
+      fs.writeFileSync(confPath, JSON.stringify(config, null, 2), 'utf-8');
+      console.log(`已在应用程序根目录创建配置文件: ${confPath}`);
+      console.log('您可以编辑此文件来自定义服务器地址等配置');
+    } catch (createError) {
+      console.error('创建根目录配置文件失败:', createError.message);
+    }
   }
+  
+  // 验证配置是否包含必要的字段
+  if (!config.serverUrl) {
+    console.error('配置文件缺少必要的serverUrl字段');
+    // 使用默认值
+    config.serverUrl = 'https://www.tianyaoshuai.dpdns.org:23000/';
+    console.log('使用默认服务器地址:', config.serverUrl);
+  }
+  
+  serverUrl = config.serverUrl;
+  console.log(`配置加载成功 (${configLoadedFrom})，服务器地址: ${serverUrl}`);
+} catch (error) {
+  console.error('配置文件加载失败，使用硬编码的默认配置:', error.message);
+  // 使用硬编码的默认配置作为最后的后备方案
+  config = {
+    serverUrl: 'https://www.tianyaoshuai.dpdns.org:23000/'
+  };
+  serverUrl = config.serverUrl;
+  console.log('使用硬编码的默认服务器地址:', serverUrl);
 }
-serverUrl = config.serverUrl;
 
 // 创建Express应用用于静态文件服务和代理
 const staticApp = express();

@@ -11,7 +11,7 @@
     "electron": "electron electron/main.js",
     "electron:dev": "npm run build && electron electron/main.js",
     "electron:package": "npm run build && electron-builder",
-    "electron:package:win": "npm run build && electron-builder --win --x64"
+    "electron:package:win": "npm run build && electron-builder --win --x64 && move dist\\\\win-unpacked dist\\\\chart-room-win"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -29,21 +29,20 @@
   "license": "ISC",
   "build": {
     "appId": "com.chatonweb.app",
-    "productName": "Chat on Web",
+    "productName": "ChatRoom",
     "copyright": "Copyright © 2024 Chat on Web",
     "directories": {
-      "output": "dist"
-    },
+    "output": "dist"
+  },
     "files": [
       "electron/**/*",
       "public/**/*",
       "package.json"
     ],
     "win": {
-      "target": [
-        "portable"
-      ],
+      "target": ["dir"],
       "icon": "electron/app.ico"
-    }
+    },
+    "asar": true
   }
 }
