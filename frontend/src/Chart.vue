@@ -354,6 +354,7 @@ import AnnouncementBar from './components/AnnouncementBar.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
+import { notifyNewMessage } from './utils/electronUtils.js';
 
 // 导入qq.mp3音频文件
 import qqSound from "./qq.mp3";
@@ -643,6 +644,9 @@ export default {
             // 显示音频授权按钮
             showAudioPermissionButton.value = true;
           }
+          
+          // 通知Electron主进程进行图标闪烁
+          notifyNewMessage();
         }
       });
 

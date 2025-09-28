@@ -11,6 +11,8 @@ const server = http.createServer(app);
 
 // 设置静态目录，用于存放Vue打包后的文件
 app.use(express.static(path.join(__dirname, "public")));
+// 设置emojis目录为静态文件目录
+app.use('/emojis', express.static(path.join(__dirname, "data", "emojis")));
 
 // 使用基于签名URL的对象存储方案，不再需要multer
 

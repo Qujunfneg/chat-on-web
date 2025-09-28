@@ -24,7 +24,6 @@ export default defineConfig({
       "/emojis": {
         target: "http://localhost:3000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
       "/cdn-images": {
         target: "http://localhost:3000",
