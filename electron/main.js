@@ -197,6 +197,9 @@ function createWindow() {
   // 加载本地服务
   mainWindow.loadURL(`http://localhost:${PORT}`);
 
+  // 移除应用程序菜单栏，这样就不会显示file、edit、view/window等工具条
+  Menu.setApplicationMenu(null);
+
   // 修改关闭按钮行为，使其最小化到托盘而不是关闭
   mainWindow.on('close', function(e) {
     e.preventDefault(); // 阻止窗口真正关闭
