@@ -14,7 +14,6 @@
       <div class="drawer-content" v-html="renderedMarkdown"></div>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleCancel">取消</el-button>
           <el-button type="primary" @click="handleConfirm">确认收到</el-button>
         </div>
       </template>
