@@ -32,7 +32,7 @@ jobs:
       # 4. 打包为 ZIP（按需调整内容）
       - name: Create zip package
         run: |
-          zip -r online-chat-room.zip data/ public/ src/ node_modules/ package*.json server.js
+          zip -r online-chat-room.zip data/ public/ src/ package*.json server.js
 
       # 5. 上传 ZIP 到刚刚创建的 Release
       - name: Upload zip to release

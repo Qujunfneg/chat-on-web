@@ -2,7 +2,7 @@
   <div>
     <!-- 收起后的按钮 -->
     <transition name="fade">
-     <span @click="isOpen = true" class="toggle-btn"> 📢 </span>
+     <span @click="isOpen = true, fetchNotice()" class="toggle-btn"> 📢 </span>
     </transition>
 
     <el-dialog v-model="isOpen" :show-close="false" width="40%">
