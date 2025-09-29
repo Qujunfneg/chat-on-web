@@ -5,7 +5,7 @@
      <span @click="isOpen = true" class="toggle-btn"> 📢 </span>
     </transition>
 
-    <el-dialog v-model="isOpen" :show-close="false" width="30%">
+    <el-dialog v-model="isOpen" :show-close="false" width="40%">
       <template #header="{ close, titleId, titleClass }">
         <div class="my-header">
           <h4 :id="titleId" :class="titleClass">📢 公告</h4>
@@ -125,5 +125,9 @@ export default {
   flex-direction: row;
   justify-content: space-between;
   gap: 16px;
+}
+.drawer-content {
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
 }
 </style>
