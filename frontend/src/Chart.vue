@@ -1260,7 +1260,7 @@ export default {
       const displayWidth = displayArea.clientWidth;
       const displayHeight = displayArea.clientHeight;
       const fontSize = 20;
-      const speed = 4 + Math.random() * 3; // 4-7秒，更快的速度
+      const speed = 6 + Math.random() * 3; // 4-7秒，更快的速度
 
       // 随机垂直位置，但确保在显示区域内
       const top = Math.floor(Math.random() * (displayHeight - fontSize * 2));
