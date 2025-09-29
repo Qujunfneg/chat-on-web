@@ -11,10 +11,12 @@
           <h4 :id="titleId" :class="titleClass">📢 公告</h4>
         </div>
       </template>
-      <div class="drawer-content" v-html="renderedMarkdown"></div>
+      <div class="drawer-content" v-if="hasData" v-html="renderedMarkdown"></div>
+      <el-empty v-else description="暂无公告" image-size="50px"/>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="handleConfirm">确认收到</el-button>
+          <el-button type="primary" @click="handleCancel" v-if="!hasData">关闭</el-button>
+          <el-button type="primary" @click="handleConfirm" v-else>确认收到</el-button>
         </div>
       </template>
     </el-dialog>

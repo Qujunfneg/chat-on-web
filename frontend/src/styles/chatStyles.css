@@ -315,7 +315,6 @@
   background-color: var(--background-primary);
   position: sticky;
   bottom: 0;
-  z-index: 20;
 }
 
 /* 输入工具条 */
