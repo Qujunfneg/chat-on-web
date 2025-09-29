@@ -7,44 +7,27 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // 获取应用程序目录
 let appDir = path.dirname(process.execPath);
-console.log(`应用程序根目录: ${appDir}`);
-console.log(`当前执行路径: ${process.execPath}`);
 
-// 配置文件路径 - 对于便携版，我们需要特殊处理
+// 配置文件路径 - extraResources配置的文件会放在resources目录下
 let confPath;
 
-// 检查是否是便携版运行模式（运行在临时目录）
-if (process.platform === 'win32' && appDir.includes('AppData\\Local\\Temp')) {
-  // 对于便携版，尝试从exe文件的原始位置读取配置
-  // 从命令行参数中获取原始exe路径
-  const originalExePath = process.argv[0];
-  const originalExeDir = path.dirname(originalExePath);
-  
-  // 检查原始exe目录是否包含配置文件
-  const originalConfPath = path.join(originalExeDir, 'conf.json');
-  if (fs.existsSync(originalConfPath)) {
-    confPath = originalConfPath;
-    console.log(`检测到便携版运行模式，使用原始exe目录下的配置文件: ${confPath}`);
-  } else {
-    // 如果原始目录没有配置文件，使用临时目录下的配置
-    confPath = path.join(appDir, 'conf.json');
-    console.log(`便携版运行模式，但原始目录没有配置文件，使用临时目录配置: ${confPath}`);
-  }
+// 检查是否是打包后的应用
+if (app.isPackaged) {
+  // 打包后的应用，配置文件在resources目录下
+  confPath = path.join(process.resourcesPath, 'conf.json');
 } else {
-  // 非便携版，使用常规的应用程序根目录
+  // 开发模式，配置文件在应用程序根目录
   confPath = path.join(appDir, 'conf.json');
-  console.log(`标准运行模式，使用应用程序根目录配置: ${confPath}`);
 }
 
 // 内部默认配置文件路径（作为备选）
 const internalConfPath = path.join(__dirname, 'conf.json');
 
+console.log(`应用程序根目录: ${appDir}`);
+console.log(`当前执行路径: ${process.execPath}`);
+console.log(`是否打包模式: ${app.isPackaged}`);
 console.log(`配置文件路径: ${confPath}`);
 console.log(`内部默认配置文件路径: ${internalConfPath}`);
-
-// 检查配置文件是否存在
-console.log(`根目录配置文件是否存在: ${fs.existsSync(confPath)}`);
-console.log(`内部默认配置文件是否存在: ${fs.existsSync(internalConfPath)}`);
 
 // 读取配置文件，只使用根目录配置文件和内部默认配置
 let config, serverUrl;

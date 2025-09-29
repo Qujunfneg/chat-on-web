@@ -32,12 +32,19 @@
     "productName": "ChatRoom",
     "copyright": "Copyright © 2024 Chat on Web",
     "directories": {
-    "output": "dist"
+    "output": "dist2"
   },
     "files": [
       "electron/**/*",
       "public/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/conf.json",
+        "to": "conf.json",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": ["dir"],
