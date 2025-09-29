@@ -41,20 +41,23 @@
           @click="onMessageAreaClick"
           @touchstart="onMessageAreaClick"
         >
-          <AnnouncementBar />
+          
           <!-- 聊天头部 -->
           <div class="chat-header">
             <h2>公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
+              <AnnouncementBar style="margin-right: 10px;"/>
               <button
                 v-if="showAudioPermissionButton"
                 class="audio-permission-button"
+                size="small"
                 @click="requestAudioPermission"
                 title="点击授权音频播放"
               >
                 🔊 启用提示音
               </button>
+              
               <el-button
                 type="primary"
                 style="cursor: pointer"
