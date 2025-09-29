@@ -1,7 +1,7 @@
 # 在线聊天室
 
 ## 📖 项目介绍
-在线聊天室是一个基于Node.js和Vue 3开发的实时通信应用，支持多用户同时在线聊天、图片分享、消息引用和表情包等功能。本项目采用前后端分离架构，使用Socket.io实现实时通信，提供了简洁友好的用户界面和稳定可靠的服务端支持。
+在线聊天室是一个基于Node.js和Vue 3开发的实时通信应用，支持多用户同时在线聊天、图片分享、消息引用和表情包等功能。本项目采用前后端分离架构，使用Socket.io实现实时通信，同时支持Web端和Electron桌面客户端，提供了简洁友好的用户界面和稳定可靠的服务端支持。
 
 ## 🚀 功能特性
 
@@ -95,7 +95,17 @@ docker run -d --name chat-room --net host \
 
 ## 🚀 使用说明
 
-### 开发环境
+### Electron桌面客户端
+
+项目支持Electron桌面客户端，提供更稳定的使用体验和系统集成功能。
+
+#### 配置说明
+Electron客户端通过`electron/conf.json`文件进行配置，主要配置项包括服务器地址等。
+
+#### 最小窗口尺寸
+客户端已设置最小宽度为800px，最小高度为600px，确保良好的用户体验。
+
+### Web端开发环境
 
 1. **启动后端服务（开发模式）**
 ```bash
@@ -142,22 +152,38 @@ npm start
 ## 📁 项目结构
 
 ```
-online-chat-room/
-├── public/              # 静态资源目录
-│   ├── cdn-images/      # CDN图片存储目录
-│   └── temp-uploads/    # 临时上传目录
+chat-on-web/
+├── .github/             # GitHub配置目录
+│   └── workflows/       # GitHub Actions工作流
+├── cdn-images/          # CDN图片存储目录
+├── data/                # 数据存储目录
+│   ├── emojis/          # 表情包资源
+│   ├── images/          # 图片资源
+│   └── notice.md        # 公告内容
+├── electron/            # Electron桌面应用目录
+│   ├── application.ico  # 应用图标
+│   ├── conf.json        # 客户端配置文件
+│   ├── favicon.ico      # 网页图标
+│   └── main.js          # Electron主进程文件
+├── electron-icon.svg    # Electron图标源文件
 ├── frontend/            # 前端项目目录
+│   ├── index.html       # 入口HTML文件
 │   ├── src/             # 前端源码
-│   │   ├── components/  # Vue组件
-│   │   ├── styles/      # 样式文件
-│   │   ├── utils/       # 工具函数
 │   │   ├── App.vue      # 根组件
 │   │   ├── Chart.vue    # 聊天室主组件
-│   │   └── main.js      # 入口文件
-│   ├── package.json     # 前端依赖配置
+│   │   ├── components/  # Vue组件
+│   │   ├── main.js      # 入口文件
+│   │   ├── styles/      # 样式文件
+│   │   └── utils/       # 工具函数
 │   └── vite.config.js   # Vite配置文件
-├── server.js            # 后端主文件
-├── package.json         # 后端依赖配置
+├── src/                 # 后端源码
+│   ├── app.js           # Express应用配置
+│   ├── config/          # 配置文件
+│   ├── middleware/      # 中间件
+│   ├── routes/          # 路由定义
+│   ├── services/        # 业务逻辑
+│   └── websocket/       # WebSocket处理
+├── server.js            # 后端入口文件
 ├── README.md            # 项目说明文档（中文）
 └── README.en.md         # 项目说明文档（英文）
 ```
@@ -194,6 +220,7 @@ online-chat-room/
 2. 首次启动时会自动创建必要的目录
 3. 如需修改CDN目录大小限制，可通过环境变量CDN_SIZE_LIMIT_MB设置
 4. 生产环境建议使用进程管理工具如PM2来管理Node.js进程
+5. Electron客户端支持通过配置文件自定义服务器地址
 
 ## 📄 许可证
 本项目使用 ISC 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情

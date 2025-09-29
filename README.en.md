@@ -1,7 +1,7 @@
 # Online Chat Room
 
 ## 📖 Project Introduction
-Online Chat Room is a real-time communication application developed based on Node.js and Vue 3. It supports multi-user real-time chatting, image sharing, message quoting, and emoji functionality. This project adopts a front-end and back-end separated architecture, using Socket.io for real-time communication, providing a clean and user-friendly interface and stable server support.
+Online Chat Room is a real-time communication application developed based on Node.js and Vue 3. It supports multi-user real-time chatting, image sharing, message quoting, and emoji functionality. This project adopts a front-end and back-end separated architecture, using Socket.io for real-time communication, and supports both web and Electron desktop clients, providing a clean and user-friendly interface and stable server support.
 
 ## 🚀 Features
 
@@ -95,7 +95,17 @@ docker run -d --name chat-room --net host \
 
 ## 🚀 Usage Instructions
 
-### Development Environment
+### Electron Desktop Client
+
+The project supports an Electron desktop client, providing a more stable user experience and system integration features.
+
+#### Configuration Instructions
+The Electron client is configured through the `electron/conf.json` file, with main configuration items including server address, etc.
+
+#### Minimum Window Size
+The client has been set with a minimum width of 800px and a minimum height of 600px to ensure a good user experience.
+
+### Web Development Environment
 
 1. **Start Backend Service (Development Mode)**
 ```bash
@@ -142,22 +152,38 @@ Open a browser and visit `http://localhost:3000` (or the server's IP address)
 ## 📁 Project Structure
 
 ```
-online-chat-room/
-├── public/              # Static resource directory
-│   ├── cdn-images/      # CDN image storage directory
-│   └── temp-uploads/    # Temporary upload directory
+chat-on-web/
+├── .github/             # GitHub configuration directory
+│   └── workflows/       # GitHub Actions workflows
+├── cdn-images/          # CDN image storage directory
+├── data/                # Data storage directory
+│   ├── emojis/          # Emoji resources
+│   ├── images/          # Image resources
+│   └── notice.md        # Announcement content
+├── electron/            # Electron desktop application directory
+│   ├── application.ico  # Application icon
+│   ├── conf.json        # Client configuration file
+│   ├── favicon.ico      # Webpage icon
+│   └── main.js          # Electron main process file
+├── electron-icon.svg    # Electron icon source file
 ├── frontend/            # Frontend project directory
+│   ├── index.html       # Entry HTML file
 │   ├── src/             # Frontend source code
-│   │   ├── components/  # Vue components
-│   │   ├── styles/      # Style files
-│   │   ├── utils/       # Utility functions
 │   │   ├── App.vue      # Root component
 │   │   ├── Chart.vue    # Main chat room component
-│   │   └── main.js      # Entry file
-│   ├── package.json     # Frontend dependency configuration
+│   │   ├── components/  # Vue components
+│   │   ├── main.js      # Entry file
+│   │   ├── styles/      # Style files
+│   │   └── utils/       # Utility functions
 │   └── vite.config.js   # Vite configuration file
-├── server.js            # Backend main file
-├── package.json         # Backend dependency configuration
+├── src/                 # Backend source code
+│   ├── app.js           # Express application configuration
+│   ├── config/          # Configuration files
+│   ├── middleware/      # Middleware
+│   ├── routes/          # Route definitions
+│   ├── services/        # Business logic
+│   └── websocket/       # WebSocket handling
+├── server.js            # Backend entry file
 ├── README.md            # Project description document (Chinese)
 └── README.en.md         # Project description document (English)
 ```
@@ -194,6 +220,7 @@ online-chat-room/
 2. Necessary directories will be automatically created when starting for the first time
 3. To modify the CDN directory size limit, you can set it through the CDN_SIZE_LIMIT_MB environment variable
 4. It is recommended to use process management tools like PM2 to manage Node.js processes in the production environment
+5. The Electron client supports customizing the server address through configuration files
 
 ## 📄 License
 This project uses the ISC license - see the [LICENSE](LICENSE) file for details
