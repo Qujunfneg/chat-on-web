@@ -22,9 +22,9 @@ FROM node:18-slim AS runner
 WORKDIR /usr/src/app
 
 # 只复制必要文件（避免带入开发依赖）
-COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/data ./data
 COPY --from=builder /usr/src/app/public ./public
+COPY --from=builder /usr/src/app/src ./src
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/server.js ./
 
