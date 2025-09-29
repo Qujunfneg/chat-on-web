@@ -11,6 +11,8 @@ const server = http.createServer(app);
 
 // 设置静态目录，用于存放Vue打包后的文件
 app.use(express.static(path.join(__dirname, "public")));
+// 设置emojis目录为静态文件目录
+app.use('/emojis', express.static(path.join(__dirname, "data", "emojis")));
 
 // 使用基于签名URL的对象存储方案，不再需要multer
 
@@ -286,18 +288,19 @@ io.on("connection", (socket) => {
     );
 
     // 处理消息类型和内容
-    let processedMessage = { ...data };
+  let processedMessage = { ...data };
 
-    // 修复字段名不一致问题：将userName转换为username
-    if (processedMessage.userName && !processedMessage.username) {
-      processedMessage.username = processedMessage.userName;
-      delete processedMessage.userName;
-    }
+  // 修复字段名不一致问题：将userName转换为username
+  if (processedMessage.userName && !processedMessage.username) {
+    processedMessage.username = processedMessage.userName;
+    delete processedMessage.userName;
+  }
 
-    // 为消息添加时间戳和ID
-    processedMessage.id = Date.now().toString();
-    processedMessage.timestamp = new Date().toLocaleTimeString();
-    processedMessage.userId = data.userId; // 使用客户端提供的用户ID
+  // 为消息添加时间戳和ID
+  processedMessage.id = Date.now().toString();
+  processedMessage.timestamp = new Date().toLocaleTimeString();
+  processedMessage.userId = data.userId; // 使用客户端提供的用户ID
+  processedMessage.localId = data.localId; // 保留客户端发送的localId
 
     // 处理引用消息，确保引用消息也包含用户ID
     if (processedMessage.quote) {

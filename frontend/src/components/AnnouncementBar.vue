@@ -2,24 +2,21 @@
   <div>
     <!-- 收起后的按钮 -->
     <transition name="fade">
-      <el-button v-if="!isOpen" type="primary" size="small" class="toggle-btn" @click="isOpen = true">
-        📢 查看公告
-      </el-button>
+     <span @click="isOpen = true" class="toggle-btn"> 📢 </span>
     </transition>
 
     <el-dialog v-model="isOpen" :show-close="false" width="30%">
       <template #header="{ close, titleId, titleClass }">
         <div class="my-header">
           <h4 :id="titleId" :class="titleClass">📢 公告</h4>
-          <el-button type="danger" @click="close">
-            <el-icon class="el-icon--left">
-              <CircleCloseFilled />
-            </el-icon>
-            Close
-          </el-button>
         </div>
       </template>
       <div class="drawer-content" v-html="renderedMarkdown"></div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="handleConfirm">确认收到</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -34,6 +31,8 @@ export default {
       content: "",
       isOpen: false,
       hasData: false,
+      hasNewNotice: false,
+      CONFIRM_KEY: 'announcement_confirmed'
     };
   },
   computed: {
@@ -52,16 +51,63 @@ export default {
         if (data && data.content) {
           this.content = data.content;
           this.hasData = true;
-          this.isOpen = true; // 有数据自动展开
+          
+          // 检查是否需要显示公告
+          this.checkIfNewAnnouncement();
         } else {
           this.hasData = false;
           this.isOpen = false;
+          this.hasNewNotice = false;
         }
       } catch (err) {
         console.error("获取公告失败:", err);
         this.hasData = false;
+        this.hasNewNotice = false;
       }
     },
+    
+    checkIfNewAnnouncement() {
+      const confirmedAnnouncement = localStorage.getItem(this.CONFIRM_KEY);
+      if (!confirmedAnnouncement) {
+        // 没有确认过任何公告，显示公告
+        this.isOpen = true;
+        this.hasNewNotice = true;
+        return;
+      }
+      
+      try {
+        const { content, timestamp } = JSON.parse(confirmedAnnouncement);
+        // 比较当前公告与已确认公告是否相同
+        if (content !== this.content) {
+          this.isOpen = true;
+          this.hasNewNotice = true;
+        } else {
+          this.isOpen = false;
+          this.hasNewNotice = false;
+        }
+      } catch (error) {
+        console.error("解析已确认公告失败:", error);
+        this.isOpen = true;
+        this.hasNewNotice = true;
+      }
+    },
+    
+    handleConfirm() {
+      // 存储确认信息到localStorage
+      const confirmInfo = {
+        content: this.content,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(this.CONFIRM_KEY, JSON.stringify(confirmInfo));
+      
+      this.isOpen = false;
+      this.hasNewNotice = false;
+    },
+    
+    handleCancel() {
+      this.isOpen = false;
+      // 取消不存储，下次打开应用仍会显示
+    }
   },
 };
 </script>
@@ -69,11 +115,7 @@ export default {
 <style scoped>
 /* 折叠按钮固定顶部 */
 .toggle-btn {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3000;
+  cursor: pointer;
 }
 
 .my-header {

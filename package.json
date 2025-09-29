@@ -2,21 +2,66 @@
   "name": "chart-room",
   "version": "1.0.0",
   "description": "在线聊天室",
-  "main": "server.js",
+  "main": "electron/main.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "cd frontend && npm install && npm run build && cd ..",
-    "web": "cd frontend && npm run dev"
+    "web": "cd frontend && npm run dev",
+    "electron": "electron electron/main.js",
+    "electron:dev": "npm run build && electron electron/main.js",
+    "electron:package": "npm run build && electron-builder",
+    "electron:package:win": "npm run build && electron-builder --win --x64 && if exist dist\\chart-room-win rd /s /q dist\\chart-room-win && xcopy /s /e /y dist\\win-unpacked\\* dist\\chart-room-win\\ && rd /s /q dist\\win-unpacked"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "marked": "^16.3.0",
     "multer": "^2.0.2",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "http-proxy-middleware": "^2.0.6"
   },
   "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
     "nodemon": "^3.0.1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "build": {
+    "appId": "com.chatonweb.app",
+    "productName": "ChatRoom",
+    "copyright": "Copyright © 2024 Chat on Web",
+    "directories": {
+    "output": "dist"
+  },
+    "electronVersion": "38.2.0",
+    "files": [
+      "electron/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/conf.json",
+        "to": "conf.json",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "data/emojis",
+        "to": "emojis",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "electron/app.ico",
+      "artifactName": "chart-room-win"
+    },
+    "asar": true
+  }
 }

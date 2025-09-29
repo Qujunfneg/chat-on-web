@@ -41,20 +41,23 @@
           @click="onMessageAreaClick"
           @touchstart="onMessageAreaClick"
         >
-          <AnnouncementBar />
+          
           <!-- 聊天头部 -->
           <div class="chat-header">
             <h2>公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
+              <AnnouncementBar style="margin-right: 10px;"/>
               <button
                 v-if="showAudioPermissionButton"
                 class="audio-permission-button"
+                size="small"
                 @click="requestAudioPermission"
                 title="点击授权音频播放"
               >
                 🔊 启用提示音
               </button>
+              
               <el-button
                 type="primary"
                 style="cursor: pointer"
@@ -354,6 +357,7 @@ import AnnouncementBar from './components/AnnouncementBar.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
+import { notifyNewMessage } from './utils/electronUtils.js';
 
 // 导入qq.mp3音频文件
 import qqSound from "./qq.mp3";
@@ -409,9 +413,9 @@ export default {
     // 图片相关
     const pastedImage = ref("");
 
-    // 音频相关
-    const audioPermissionGranted = ref(false);
-    const showAudioPermissionButton = ref(false);
+    // 音频相关 - 客户端自动授予音频权限
+    const audioPermissionGranted = ref(true);
+    const showAudioPermissionButton = ref(false); // 始终隐藏授权按钮
     const lastPlaySoundTime = ref(0);
     const soundInterval = 1000;
 
@@ -635,14 +639,11 @@ export default {
             startTitleBlink();
           }
 
-          // 只有在用户已授权音频播放的情况下才播放声音
-          if (audioPermissionGranted.value) {
-            // 如果@，播放特殊的提示音
-            playNotificationSound(isMentioned);
-          } else {
-            // 显示音频授权按钮
-            showAudioPermissionButton.value = true;
-          }
+          // 自动播放声音，因为客户端已授予权限
+          playNotificationSound(isMentioned);
+          
+          // 通知Electron主进程进行图标闪烁
+          notifyNewMessage();
         }
       });
 

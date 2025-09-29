@@ -64,7 +64,7 @@ function setActiveMenu(name) {
 /* 菜单列表样式 */
 .menu {
   background-color: var(--background-secondary);
-  border-right: 1px solid var(--border-color);
+  border: none;
   margin: 0;
   padding: 8px 0;
   list-style: none;
