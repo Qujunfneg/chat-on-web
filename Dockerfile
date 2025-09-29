@@ -25,6 +25,7 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/data ./data
 COPY --from=builder /usr/src/app/public ./public
+COPY --from=builder /usr/src/app/src ./src
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/server.js ./
 
