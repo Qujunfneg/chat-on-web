@@ -11,7 +11,7 @@
     "electron": "electron electron/main.js",
     "electron:dev": "npm run build && electron electron/main.js",
     "electron:package": "npm run build && electron-builder",
-    "electron:package:win": "npm run build && electron-builder --win --x64 && move dist\\\\win-unpacked dist\\\\chart-room-win"
+    "electron:package:win": "npm run build && electron-builder --win --x64 && if exist dist\\chart-room-win rd /s /q dist\\chart-room-win && xcopy /s /e /y dist\\win-unpacked\\* dist\\chart-room-win\\ && rd /s /q dist\\win-unpacked"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -32,8 +32,9 @@
     "productName": "ChatRoom",
     "copyright": "Copyright © 2024 Chat on Web",
     "directories": {
-    "output": "dist2"
+    "output": "dist"
   },
+    "electronVersion": "38.2.0",
     "files": [
       "electron/**/*",
       "public/**/*",
@@ -44,11 +45,22 @@
         "from": "electron/conf.json",
         "to": "conf.json",
         "filter": ["**/*"]
+      },
+      {
+        "from": "data/emojis",
+        "to": "emojis",
+        "filter": ["**/*"]
       }
     ],
     "win": {
-      "target": ["dir"],
-      "icon": "electron/app.ico"
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "electron/app.ico",
+      "artifactName": "chart-room-win"
     },
     "asar": true
   }

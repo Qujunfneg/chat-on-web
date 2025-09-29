@@ -111,10 +111,49 @@ staticApp.use('/api', createProxyMiddleware({
   changeOrigin: true
 }));
 
-staticApp.use('/emojis', createProxyMiddleware({
-  target: serverUrl,
-  changeOrigin: true
-}));
+// 客户端模式下，表情包直接从本地提供，不需要转发到远程服务器
+if (app.isPackaged) {
+  // 在客户端模式下，设置本地表情包目录的静态文件服务
+  const emojisPath = path.join(process.resourcesPath, 'emojis');
+  console.log(`客户端模式：从本地提供表情包，路径：${emojisPath}`);
+  staticApp.use('/emojis', express.static(emojisPath));
+  
+  // 添加localEmojis接口，用于获取本地表情包列表
+  staticApp.get('/api/localEmojis', (req, res) => {
+    try {
+      // 读取emojis目录下的所有子目录和文件
+      const categories = ['bigface', 'funny', 'qq'];
+      const emojiList = {};
+      
+      categories.forEach(category => {
+        const categoryPath = path.join(emojisPath, category);
+        if (fs.existsSync(categoryPath)) {
+          const files = fs.readdirSync(categoryPath).filter(file => 
+            file.endsWith('.gif')
+          );
+          emojiList[category] = files;
+        }
+      });
+      
+      res.json({
+        success: true,
+        data: emojiList
+      });
+    } catch (error) {
+      console.error('获取本地表情包列表失败:', error);
+      res.status(500).json({
+        success: false,
+        message: '获取表情包失败'
+      });
+    }
+  });
+} else {
+  // 开发模式下，继续使用代理转发
+  staticApp.use('/emojis', createProxyMiddleware({
+    target: serverUrl,
+    changeOrigin: true
+  }));
+}
 
 staticApp.use('/cdn-images', createProxyMiddleware({
   target: serverUrl,
