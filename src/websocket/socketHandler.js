@@ -1,7 +1,6 @@
 const { 
   onlineUsers, 
   userInfoMap, 
-  userIdMap, 
   chatHistory // 暴露 chatHistory 以便写入
 } = require('../services/userService');
 const { MAX_HISTORY } = require('../config/constants');
@@ -13,63 +12,57 @@ module.exports = (io) => {
 
     // 用户加入聊天室，需要提供userId和username
     socket.on("join", ({ userId, username }) => {
-      // 原始逻辑完全不变
       if (!userId || !username) {
         console.log(`用户验证失败：缺少必要信息`);
         socket.emit("user_id_failed", { message: "缺少用户ID或用户名" });
         return;
       }
 
-      if (userIdMap.has(userId)) {
-        const existingUsername = userIdMap.get(userId);
-        const existingSocketId = Array.from(onlineUsers.entries()).find(([_, name]) => name === existingUsername)?.[0];
-        
-        if (existingSocketId && existingSocketId !== socket.id && onlineUsers.get(existingSocketId) !== username) {
-          console.log(`检测到用户ID ${userId} 已被其他用户名使用，拒绝新连接`);
-          socket.emit("user_id_failed", { message: "用户ID已被使用，请重新输入用户名" });
-          return;
-        }
-        
+      // 检查 userId 是否已存在于其他 socket
+      if (userInfoMap.has(userId)) {
+        const existingSocketId = Array.from(onlineUsers.entries()).find(([_, uid]) => uid === userId)?.[0];
         if (existingSocketId && existingSocketId !== socket.id) {
-          console.log(`检测到重复用户ID ${userId}，断开旧连接 ${existingSocketId}`);
+          console.log(`检测到重复 userId ${userId}，断开旧连接 ${existingSocketId}`);
           io.sockets.sockets.get(existingSocketId)?.disconnect(true);
           onlineUsers.delete(existingSocketId);
         }
       }
 
-      onlineUsers.set(socket.id, username);
-      userIdMap.set(userId, username);
-      if (!userInfoMap.has(username)) { // 确保只初始化一次
-         userInfoMap.set(username, { userId, username, nickname: username });
+      // 记录在线用户 (socket.id -> userId)
+      onlineUsers.set(socket.id, userId);
+
+      // 初始化或更新用户信息
+      if (!userInfoMap.has(userId)) {
+        userInfoMap.set(userId, { userId, username, nickname: username });
       } else {
-         // 如果用户已存在，更新其 socket.id 对应的 username
-         userInfoMap.get(username).userId = userId;
+        // 更新最新的用户名（允许重名）
+        const info = userInfoMap.get(userId);
+        info.username = username;
+        userInfoMap.set(userId, info);
       }
-      
+
       console.log(`${username} 加入聊天室，用户ID: ${userId}`);
 
       socket.emit("chat_history", chatHistory);
 
-      const usersList = Array.from(onlineUsers.entries()).map(([socketId, user]) => {
-        const userInfo = userInfoMap.get(user);
-        return userInfo || { username: user, userId: null };
+      const usersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+        return userInfoMap.get(uid) || { userId: uid, username: null };
       });
 
       io.emit("user_join", {
         username,
         userId,
-        nickname: userInfoMap.get(username)?.nickname || username,
+        nickname: userInfoMap.get(userId)?.nickname || username,
         users: usersList,
       });
     });
 
     // 接收消息并广播
     socket.on("chat_message", (data) => {
-      // 原始逻辑完全不变
-      const username = onlineUsers.get(socket.id);
-      const userInfo = userInfoMap.get(username);
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
       
-      if (!userInfo || userInfo.userId !== data.userId) {
+      if (!userInfo || userId !== data.userId) {
         console.log(`消息发送验证失败：用户ID不匹配或用户不存在`);
         socket.emit("user_id_failed", { message: "用户验证失败，请重新输入用户名" });
         return;
@@ -77,7 +70,7 @@ module.exports = (io) => {
 
       console.log(
         socket.request.connection.remoteAddress,
-        username,
+        userInfo.nickname,
         "说:",
         data.content
       );
@@ -97,9 +90,8 @@ module.exports = (io) => {
       processedMessage.localId = data.localId;
 
       if (processedMessage.quote) {
-        const quotedUserInfo = userInfoMap.get(processedMessage.quote.username);
-        const quoteUserId = quotedUserInfo?.userId || "";
-        processedMessage.quote.userId = quoteUserId;
+        const quotedInfo = Array.from(userInfoMap.values()).find(info => info.username === processedMessage.quote.username);
+        processedMessage.quote.userId = quotedInfo?.userId || "";
       }
 
       if (data.mentionedUserIds && Array.isArray(data.mentionedUserIds)) {
@@ -107,10 +99,11 @@ module.exports = (io) => {
         
         if (!processedMessage.mentions) {
           processedMessage.mentions = [];
-          data.mentionedUserIds.forEach(userId => {
-            const username = Array.from(userInfoMap.entries()).find(([_, info]) => info.userId === userId)?.[0];
-            if (username && !processedMessage.mentions.includes(username)) {
-              processedMessage.mentions.push(username);
+          data.mentionedUserIds.forEach(uid => {
+            const info = userInfoMap.get(uid);
+            const name = info?.username;
+            if (name && !processedMessage.mentions.includes(name)) {
+              processedMessage.mentions.push(name);
             }
           });
         }
@@ -126,53 +119,43 @@ module.exports = (io) => {
 
     // 处理弹幕消息
     socket.on('danmu_message', (data) => {
-      // 原始逻辑完全不变
-      const username = onlineUsers.get(socket.id);
-      const userInfo = userInfoMap.get(username);
-      
-      if (!userInfo || userInfo.userId !== data.userId) {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      if (!userInfo || userId !== data.userId) {
         console.log(`弹幕发送验证失败：用户ID不匹配或用户不存在`);
         return;
       }
 
-      console.log(`${username} 发送了弹幕: ${data.content}`);
+      console.log(`${userInfo.nickname} 发送了弹幕: ${data.content}`);
 
       const danmuData = {
         content: data.content,
         color: data.color,
-        username: userInfo.nickname, // 使用昵称
-        userId: data.userId,
+        username: userInfo.nickname,
+        userId: userId,
         timestamp: data.timestamp
       };
-
       io.emit('danmu_message', danmuData);
     });
 
     // 用户断开连接
     socket.on("disconnect", () => {
-      // 原始逻辑完全不变
-      const username = onlineUsers.get(socket.id);
-      if (username) {
+      const userId = onlineUsers.get(socket.id);
+      if (userId) {
         onlineUsers.delete(socket.id);
-        console.log(`${username} 离开聊天室`);
+        console.log(`用户 ${userId} 离开聊天室`);
 
-        const hasOtherConnections = Array.from(onlineUsers.values()).includes(username);
-        
+        const hasOtherConnections = Array.from(onlineUsers.values()).includes(userId);
         if (!hasOtherConnections) {
-          const userInfo = userInfoMap.get(username);
-          if (userInfo) {
-            userIdMap.delete(userInfo.userId);
-            userInfoMap.delete(username);
-          }
+          userInfoMap.delete(userId);
         }
 
-        const usersList = Array.from(onlineUsers.entries()).map(([socketId, user]) => {
-          const userInfo = userInfoMap.get(user);
-          return userInfo || { username: user, userId: null };
+        const usersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+          return userInfoMap.get(uid) || { userId: uid, username: null };
         });
-        
+
         io.emit("user_leave", {
-          username,
+          userId,
           users: usersList,
         });
       }

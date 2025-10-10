@@ -183,7 +183,7 @@ router.post("/api/update-nickname", validateUserId, (req, res) => {
             .json({ success: false, message: "昵称不能超过20个字符" });
         }
 
-        const userInfo = userInfoMap.get(req.user.username);
+        const userInfo = userInfoMap.get(req.user.userId);
         if (userInfo) {
           const userId = userInfo.userId;
           
