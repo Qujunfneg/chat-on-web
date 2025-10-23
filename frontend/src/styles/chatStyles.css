@@ -1187,5 +1187,8 @@ pre {
   }
 }
 .el-popover{
-  background-color: transparent!important;
+  background-color: var(--background-secondary)!important;
+}
+.el-popover .el-popover__title{
+  color: var(--text-primary);
 }
