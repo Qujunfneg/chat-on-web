@@ -98,6 +98,7 @@
             :user-info-map="userInfoMap"
             :users="users"
             :is-loading="isLoadingMessages"
+            :background="selectedBackground"
             @message-context-menu="handleMessageContextMenu"
             @user-context-menu="handleUserContextMenu"
           ></MessageList>
@@ -181,6 +182,9 @@
                   ></el-button>
                 </template>
               </el-popover>
+              
+              <!-- 背景图片选择器 -->
+              <BackgroundSelector @background-changed="handleBackgroundChange"></BackgroundSelector>
             </div>
             <div class="input-container">
               <el-input
@@ -354,6 +358,7 @@ import NameDialog from "./components/NameDialog.vue";
 import ThemeSelector from "./components/ThemeSelector.vue";
 import DailyOneFloating from './components/DailyOneFloating.vue';
 import AnnouncementBar from './components/AnnouncementBar.vue';
+import BackgroundSelector from './components/BackgroundSelector.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -377,6 +382,7 @@ export default {
     ThemeSelector,
     DailyOneFloating,
     AnnouncementBar,
+    BackgroundSelector,
   },
   setup() {
     // 基本状态
@@ -451,6 +457,17 @@ export default {
     // 修改昵称相关
     const showNicknameDialog = ref(false);
     const editNicknameInitialValue = ref("");
+
+    // 背景图片相关
+    const selectedBackground = ref(
+      localStorage.getItem("selectedBackground") || "default"
+    );
+
+    // 处理背景图片切换
+    const handleBackgroundChange = (background) => {
+      selectedBackground.value = background;
+      localStorage.setItem("selectedBackground", background);
+    };
 
     // 手机端用户列表显示控制
     const showUserList = ref(false);
@@ -1693,6 +1710,8 @@ export default {
       danmuColors,
       sendDanmu,
       removeDanmu,
+      selectedBackground,
+      handleBackgroundChange,
     };
   },
 };

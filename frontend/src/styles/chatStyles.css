@@ -324,6 +324,11 @@
   align-items: center;
 }
 
+/* 暗黑模式下的输入工具栏图标适配 */
+.theme-dark .input-tools .el-button .el-icon {
+  color: var(--text-secondary) !important;
+}
+
 /* 输入容器 */
 .input-container {
   display: flex;

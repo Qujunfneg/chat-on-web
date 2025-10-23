@@ -1,6 +1,10 @@
 <template>
   <!-- :class="['message-item', (message.userId && message.userId === currentUserId) || (!message.userId && message.username === currentUsername) ? 'self' : 'other']" -->
-  <div class="chat-messages" ref="messagesContainer">
+  <div 
+    class="chat-messages" 
+    ref="messagesContainer"
+    :style="getBackgroundStyle()"
+  >
     <!-- 加载状态 - 骨架屏 -->
     <div v-if="isLoading" class="skeleton-container">
       <!-- 生成8个骨架屏消息项 -->
@@ -177,6 +181,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    background: {
+      type: String,
+      default: "default",
+    },
   },
   emits: ["messageContextMenu", "userContextMenu"],
   setup(props, { emit }) {
@@ -324,6 +332,19 @@ export default {
       return dayjs(timestamp).format('HH:mm:ss');
     };
 
+    // 获取背景样式
+    const getBackgroundStyle = () => {
+      if (props.background === 'default') {
+        return {};
+      }
+      return {
+        backgroundImage: `url(${props.background})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      };
+    };
+
     return {
       messagesContainer,
       getAvatarColor,
@@ -335,6 +356,7 @@ export default {
       getDisplayUsername,
       newMessageAlert,
       formatTime,
+      getBackgroundStyle,
     };
   },
 };
