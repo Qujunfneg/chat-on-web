@@ -17,7 +17,11 @@
       <span v-else>👥</span>
     </button>
     <!-- 聊天室主界面 -->
-    <div class="chat-container" v-if="isLoggedIn">
+    <div 
+      class="chat-container" 
+      v-if="isLoggedIn"
+      :style="getBackgroundStyle()"
+    >
       <div class="chat-main">
         <!-- 左侧用户列表 -->
         <div class="user-list-container" :class="{ show: showUserList }">
@@ -101,7 +105,8 @@
             :background="selectedBackground"
             @message-context-menu="handleMessageContextMenu"
             @user-context-menu="handleUserContextMenu"
-          ></MessageList>
+          >
+        </MessageList>
 
           <!-- 消息输入区域 -->
           <div class="chat-input-area">
@@ -467,6 +472,44 @@ export default {
     const handleBackgroundChange = (background) => {
       selectedBackground.value = background;
       localStorage.setItem("selectedBackground", background);
+    };
+
+    // 获取背景图片样式
+    const getBackgroundStyle = () => {
+      // 检查是否为暗黑模式
+      const isDarkMode = document.documentElement.classList.contains('theme-dark');
+      
+      // 如果是暗黑模式，不应用背景图片
+      if (isDarkMode) {
+        return {};
+      }
+      
+      // 非暗黑模式下，根据选中的背景返回样式
+      if (selectedBackground.value === 'default') {
+        return {};
+      }
+      
+      // 背景图片映射
+      const backgroundMap = {
+        'bg1': '/images/bg1.jpg',
+        'bg2': '/images/bg2.jpg',
+        'bg3': '/images/bg3.jpg',
+        'bg4': '/images/bg4.jpg',
+        'bg5': '/images/bg5.jpg'
+      };
+      
+      const backgroundImage = backgroundMap[selectedBackground.value];
+      if (backgroundImage) {
+        return {
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        };
+      }
+      
+      return {};
     };
 
     // 手机端用户列表显示控制
@@ -1712,6 +1755,7 @@ export default {
       removeDanmu,
       selectedBackground,
       handleBackgroundChange,
+      getBackgroundStyle,
     };
   },
 };
@@ -2000,6 +2044,7 @@ export default {
   /* 输入框容器样式调整 */
   .input-container {
     flex-direction: column;
+    position: relative;
   }
 
   /* 输入框样式调整 */
@@ -2057,4 +2102,5 @@ export default {
     display: none;
   }
 }
+
 </style>

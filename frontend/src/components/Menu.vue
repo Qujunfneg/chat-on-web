@@ -6,11 +6,11 @@
         :class="{ active: currentMenu === item.name }"
         @click="setActiveMenu(item.name)"
         :key="item.name"
+        :title="item.label"
       >
         <el-icon v-if="item.icon === 'chart'" class="icon"><ChatLineRound /></el-icon>
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
         <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
-        {{ item.label }}
       </li>
     </ul>
   </div>
@@ -59,6 +59,9 @@ function setActiveMenu(name) {
   height: 100%;
   background-color: var(--background-secondary);
   border-right: 1px solid var(--border-color);
+  width: 60px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 /* 菜单列表样式 */
@@ -66,61 +69,83 @@ function setActiveMenu(name) {
   background-color: var(--background-secondary);
   border: none;
   margin: 0;
-  padding: 8px 0;
+  padding: 16px 0;
   list-style: none;
-  border-radius: 0 4px 4px 0;
-  flex: 0 0 180px
+  flex:  0 0 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 菜单项基础样式 */
 .menu li {
-  padding: 12px 24px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   transition: all 0.3s ease;
   color: var(--text-primary);
   font-size: 14px;
-  border-left: 3px solid transparent;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 /* 菜单项悬停效果 */
 .menu li:hover {
   background-color: var(--background-tertiary);
-  color: var(--accent-primary);
-  padding-left: 28px;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* 菜单项激活状态 */
 .menu li.active {
-  background-color: var(--background-tertiary);
-  color: var(--accent-primary);
-  border-left-color: var(--accent-primary);
-  font-weight: 500;
+  background-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.menu li.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--accent-secondary, var(--accent-primary));
+  border-radius: 3px 3px 0 0;
 }
 
 /* 图标样式 */
 .icon {
-  font-size: 18px;
+  font-size: 20px;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: inherit;
+  transition: all 0.3s ease;
 }
 
-.menu li:hover .icon,
+.menu li:hover .icon {
+  transform: translateY(-2px);
+}
+
 .menu li.active .icon {
-  color: var(--accent-primary);
+  transform: translateY(-2px);
 }
 
 /* 主题选择器容器样式 */
 .theme-selector-container {
-  padding: 16px;
+  padding: 12px 8px;
   border-top: 1px solid var(--border-color);
   background-color: var(--background-tertiary);
+  display: flex;
+  justify-content: center;
 }
 
 .theme-selector {
@@ -130,38 +155,38 @@ function setActiveMenu(name) {
 
 .theme-select {
   width: 100%;
-  max-width: 140px;
+  max-width: 44px;
 }
-
-/* 添加图标增强视觉效果 */  
-
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .menu-container {
-    display: none;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
   .menu {
-    width: 100%;
-    display: flex;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 4px 4px 0 0;
-    padding: 0;
+    flex-direction: row;
+    padding: 8px 16px;
+    gap: 12px;
   }
 
   .menu li {
-    flex: 1;
-    justify-content: center;
-    border-left: none;
-    border-bottom: 3px solid transparent;
+    width: 40px;
+    height: 40px;
   }
 
-  .menu li.active {
-    border-left-color: transparent;
-    border-bottom-color: var(--accent-primary);
-    background-color: transparent;
+  .menu li.active::before {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    width: 100%;
   }
 }
 </style>

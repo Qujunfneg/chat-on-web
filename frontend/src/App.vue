@@ -257,6 +257,11 @@ function handleNicknameUpdated(newNickname) {
   flex: 1;
   overflow: hidden;
 }
+
+/* 菜单容器样式 */
+.main-content > .menu {
+  flex-shrink: 0;
+}
 </style>
 
 <style>

@@ -2,7 +2,7 @@
   <div>
     <!-- 收起后的按钮 -->
     <transition name="fade">
-     <span @click="isOpen = true, fetchNotice()" class="toggle-btn"> 📢 </span>
+     <span @click="isOpen = true, fetchNotice('manual')" class="toggle-btn"> 📢 </span>
     </transition>
 
     <el-dialog v-model="isOpen" :show-close="false" width="40%">
@@ -46,7 +46,7 @@ export default {
     this.fetchNotice();
   },
   methods: {
-    async fetchNotice() {
+    async fetchNotice(type) {
       try {
         const res = await fetch("/api/notices");
         const data = await res.json();
@@ -55,7 +55,7 @@ export default {
           this.hasData = true;
           
           // 检查是否需要显示公告
-          this.checkIfNewAnnouncement();
+          type !== 'manual' && this.checkIfNewAnnouncement();
         } else {
           this.hasData = false;
           this.isOpen = false;
