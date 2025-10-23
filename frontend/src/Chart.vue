@@ -1155,7 +1155,7 @@ export default {
       const localMessage = {
         ...messageData,
         id: messageId,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: Date.now(), // 使用时间戳而不是格式化后的字符串
       };
 
       // 添加到本地消息列表

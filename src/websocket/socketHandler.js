@@ -85,7 +85,7 @@ module.exports = (io) => {
       processedMessage.username = userInfo.nickname; 
       
       processedMessage.id = Date.now().toString();
-      processedMessage.timestamp = new Date().toLocaleTimeString();
+      processedMessage.timestamp = Date.now(); // 使用时间戳而不是格式化后的字符串
       processedMessage.userId = data.userId;
       processedMessage.localId = data.localId;
 

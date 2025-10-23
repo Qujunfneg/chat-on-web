@@ -123,7 +123,7 @@
             ></el-image>
           </div>
         </div>
-        <div class="message-time">{{ message.timestamp }}</div>
+        <div class="message-time">{{ formatTime(message.timestamp) }}</div>
       </div>
     </div>
     <div
@@ -145,6 +145,7 @@ import { ref, onMounted, watch, onUnmounted } from "vue";
 import { ElMessage, ElImage } from "element-plus";
 import { Bell } from "@element-plus/icons-vue";
 import QuoteMessage from "./quoteMessage.vue";
+import dayjs from "dayjs";
 
 export default {
   name: "MessageList",
@@ -312,6 +313,17 @@ export default {
       return message.userId === props.currentUserId ? "self" : "other";
     };
 
+    // 格式化时间戳显示
+    const formatTime = (timestamp) => {
+      if (!timestamp) return "";
+      // 如果timestamp已经是格式化过的字符串，直接返回
+      if (typeof timestamp === "string" && timestamp.includes(":")) {
+        return timestamp;
+      }
+      // 否则使用dayjs格式化时间戳
+      return dayjs(timestamp).format('HH:mm:ss');
+    };
+
     return {
       messagesContainer,
       getAvatarColor,
@@ -322,6 +334,7 @@ export default {
       getClass,
       getDisplayUsername,
       newMessageAlert,
+      formatTime,
     };
   },
 };
