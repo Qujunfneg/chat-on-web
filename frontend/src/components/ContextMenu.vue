@@ -22,13 +22,6 @@
     >
       ⭐ 收藏为表情包
     </div>
-    <div 
-      class="context-menu-item" 
-      v-if="selectedUserForMention && isCurrentUser"
-      @click="editNickname"
-    >
-      ✏️ 修改昵称
-    </div>
     <div class="context-menu-item" @click="hideMenu">取消</div>
   </div>
 </template>
