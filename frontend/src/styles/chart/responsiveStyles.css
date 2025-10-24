@@ -1,0 +1,110 @@
+/* 响应式媒体查询 - 手机端布局优化 */
+@media screen and (max-width: 768px) {
+  /* 聊天室容器采用垂直布局 */
+  .chat-container {
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* 聊天主区域也采用垂直布局 */
+  .chat-main {
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* 隐藏左侧用户列表，通过按钮切换显示 */
+  .user-list-container {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: left 0.3s ease;
+  }
+
+  /* 用户列表显示状态 */
+  .user-list-container.show {
+    left: 0;
+  }
+
+  /* 消息区域高度自适应并确保可滚动 */
+  .message-area {
+    height: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  /* 确保聊天消息区域可以正常滚动 */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch; /* 优化iOS设备上的滚动体验 */
+  }
+  /* 聊天输入区域宽度调整为适应手机屏幕 */
+  .chat-input-area {
+    width: 100%;
+  }
+
+  /* 输入框容器样式调整 */
+  .input-container {
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* 输入框样式调整 */
+  .input-container .el-input {
+    flex: none !important;
+    margin-bottom: 10px;
+  }
+
+  /* 手机端添加用户列表切换按钮 */
+  .mobile-user-list-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 移动端遮罩层样式 */
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    display: block;
+  }
+
+  /* 确保用户列表在遮罩层之上 */
+  .user-list-container.show {
+    z-index: 30;
+  }
+
+  /* 手机端修改昵称按钮样式调整 */
+  .mobile-edit-nickname-button {
+    margin-left: 10px;
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+}
+
+/* PC端样式保持不变 */
+@media screen and (min-width: 769px) {
+  /* 确保在PC端不显示手机端专用按钮 */
+  .mobile-user-list-toggle {
+    display: none;
+  }
+}
