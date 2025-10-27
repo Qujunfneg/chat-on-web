@@ -399,6 +399,7 @@ export default {
     // 移除nickname变量，统一使用username
     // const nickname = ref(""); // 添加昵称状态
     const userId = ref("");
+    const coreId = ref("");
     const isLoggedIn = ref(false);
     const messages = ref([]);
     const inputMessage = ref("");
@@ -546,12 +547,13 @@ export default {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
       }
-      // 从localStorage获取userId和username
+      // 从localStorage获取userId、username和coreId
       const storedUserId = localStorage.getItem("userId");
       const storedUsername = localStorage.getItem("username");
+      const storedCoreId = localStorage.getItem("coreId");
       // 移除对nickname的获取
       // const storedNickname = localStorage.getItem('nickname');
-      if (!storedUserId || !storedUsername) {
+      if (!storedUserId || !storedUsername || !storedCoreId) {
         handleLogout();
         return;
       }
@@ -559,6 +561,7 @@ export default {
       // 确保响应式变量被正确设置
       userId.value = storedUserId;
       username.value = storedUsername;
+      coreId.value = storedCoreId;
       // 移除nickname的设置
       // nickname.value = storedNickname || storedUsername;
       // 更新用户信息映射，使用username作为nickname
@@ -566,6 +569,9 @@ export default {
 
       // 使用相对路径，让WebSocket自动使用当前页面的主机地址
       socket = io();
+      
+      // 将socket挂载到window对象上，使其他组件可以访问
+      window.socket = socket;
 
       // 设置验证超时计时器
       let validationTimeout;
@@ -573,8 +579,8 @@ export default {
       // 连接成功
       socket.on("connect", () => {
         console.log("WebSocket连接成功");
-        // 发送userId、username加入聊天室
-        socket.emit("join", { userId: userId.value, username: username.value });
+        // 发送userId、username和coreId加入聊天室
+        socket.emit("join", { userId: userId.value, username: username.value, coreId: coreId.value });
 
         // 优化：将验证超时从2秒减少到500毫秒，提高用户体验
         validationTimeout = setTimeout(() => {
@@ -775,6 +781,28 @@ export default {
         }
       });
 
+      // 处理积分更新事件
+      socket.on("points_updated", (data) => {
+        console.log("积分更新:", data);
+        
+        // 更新用户列表中对应coreId的用户的积分
+        if (data.coreId && data.updatedPoints !== undefined) {
+          const userIndex = users.value.findIndex(user => user.coreId === data.coreId);
+          if (userIndex !== -1) {
+            users.value[userIndex].points = data.updatedPoints;
+            console.log(`更新用户 ${users.value[userIndex].username} 的积分为 ${data.updatedPoints}`);
+          }
+        }
+      });
+
+      // 处理用户列表更新事件
+      socket.on("users_updated", (data) => {
+        console.log("用户列表更新:", data);
+        if (Array.isArray(data)) {
+          users.value = data;
+        }
+      });
+
       // 处理消息撤回失败事件
       socket.on("recall_failed", (data) => {
         ElMessage.error(data.message || "消息撤回失败");
@@ -861,6 +889,7 @@ export default {
       // 清除用户信息
       username.value = "";
       userId.value = "";
+      coreId.value = ""; // 清除coreId的响应式变量，但不从localStorage中清除
       // 移除对nickname的清除
       // nickname.value = "";
       isLoggedIn.value = false;
@@ -874,11 +903,12 @@ export default {
         socket = null;
       }
 
-      // 清除localStorage中的用户信息
+      // 清除localStorage中的用户信息，但保留coreId
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
       // 移除对nickname的localStorage清除
       // localStorage.removeItem('nickname');
+      // 注意：不删除localStorage中的coreId，因为coreId绑定的积分是唯一值
 
       // 重定向到首页（用户名输入页面）
       window.location.href = window.location.origin;

@@ -10,6 +10,7 @@
       >
         <el-icon v-if="item.icon === 'chart'" class="icon"><ChatLineRound /></el-icon>
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
+        <el-icon v-if="item.icon === 'profile'" class="icon"><User /></el-icon>
         <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
       </li>
     </ul>
@@ -17,9 +18,14 @@
 </template>
 <script setup>
 import { ref } from "vue";
-import { ChatLineRound, Service, Setting } from '@element-plus/icons-vue';
+import { ChatLineRound, Service, User, Setting } from '@element-plus/icons-vue';
 
 const menuList = [
+   {
+    label: "我的主页",
+    name: "profile",
+    icon: "profile",
+  },
   {
     label: "公共大厅",
     name: "chart",
@@ -45,6 +51,8 @@ function setActiveMenu(name) {
     window.location.href = '#/chat';
   } else if (name === 'music') {
     window.location.href = '#/music';
+  } else if (name === 'profile') {
+    window.location.href = '#/profile';
   } else if (name === 'settings') {
     // 通过emit和路由更新来确保设置页面正确显示
     // 不再依赖Chart.vue中的事件处理

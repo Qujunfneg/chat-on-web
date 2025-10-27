@@ -28,6 +28,7 @@
       <div class="content-area">
         <Chart v-show="currentMenu === 'chart'"></Chart>
         <Music v-show="currentMenu === 'music'"/>
+        <Profile v-show="currentMenu === 'profile'"/>
         <Setting v-if="currentMenu === 'settings'"/>
       </div>
     </div>
@@ -41,12 +42,28 @@ import { Message, User } from '@element-plus/icons-vue';
 import Setting from "./components/Setting.vue";
 import Menu from "./components/Menu.vue";
 import Music from "./components/Music.vue";
+import Profile from "./views/Profile.vue";
 import './styles/theme.scss'; // 导入主题样式
 const username = ref("");
 
 // 生成永不重复的用户ID
 const generateUserId = () => {
   return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+// 生成永不重复的coreId
+const generateCoreId = () => {
+  return 'core_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+// 获取或生成coreId
+const getCoreId = () => {
+  let storedCoreId = localStorage.getItem("coreId");
+  if (!storedCoreId) {
+    storedCoreId = generateCoreId();
+    localStorage.setItem("coreId", storedCoreId);
+  }
+  return storedCoreId;
 };
 const currentMenu = ref('chart');
 
@@ -76,10 +93,14 @@ function handleUsernameSubmit() {
     // 生成用户ID
     const userId = generateUserId();
     
+    // 获取或生成coreId
+    const coreId = getCoreId();
+    
     // 存储到localStorage
     localStorage.setItem("username", username.value.trim());
     localStorage.setItem("userId", userId);
     localStorage.setItem("nickname", username.value.trim());
+    // coreId已经在getCoreId函数中存储到localStorage
     
     ElMessage.success(`欢迎，${username.value.trim()}`);
     
@@ -255,7 +276,10 @@ function handleNicknameUpdated(newNickname) {
 
 .content-area {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  height: 100%;
+  background-color: var(--bg-secondary);
+  transition: all 0.3s ease;
 }
 
 /* 菜单容器样式 */

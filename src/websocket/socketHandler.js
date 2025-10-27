@@ -4,17 +4,116 @@ const {
   chatHistory // 暴露 chatHistory 以便写入
 } = require('../services/userService');
 const { MAX_HISTORY } = require('../config/constants');
+const { 
+  getUserPoints, 
+  addUserPoints, 
+  canClaimDailyPoints, 
+  claimDailyPoints,
+  addUserOnlineMinutes,
+  getUserInfo,
+  cleanupInactiveUsers
+} = require('../services/pointsService');
 
 module.exports = (io) => {
+  // 确保只有一个定时器在运行 - 使用全局变量
+  if (global.pointsInterval) {
+    clearInterval(global.pointsInterval);
+    console.log("清理旧的积分定时器");
+  }
+  
+  // 每10分钟为在线用户增加10积分
+  global.pointsInterval = setInterval(() => {
+    const now = new Date();
+    console.log(`[${now.toLocaleTimeString()}] 开始为在线用户增加积分...`);
+    
+    // 遍历所有在线用户
+    onlineUsers.forEach((userId, socketId) => {
+      const userInfo = userInfoMap.get(userId);
+      if (userInfo && userInfo.coreId) {
+        // 为在线用户增加10积分
+        const success = addUserPoints(userInfo.coreId, 10);
+        if (success) {
+          // 增加在线时长（10分钟）
+          addUserOnlineMinutes(userInfo.coreId, 10);
+          
+          // 获取更新后的积分和用户信息
+          const updatedPoints = getUserPoints(userInfo.coreId);
+          const userData = getUserInfo(userInfo.coreId);
+          
+          // 向用户发送积分更新通知
+          io.to(socketId).emit("points_updated", {
+            coreId: userInfo.coreId,
+            points: updatedPoints,
+            addedPoints: 10,
+            canClaimDaily: canClaimDailyPoints(userInfo.coreId), // 添加canClaimDaily状态
+            lastClaimDate: userData?.lastDailyClaim || null // 添加最后领取日期
+          });
+          
+          // 广播更新后的用户列表给所有用户，确保积分显示正确
+          const updatedUsersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+            const userInfo = userInfoMap.get(uid) || { userId: uid, username: null };
+            // 获取每个用户的最新积分信息
+            const userPoints = userInfo.coreId ? getUserPoints(userInfo.coreId) : 0;
+            return {
+              ...userInfo,
+              points: userPoints
+            };
+          });
+          
+          // 广播更新后的用户列表
+          io.emit("users_updated", updatedUsersList);
+          
+          console.log(`[${now.toLocaleTimeString()}] 用户 ${userInfo.username} 积分增加10，当前积分: ${updatedPoints}`);
+        }
+      }
+    });
+  }, 600000); // 每10分钟执行一次（600000毫秒）
+  
+  console.log("积分定时器已设置，每10分钟执行一次");
+  
+  // 设置清理不活跃用户的定时器 - 每天执行一次
+  if (global.cleanupInterval) {
+    clearInterval(global.cleanupInterval);
+    console.log("清理旧的清理定时器");
+  }
+  
+  // 每天凌晨2点执行清理不活跃用户
+  const scheduleCleanup = () => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(2, 0, 0, 0); // 设置为明天凌晨2点
+    
+    const timeUntilTomorrow = tomorrow.getTime() - now.getTime();
+    
+    console.log(`将在 ${tomorrow.toLocaleString()} 执行下一次不活跃用户清理`);
+    
+    global.cleanupTimeout = setTimeout(() => {
+      console.log("开始执行不活跃用户清理...");
+      const cleanedCount = cleanupInactiveUsers();
+      if (cleanedCount > 0) {
+        io.emit("system_notification", {
+          type: "info",
+          message: `系统已清理 ${cleanedCount} 个超过50天未活跃的用户账户`
+        });
+      }
+      // 递归调用，安排下一次清理
+      scheduleCleanup();
+    }, timeUntilTomorrow);
+  };
+  
+  // 立即安排第一次清理
+  scheduleCleanup();
+
   // WebSocket连接处理
   io.on("connection", (socket) => {
     console.log("新用户连接:", socket.id);
 
-    // 用户加入聊天室，需要提供userId和username
-    socket.on("join", ({ userId, username }) => {
-      if (!userId || !username) {
+    // 用户加入聊天室，需要提供userId、username和coreId
+    socket.on("join", ({ userId, username, coreId }) => {
+      if (!userId || !username || !coreId) {
         console.log(`用户验证失败：缺少必要信息`);
-        socket.emit("user_id_failed", { message: "缺少用户ID或用户名" });
+        socket.emit("user_id_failed", { message: "缺少用户ID、用户名或coreId" });
         return;
       }
 
@@ -33,26 +132,48 @@ module.exports = (io) => {
 
       // 初始化或更新用户信息
       if (!userInfoMap.has(userId)) {
-        userInfoMap.set(userId, { userId, username, nickname: username });
+        userInfoMap.set(userId, { userId, username, nickname: username, coreId });
       } else {
-        // 更新最新的用户名（允许重名）
+        // 更新最新的用户名和coreId（允许重名）
         const info = userInfoMap.get(userId);
         info.username = username;
+        info.coreId = coreId;
         userInfoMap.set(userId, info);
       }
 
-      console.log(`${username} 加入聊天室，用户ID: ${userId}`);
+      // 获取用户积分信息
+      const userPoints = getUserPoints(coreId);
+      const canClaim = canClaimDailyPoints(coreId);
+      const userInfo = getUserInfo(coreId);
+
+      console.log(`${username} 加入聊天室，用户ID: ${userId}, coreId: ${coreId}, 积分: ${userPoints}`);
 
       socket.emit("chat_history", chatHistory);
+      
+      // 发送用户积分信息
+      socket.emit("points_info", {
+        coreId,
+        points: userPoints,
+        canClaimDaily: canClaim,
+        onlineMinutes: userInfo?.onlineMinutes || 0
+      });
 
       const usersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
-        return userInfoMap.get(uid) || { userId: uid, username: null };
+        const userInfo = userInfoMap.get(uid) || { userId: uid, username: null };
+        // 获取每个用户的积分信息
+        const userPoints = userInfo.coreId ? getUserPoints(userInfo.coreId) : 0;
+        return {
+          ...userInfo,
+          points: userPoints
+        };
       });
 
       io.emit("user_join", {
         username,
         userId,
+        coreId,
         nickname: userInfoMap.get(userId)?.nickname || username,
+        points: userPoints,
         users: usersList,
       });
     });
@@ -192,6 +313,64 @@ module.exports = (io) => {
         messageId: data.messageId,
         userId: userId
       });
+    });
+
+    // 处理获取积分请求
+    socket.on("get_points", () => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || !userInfo.coreId) {
+        socket.emit("points_error", { message: "用户信息不完整" });
+        return;
+      }
+      
+      const userPoints = getUserPoints(userInfo.coreId);
+      const canClaim = canClaimDailyPoints(userInfo.coreId);
+      const userData = getUserInfo(userInfo.coreId);
+      
+      socket.emit("points_info", {
+        coreId: userInfo.coreId,
+        points: userPoints,
+        canClaimDaily: canClaim,
+        onlineMinutes: userData?.onlineMinutes || 0,
+        lastClaimDate: userData?.lastDailyClaim || null
+      });
+    });
+
+    // 处理每日积分领取
+    socket.on("claim_daily_points", () => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || !userInfo.coreId) {
+        socket.emit("claim_points_failed", { message: "用户信息不完整" });
+        return;
+      }
+      
+      // 检查是否可以领取每日积分
+      if (!canClaimDailyPoints(userInfo.coreId)) {
+        socket.emit("claim_points_failed", { message: "今日已领取过积分" });
+        return;
+      }
+      
+      // 领取每日积分
+      const success = claimDailyPoints(userInfo.coreId);
+      if (success) {
+        const updatedPoints = getUserPoints(userInfo.coreId);
+        const canClaim = canClaimDailyPoints(userInfo.coreId);
+        
+        socket.emit("claim_points_success", {
+          coreId: userInfo.coreId,
+          points: updatedPoints,
+          claimedPoints: 100,
+          canClaimDaily: canClaim
+        });
+        
+        console.log(`用户 ${userInfo.username} 领取了每日100积分，当前积分: ${updatedPoints}`);
+      } else {
+        socket.emit("claim_points_failed", { message: "领取积分失败" });
+      }
     });
 
     // 用户断开连接

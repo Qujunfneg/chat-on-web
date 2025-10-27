@@ -18,6 +18,7 @@ const {
   NOTICE_FILE_PATH, 
   DATA_DIR 
 } = require('../config/constants');
+const { cleanupInactiveUsers } = require('../services/pointsService');
 
 
 // 获取临时签名URL接口
@@ -258,6 +259,42 @@ router.get("/api/emojis/:category", (req, res) => {
     });
   } catch (error) {
     console.error("获取表情包文件列表失败:", error);
+    res.status(500).json({
+      success: false,
+      message: "服务器错误"
+    });
+  }
+});
+
+// 清理不活跃用户API
+router.post("/api/cleanup-inactive-users", validateUserId, (req, res) => {
+  try {
+    // 这里可以添加管理员权限检查，目前简化为所有用户都可以触发
+    console.log(`用户 ${req.user.userId} 请求清理不活跃用户`);
+    
+    // 执行清理操作
+    const cleanedCount = cleanupInactiveUsers();
+    
+    // 允许 API 访问 io 实例来广播事件
+    const io = req.app.get('io');
+    
+    // 如果有用户被清理，则广播通知
+    if (cleanedCount > 0) {
+      io.emit("system_notification", {
+        type: "info",
+        message: `系统已清理 ${cleanedCount} 个超过50天未活跃的用户账户`
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: cleanedCount > 0 
+        ? `成功清理了 ${cleanedCount} 个不活跃用户` 
+        : "没有需要清理的不活跃用户",
+      cleanedCount
+    });
+  } catch (error) {
+    console.error("清理不活跃用户失败:", error);
     res.status(500).json({
       success: false,
       message: "服务器错误"

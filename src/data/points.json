@@ -1,0 +1,82 @@
+{
+  "core_1761536803066_knos7m9ae": {
+    "coreId": "core_1761536803066_knos7m9ae",
+    "points": 530,
+    "createdAt": "2025-10-27T07:26:13.551Z",
+    "lastDailyClaim": "2025-10-27T07:34:57.850Z",
+    "onlineMinutes": 7.1666666666666705,
+    "updatedAt": "2025-10-27T07:35:33.158Z"
+  },
+  "core_1761550492217_tfcrfpqq5": {
+    "coreId": "core_1761550492217_tfcrfpqq5",
+    "points": 650,
+    "createdAt": "2025-10-27T07:34:53.150Z",
+    "lastDailyClaim": "2025-10-27T08:48:33.939Z",
+    "onlineMinutes": 61.833333333333336,
+    "updatedAt": "2025-10-27T09:24:31.623Z"
+  },
+  "core_1761550540345_pnmgn6e4t": {
+    "coreId": "core_1761550540345_pnmgn6e4t",
+    "points": 870,
+    "createdAt": "2025-10-27T07:35:43.157Z",
+    "lastDailyClaim": "2025-10-27T07:35:47.073Z",
+    "onlineMinutes": 23.49999999999999,
+    "updatedAt": "2025-10-27T08:04:33.003Z"
+  },
+  "core_1761550908476_1hmu0imdc": {
+    "coreId": "core_1761550908476_1hmu0imdc",
+    "points": 490,
+    "createdAt": "2025-10-27T07:41:51.257Z",
+    "lastDailyClaim": "2025-10-27T07:41:51.257Z",
+    "onlineMinutes": 6.500000000000003,
+    "updatedAt": "2025-10-27T07:48:22.118Z"
+  },
+  "core_1761551890134_2wzih0trk": {
+    "coreId": "core_1761551890134_2wzih0trk",
+    "points": 280,
+    "createdAt": "2025-10-27T07:58:13.223Z",
+    "lastDailyClaim": "2025-10-27T07:58:13.223Z",
+    "onlineMinutes": 36,
+    "updatedAt": "2025-10-27T08:31:31.159Z"
+  },
+  "core_1761552309501_ezw6hiuf7": {
+    "coreId": "core_1761552309501_ezw6hiuf7",
+    "points": 190,
+    "createdAt": "2025-10-27T08:05:12.999Z",
+    "lastDailyClaim": "2025-10-27T08:05:12.999Z",
+    "onlineMinutes": 9,
+    "updatedAt": "2025-10-27T08:14:34.848Z"
+  },
+  "core_1761552952564_ia2mctew9": {
+    "coreId": "core_1761552952564_ia2mctew9",
+    "points": 160,
+    "createdAt": "2025-10-27T08:15:54.710Z",
+    "lastDailyClaim": "2025-10-27T08:16:09.504Z",
+    "onlineMinutes": 6,
+    "updatedAt": "2025-10-27T08:20:54.635Z"
+  },
+  "core_1761553325168_sva1zqh5l": {
+    "coreId": "core_1761553325168_sva1zqh5l",
+    "points": 100,
+    "createdAt": "2025-10-27T08:22:08.989Z",
+    "lastDailyClaim": "2025-10-27T08:22:08.989Z",
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-27T08:22:08.989Z"
+  },
+  "core_1761553420931_h1i6o2xhf": {
+    "coreId": "core_1761553420931_h1i6o2xhf",
+    "points": 110,
+    "createdAt": "2025-10-27T08:23:44.380Z",
+    "lastDailyClaim": "2025-10-27T08:23:44.380Z",
+    "onlineMinutes": 10,
+    "updatedAt": "2025-10-27T08:31:31.180Z"
+  },
+  "core_1761554106802_3vcv8zg6k": {
+    "coreId": "core_1761554106802_3vcv8zg6k",
+    "points": 170,
+    "createdAt": "2025-10-27T08:35:10.091Z",
+    "lastDailyClaim": "2025-10-27T08:35:10.091Z",
+    "onlineMinutes": 70,
+    "updatedAt": "2025-10-27T09:44:31.621Z"
+  }
+}
