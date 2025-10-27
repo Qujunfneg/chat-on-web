@@ -138,6 +138,62 @@ module.exports = (io) => {
       io.emit('danmu_message', danmuData);
     });
 
+    // 处理消息撤回
+    socket.on('recall_message', (data) => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || userId !== data.userId) {
+        console.log(`消息撤回失败：用户ID不匹配或用户不存在`);
+        socket.emit("recall_failed", { message: "用户验证失败" });
+        return;
+      }
+
+      // 查找要撤回的消息
+      const messageIndex = chatHistory.findIndex(msg => msg.id === data.messageId);
+      
+      if (messageIndex === -1) {
+        console.log(`消息撤回失败：消息不存在，消息ID: ${data.messageId}`);
+        socket.emit("recall_failed", { message: "消息不存在或无权限撤回" });
+        return;
+      }
+
+      const message = chatHistory[messageIndex];
+      
+      // 检查消息是否属于当前用户
+      if (message.userId !== userId) {
+        console.log(`消息撤回失败：无权限撤回此消息`);
+        socket.emit("recall_failed", { message: "无权限撤回此消息" });
+        return;
+      }
+      
+      // 检查消息发送时间，只允许撤回2分钟内的消息
+      const now = Date.now();
+      const messageTime = message.timestamp || Date.parse(message.timestamp);
+      const timeDiff = now - messageTime;
+      const twoMinutes = 2 * 60 * 1000; // 2分钟的毫秒数
+      
+      if (timeDiff > twoMinutes) {
+        console.log(`消息撤回失败：超过撤回时间限制`);
+        socket.emit("recall_failed", { message: "消息发送超过2分钟，无法撤回" });
+        return;
+      }
+
+      // 标记消息为已撤回
+      chatHistory[messageIndex] = {
+        ...message,
+        recalled: true,
+        content: "此消息已被撤回",
+        type: "recalled"
+      };
+
+      // 广播消息撤回事件
+      io.emit("message_recalled", {
+        messageId: data.messageId,
+        userId: userId
+      });
+    });
+
     // 用户断开连接
     socket.on("disconnect", () => {
       const userId = onlineUsers.get(socket.id);

@@ -54,8 +54,15 @@
           class="message-content"
           @contextmenu="handleMessageContextMenu(message)"
         >
+          <!-- 已撤回的消息显示 -->
+          <div v-if="message.recalled || message.type === 'recalled'" class="recalled-message">
+            <div class="recalled-content">
+              <span class="recalled-icon">↩️</span>
+              <span class="recalled-text">{{ message.content }}</span>
+            </div>
+          </div>
           <!-- 引用消息显示 - 所有消息类型都可能包含引用 -->
-          <div v-if="message.quote" class="quoted-message">
+          <div v-else-if="message.quote" class="quoted-message">
             <div class="quoted-header">
               回复 @{{ getDisplayUsername(message.quote) }}:
             </div>
@@ -439,5 +446,32 @@ export default {
   position: relative;
   height: 100%;
   overflow-y: auto;
+}
+
+/* 已撤回消息的样式 */
+.recalled-message {
+  padding: 8px 12px;
+  margin: 4px 0;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  max-width: 70%;
+  display: inline-block;
+  min-width: 180px;
+}
+
+.recalled-content {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.recalled-icon {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.recalled-text {
+  font-style: italic;
 }
 </style>

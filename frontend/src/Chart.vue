@@ -322,6 +322,7 @@
       @mention-user="handleMentionUser"
       @quote-message="handleQuoteMessage"
       @edit-nickname="handleEditNickname"
+      @recall-message="handleRecallMessage"
     ></ContextMenu>
 
     <!-- @用户弹层 -->
@@ -658,8 +659,18 @@ export default {
           // 添加到消息列表
           messages.value.push(message);
         } else {
-          // 是当前客户端发送的消息，不需要重复添加
-          console.log("忽略当前客户端发送的重复消息");
+          // 是当前客户端发送的消息，更新本地消息的ID为服务器生成的ID
+          const localMessageIndex = messages.value.findIndex(m => m.id === message.localId);
+          if (localMessageIndex !== -1) {
+            // 保留本地消息的其他属性，但更新ID为服务器生成的ID
+            messages.value[localMessageIndex] = {
+              ...messages.value[localMessageIndex],
+              id: message.id, // 使用服务器生成的ID
+              timestamp: message.timestamp, // 使用服务器的时间戳
+              uploading: false // 如果是图片消息，标记上传完成
+            };
+          }
+          console.log("更新本地消息ID为服务器生成的ID");
         }
 
         // 只有当消息不是当前用户发送时才显示通知
@@ -747,6 +758,26 @@ export default {
       // 接收弹幕消息
       socket.on("danmu_message", (data) => {
         addDanmu(data);
+      });
+
+      // 处理消息撤回成功事件
+      socket.on("message_recalled", (data) => {
+        // 查找并更新消息
+        const messageIndex = messages.value.findIndex(msg => msg.id === data.messageId);
+        if (messageIndex !== -1) {
+          // 标记消息为已撤回
+          messages.value[messageIndex] = {
+            ...messages.value[messageIndex],
+            recalled: true,
+            content: "此消息已被撤回",
+            type: "recalled"
+          };
+        }
+      });
+
+      // 处理消息撤回失败事件
+      socket.on("recall_failed", (data) => {
+        ElMessage.error(data.message || "消息撤回失败");
       });
     };
 
@@ -1357,8 +1388,8 @@ export default {
       event.preventDefault();
       showContextMenu.value = true;
       contextMenuX.value =
-        window.screen.width - event.clientX < 150
-          ? window.screen.width - 150
+        document.body.offsetWidth - event.clientX < 150
+          ? document.body.offsetWidth - 150
           : event.clientX;
       contextMenuY.value = event.clientY;
       selectedMessage.value = message;
@@ -1367,12 +1398,13 @@ export default {
 
     // 处理用户右键菜单
     const handleUserContextMenu = (data) => {
+      
       const { event, user } = data;
       event.preventDefault();
       showContextMenu.value = true;
       contextMenuX.value =
-        window.screen.width - event.clientX < 150
-          ? window.screen.width - 150
+        document.body.offsetWidth - event.clientX < 150
+          ? document.body.offsetWidth - 150
           : event.clientX;
       contextMenuY.value = event.clientY;
       selectedUserForMention.value = user;
@@ -1438,6 +1470,25 @@ export default {
           input.focus();
         }
       });
+    };
+
+    // 处理撤回消息
+    const handleRecallMessage = (message) => {
+      // 验证消息是否属于当前用户
+      if (message.userId !== userId.value) {
+        ElMessage.error("只能撤回自己的消息");
+        return;
+      }
+
+      // 向服务器发送撤回请求
+      if (socket) {
+        socket.emit("recall_message", {
+          messageId: message.id,
+          userId: userId.value
+        });
+      } else {
+        ElMessage.error("网络连接异常，请稍后再试");
+      }
     };
 
     // 处理选择用户用于@
@@ -1741,6 +1792,7 @@ export default {
       hideContextMenu,
       handleMentionUser,
       handleQuoteMessage,
+      handleRecallMessage,
       handleSelectUserForMention,
       showNicknameDialog,
       editNicknameInitialValue,

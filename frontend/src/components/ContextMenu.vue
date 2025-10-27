@@ -22,6 +22,13 @@
     >
       ⭐ 收藏为表情包
     </div>
+    <div
+      class="context-menu-item"
+      v-if="selectedMessage && isMessageOwner"
+      @click="recallMessage"
+    >
+      ↩️ 撤回
+    </div>
     <div class="context-menu-item" @click="hideMenu">取消</div>
   </div>
 </template>
@@ -61,7 +68,7 @@ export default {
       default: ''
     }
   },
-  emits: ['hideMenu', 'mentionUser', 'quoteMessage', 'saveAsFavorite', 'editNickname'],
+  emits: ['hideMenu', 'mentionUser', 'quoteMessage', 'saveAsFavorite', 'editNickname', 'recallMessage'],
   setup(props, { emit }) {
     // 检查是否为当前用户
     const isCurrentUser = computed(() => {
@@ -76,6 +83,22 @@ export default {
       
       // 如果是字符串，无法比较ID，默认不显示修改昵称选项
       return false;
+    });
+
+    // 检查消息是否属于当前用户且未被撤回
+    const isMessageOwner = computed(() => {
+      if (!props.selectedMessage || !props.currentUserId) {
+        return false;
+      }
+      
+      // 检查消息的userId是否与当前用户ID匹配
+      const isOwner = props.selectedMessage.userId === props.currentUserId;
+      
+      // 检查消息是否已被撤回
+      const isRecalled = props.selectedMessage.recalled || props.selectedMessage.type === 'recalled';
+      
+      // 只有是消息所有者且消息未被撤回时才显示撤回按钮
+      return isOwner && !isRecalled;
     });
 
     // 提及用户
@@ -110,6 +133,14 @@ export default {
       emit('hideMenu');
     };
 
+    // 撤回消息
+    const recallMessage = () => {
+      if (props.selectedMessage) {
+        emit('recallMessage', props.selectedMessage);
+      }
+      emit('hideMenu');
+    };
+
     // 隐藏菜单
     const hideMenu = () => {
       emit('hideMenu');
@@ -120,8 +151,10 @@ export default {
       quoteMessage,
       saveAsFavorite,
       editNickname,
+      recallMessage,
       hideMenu,
-      isCurrentUser
+      isCurrentUser,
+      isMessageOwner
     };
   }
 };
