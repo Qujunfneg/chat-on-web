@@ -1385,6 +1385,7 @@ export default {
     // 处理消息右键菜单
     const handleMessageContextMenu = (data) => {
       const { event, message, imageUrl } = data;
+      if(message.type==="recalled") return
       event.preventDefault();
       showContextMenu.value = true;
       contextMenuX.value =
