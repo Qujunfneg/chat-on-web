@@ -10,6 +10,7 @@ const {
   canClaimDailyPoints, 
   claimDailyPoints,
   addUserOnlineMinutes,
+  resetUserOnlineMinutes,
   getUserInfo,
   cleanupInactiveUsers
 } = require('../services/pointsService');
@@ -379,6 +380,15 @@ module.exports = (io) => {
       if (userId) {
         onlineUsers.delete(socket.id);
         console.log(`用户 ${userId} 离开聊天室`);
+
+        // 获取用户信息
+        const userInfo = userInfoMap.get(userId);
+        
+        // 重置用户在线时长，防止断开连接后继续累积
+        if (userInfo && userInfo.coreId) {
+          resetUserOnlineMinutes(userInfo.coreId);
+          console.log(`已重置用户 ${userInfo.username} 的在线时长`);
+        }
 
         const hasOtherConnections = Array.from(onlineUsers.values()).includes(userId);
         if (!hasOtherConnections) {

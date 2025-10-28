@@ -73,10 +73,26 @@
   },
   "core_1761554106802_3vcv8zg6k": {
     "coreId": "core_1761554106802_3vcv8zg6k",
-    "points": 170,
+    "points": 270,
     "createdAt": "2025-10-27T08:35:10.091Z",
-    "lastDailyClaim": "2025-10-27T08:35:10.091Z",
-    "onlineMinutes": 70,
-    "updatedAt": "2025-10-27T09:44:31.621Z"
+    "lastDailyClaim": "2025-10-28T02:03:53.366Z",
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T02:07:21.301Z"
+  },
+  "core_1761617246013_g84pydmgl": {
+    "coreId": "core_1761617246013_g84pydmgl",
+    "points": 100,
+    "createdAt": "2025-10-28T02:07:31.581Z",
+    "lastDailyClaim": "2025-10-28T02:07:31.581Z",
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T02:09:36.607Z"
+  },
+  "core_1761617379932_64gdvocdv": {
+    "coreId": "core_1761617379932_64gdvocdv",
+    "points": 110,
+    "createdAt": "2025-10-28T02:09:44.133Z",
+    "lastDailyClaim": "2025-10-28T02:09:44.133Z",
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T02:21:07.259Z"
   }
 }

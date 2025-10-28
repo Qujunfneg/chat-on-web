@@ -163,6 +163,28 @@ function addUserOnlineMinutes(coreId, minutes) {
   return writePointsData(data);
 }
 
+// 重置用户在线时长（分钟）
+function resetUserOnlineMinutes(coreId) {
+  if (!coreId) return false;
+  
+  const data = readPointsData();
+  
+  if (!data[coreId]) {
+    data[coreId] = {
+      coreId: coreId,
+      points: 0,
+      createdAt: new Date().toISOString(),
+      lastDailyClaim: null,
+      onlineMinutes: 0
+    };
+  }
+  
+  data[coreId].onlineMinutes = 0;
+  data[coreId].updatedAt = new Date().toISOString();
+  
+  return writePointsData(data);
+}
+
 // 获取用户详细信息
 function getUserInfo(coreId) {
   if (!coreId) return null;
@@ -211,6 +233,7 @@ module.exports = {
   canClaimDailyPoints,
   claimDailyPoints,
   addUserOnlineMinutes,
+  resetUserOnlineMinutes,
   getUserInfo,
   cleanupInactiveUsers,
   POINTS_DATA_FILE

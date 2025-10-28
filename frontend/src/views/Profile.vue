@@ -162,6 +162,18 @@ function getUserInfo() {
   username.value = localStorage.getItem('username') || '';
   userId.value = localStorage.getItem('userId') || '';
   coreId.value = localStorage.getItem('coreId') || '';
+  
+  // 从localStorage获取上次领取时间
+  const storedLastClaimDate = localStorage.getItem('lastClaimDate');
+  if (storedLastClaimDate) {
+    lastClaimDate.value = storedLastClaimDate;
+  }
+  
+  // 从localStorage获取canClaimDaily状态
+  const storedCanClaimDaily = localStorage.getItem('canClaimDaily');
+  if (storedCanClaimDaily !== null) {
+    canClaimDaily.value = storedCanClaimDaily === 'true';
+  }
 }
 
 function formatTime(time){
@@ -194,7 +206,11 @@ function claimDailyPoints() {
   const handleClaimSuccess = (data) => {
     userPoints.value = data.points;
     canClaimDaily.value = data.canClaimDaily;
+    // 保存canClaimDaily状态到localStorage
+    localStorage.setItem('canClaimDaily', data.canClaimDaily.toString());
     lastClaimDate.value = new Date().toISOString();
+    // 保存到localStorage
+    localStorage.setItem('lastClaimDate', lastClaimDate.value);
     ElMessage.success(`成功领取${data.claimedPoints}积分！`);
     claiming.value = false;
     
@@ -240,12 +256,18 @@ onMounted(() => {
       // 只有在明确提供了canClaimDaily状态时才更新，否则保持当前状态
       if (data.canClaimDaily !== undefined) {
         canClaimDaily.value = data.canClaimDaily;
+        // 保存canClaimDaily状态到localStorage
+        localStorage.setItem('canClaimDaily', data.canClaimDaily.toString());
       }
       // 如果没有提供lastClaimDate，但canClaimDaily为false，说明已经领取过
       if (!data.lastClaimDate && !canClaimDaily.value) {
         lastClaimDate.value = new Date().toISOString();
+        // 保存到localStorage
+        localStorage.setItem('lastClaimDate', lastClaimDate.value);
       } else if (data.lastClaimDate) {
         lastClaimDate.value = data.lastClaimDate;
+        // 保存到localStorage
+        localStorage.setItem('lastClaimDate', data.lastClaimDate);
       }
     });
     
@@ -255,11 +277,35 @@ onMounted(() => {
       onlineMinutes.value = data.onlineMinutes || 0;
       canClaimDaily.value = data.canClaimDaily;
       lastClaimDate.value = data.lastClaimDate || '';
+      
+      // 将上次领取时间保存到localStorage
+      if (data.lastClaimDate) {
+        localStorage.setItem('lastClaimDate', data.lastClaimDate);
+      }
+      
+      // 保存canClaimDaily状态到localStorage
+      localStorage.setItem('canClaimDaily', data.canClaimDaily.toString());
     });
     
     // 请求当前积分信息
     window.socket.emit('get_points');
   }
+  
+  // 如果socket还未连接，添加一个延迟重试机制
+  if (!window.socket || !window.socket.connected) {
+    setTimeout(() => {
+      if (window.socket && window.socket.connected) {
+        window.socket.emit('get_points');
+      }
+    }, 1000);
+  }
+  
+  // 添加一个额外的重试机制，确保在页面加载后获取到积分信息
+  setTimeout(() => {
+    if (window.socket && window.socket.connected) {
+      window.socket.emit('get_points');
+    }
+  }, 2000);
 });
 
 // 组件卸载时清除定时器
