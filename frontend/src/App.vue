@@ -43,6 +43,7 @@ import Setting from "./components/Setting.vue";
 import Menu from "./components/Menu.vue";
 import Music from "./components/Music.vue";
 import Profile from "./views/Profile.vue";
+import { io } from "socket.io-client";
 import './styles/theme.scss'; // 导入主题样式
 const username = ref("");
 
@@ -87,27 +88,75 @@ function setActiveMenu(name) {
   currentMenu.value = name;
 }
 
+// 获取或生成userId
+const getUserId = () => {
+  let storedUserId = localStorage.getItem("userId");
+  if (!storedUserId) {
+    storedUserId = generateUserId();
+    localStorage.setItem("userId", storedUserId);
+  }
+  return storedUserId;
+};
+
 // 处理用户名提交
 function handleUsernameSubmit() {
   if (username.value.trim()) {
-    // 生成用户ID
-    const userId = generateUserId();
+    // 获取或生成userId（使用已存在的，而不是每次都生成新的）
+    const userId = getUserId();
     
     // 获取或生成coreId
     const coreId = getCoreId();
     
     // 存储到localStorage
     localStorage.setItem("username", username.value.trim());
-    localStorage.setItem("userId", userId);
     localStorage.setItem("nickname", username.value.trim());
-    // coreId已经在getCoreId函数中存储到localStorage
+    // userId和coreId已经在getUserId和getCoreId函数中存储到localStorage
     
-    ElMessage.success(`欢迎，${username.value.trim()}`);
+    // 创建临时WebSocket连接检查用户是否被踢
+    const tempSocket = io('http://localhost:3001');
+    let isBanned = false;
     
-    // 强制重新渲染以确保视图更新
-    // 由于Vue的响应式系统可能不会立即检测到localStorage的变化
-    // 我们可以通过重新加载页面来确保用户立即进入聊天室
-    location.reload();
+    // 设置超时，如果5秒内没有收到user_banned事件，则认为用户未被踢
+    const timeout = setTimeout(() => {
+      if (!isBanned) {
+        tempSocket.disconnect();
+        ElMessage.success(`欢迎，${username.value.trim()}`);
+        // 强制重新渲染以确保视图更新
+        location.reload();
+      }
+    }, 5000);
+    
+    // 监听user_banned事件
+    tempSocket.on('user_banned', (data) => {
+      isBanned = true;
+      clearTimeout(timeout);
+      tempSocket.disconnect();
+      
+      // 显示被踢信息
+      ElMessage.error({
+        message: data.message,
+        duration: 0, // 不自动关闭
+        showClose: true
+      });
+      
+      // 显示被踢原因和剩余时间
+      ElMessage.error(`原因：${data.reason || "违反聊天室规定"}，剩余禁期：${data.remainingTime}`);
+      
+      // 清除用户信息
+      localStorage.removeItem("username");
+      localStorage.removeItem("nickname");
+      // 保留userId和coreId，以便禁期能正确应用
+      
+      // 重置输入框
+      username.value = "";
+    });
+    
+    // 尝试加入聊天室
+    tempSocket.emit('join', {
+      userId,
+      username: username.value.trim(),
+      coreId
+    });
   }
 }
 

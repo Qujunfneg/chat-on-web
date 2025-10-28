@@ -12,8 +12,8 @@
     "points": 650,
     "createdAt": "2025-10-27T07:34:53.150Z",
     "lastDailyClaim": "2025-10-27T08:48:33.939Z",
-    "onlineMinutes": 61.833333333333336,
-    "updatedAt": "2025-10-27T09:24:31.623Z"
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T02:49:33.656Z"
   },
   "core_1761550540345_pnmgn6e4t": {
     "coreId": "core_1761550540345_pnmgn6e4t",
@@ -36,8 +36,8 @@
     "points": 280,
     "createdAt": "2025-10-27T07:58:13.223Z",
     "lastDailyClaim": "2025-10-27T07:58:13.223Z",
-    "onlineMinutes": 36,
-    "updatedAt": "2025-10-27T08:31:31.159Z"
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T02:50:14.521Z"
   },
   "core_1761552309501_ezw6hiuf7": {
     "coreId": "core_1761552309501_ezw6hiuf7",
@@ -89,10 +89,10 @@
   },
   "core_1761617379932_64gdvocdv": {
     "coreId": "core_1761617379932_64gdvocdv",
-    "points": 110,
+    "points": 130,
     "createdAt": "2025-10-28T02:09:44.133Z",
     "lastDailyClaim": "2025-10-28T02:09:44.133Z",
     "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T02:21:07.259Z"
+    "updatedAt": "2025-10-28T02:50:45.652Z"
   }
 }

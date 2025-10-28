@@ -30,6 +30,19 @@
           </el-select>
         </el-form-item>
 
+        <!-- 管理员模式设置 -->
+        <el-divider content-position="left">管理员设置</el-divider>
+        
+        <el-form-item label="管理员模式">
+          <el-switch 
+            v-model="settings.adminMode" 
+            active-text="启用" 
+            inactive-text="禁用"
+            @change="onAdminModeChange"
+          />
+          <div class="form-item-tip">启用后可在用户列表右键菜单中找到踢人功能</div>
+        </el-form-item>
+
         <!-- 当前配置信息 -->
         <el-divider content-position="left">当前配置信息</el-divider>
         
@@ -91,7 +104,8 @@ export default {
     
     // 设置数据模型
     const settings = reactive({
-      musicSource: musicSources.value[0].url // 默认使用第一个音乐源
+      musicSource: musicSources.value[0].url, // 默认使用第一个音乐源
+      adminMode: false // 默认禁用管理员模式
     });
     
     // 计算当前选中的音乐源名称
@@ -103,6 +117,12 @@ export default {
     // 组件挂载时从localStorage加载设置
     onMounted(() => {
       loadSettings();
+      
+      // 从localStorage加载管理员模式状态
+      const savedAdminMode = localStorage.getItem('adminMode');
+      if (savedAdminMode !== null) {
+        settings.adminMode = savedAdminMode === 'true';
+      }
     });
     
     // 从localStorage加载设置
@@ -161,6 +181,14 @@ export default {
       // 可以在这里添加临时预览或其他逻辑
     };
     
+    // 当管理员模式变更时的处理
+    const onAdminModeChange = () => {
+      // 发送全局事件，通知Chart组件更新管理员模式
+      window.dispatchEvent(new CustomEvent('admin-mode-changed', {
+        detail: { adminMode: settings.adminMode }
+      }));
+    };
+    
     // 重置设置
     const resetSettings = () => {
       // 重置表单验证
@@ -168,7 +196,8 @@ export default {
       
       // 重置为默认值
       Object.assign(settings, {
-        musicSource: musicSources.value[0].url
+        musicSource: musicSources.value[0].url,
+        adminMode: false
       });
       
       ElMessage.info('设置已重置为默认值');
@@ -192,7 +221,8 @@ export default {
       saveSettings,
       resetSettings,
       cancel,
-      onMusicSourceChange
+      onMusicSourceChange,
+      onAdminModeChange
     };
   }
 };
@@ -278,6 +308,14 @@ export default {
 
 .el-input .el-input__wrapper {
   border-radius: 8px;
+}
+
+/* 表单项提示样式 */
+.form-item-tip {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  line-height: 1.4;
 }
 
 /* 响应式设计 */

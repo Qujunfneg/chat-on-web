@@ -118,6 +118,36 @@ module.exports = (io) => {
         return;
       }
 
+      // 检查用户是否被踢出且仍在禁期内
+      if (global.kickedUsers && global.kickedUsers.has(userId)) {
+        const kickInfo = global.kickedUsers.get(userId);
+        const now = Date.now();
+        
+        // 检查是否仍在禁期内
+        if (kickInfo.unbanTimestamp === 0 || now < kickInfo.unbanTimestamp) {
+          const remainingTime = kickInfo.unbanTimestamp === 0 ? 
+            '永久' : 
+            Math.ceil((kickInfo.unbanTimestamp - now) / (60 * 1000)) + '分钟';
+          
+          console.log(`用户 ${username} 尝试重新连接，但仍在禁期内，剩余时间: ${remainingTime}`);
+          socket.emit("user_banned", {
+            message: `您已被管理员 ${kickInfo.kickedByUsername} 踢出聊天室`,
+            reason: kickInfo.reason,
+            duration: kickInfo.duration,
+            remainingTime: remainingTime,
+            timestamp: kickInfo.timestamp
+          });
+          
+          // 断开连接
+          socket.disconnect(true);
+          return;
+        } else {
+          // 禁期已过，移除踢人记录
+          global.kickedUsers.delete(userId);
+          console.log(`用户 ${username} 禁期已过，允许重新连接`);
+        }
+      }
+
       // 检查 userId 是否已存在于其他 socket
       if (userInfoMap.has(userId)) {
         const existingSocketId = Array.from(onlineUsers.entries()).find(([_, uid]) => uid === userId)?.[0];
@@ -372,6 +402,130 @@ module.exports = (io) => {
       } else {
         socket.emit("claim_points_failed", { message: "领取积分失败" });
       }
+    });
+
+    // 处理踢人请求
+    socket.on('kick_user', (data) => {
+      const adminId = onlineUsers.get(socket.id);
+      const adminInfo = userInfoMap.get(adminId);
+      
+      // 验证管理员身份（暂时简化为检查用户是否在线）
+      if (!adminInfo) {
+        console.log(`踢人失败：用户 ${adminId} 不存在或未登录`);
+        socket.emit("kick_failed", { message: "用户未登录" });
+        return;
+      }
+      
+      const { userId, username, duration } = data;
+      
+      // 如果提供了userId，直接使用；否则通过username查找
+      let targetUserId = userId;
+      let targetUserInfo = userInfoMap.get(userId);
+      
+      if (!targetUserId && username) {
+        // 通过username查找userId
+        for (const [uid, info] of userInfoMap.entries()) {
+          if (info.username === username || info.nickname === username) {
+            targetUserId = uid;
+            targetUserInfo = info;
+            break;
+          }
+        }
+      }
+      
+      if (!targetUserInfo) {
+        console.log(`踢人失败：目标用户 ${userId || username} 不存在`);
+        socket.emit("kick_failed", { message: "目标用户不存在" });
+        return;
+      }
+      
+      // 不能踢自己
+      if (targetUserId === adminId) {
+        console.log(`踢人失败：管理员尝试踢自己`);
+        socket.emit("kick_failed", { message: "不能踢出自己" });
+        return;
+      }
+      
+      // 查找目标用户的socket
+      let targetSocketId = null;
+      for (const [sid, uid] of onlineUsers.entries()) {
+        if (uid === targetUserId) {
+          targetSocketId = sid;
+          break;
+        }
+      }
+      
+      if (!targetSocketId) {
+        console.log(`踢人失败：目标用户 ${targetUserId} 不在线`);
+        socket.emit("kick_failed", { message: "目标用户不在线" });
+        return;
+      }
+      
+      // 记录踢人信息
+      const kickInfo = {
+        kickedUserId: targetUserId,
+        kickedByUsername: adminInfo.nickname,
+        kickedByUserId: adminId,
+        duration: duration, // 分钟数，0表示永久
+        timestamp: Date.now(),
+        reason: data.reason || "违反聊天室规定"
+      };
+      
+      // 存储踢人信息
+      if (!global.kickedUsers) {
+        global.kickedUsers = new Map();
+      }
+      
+      // 计算解禁时间戳
+      let unbanTimestamp = 0;
+      if (duration > 0) {
+        unbanTimestamp = Date.now() + (duration * 60 * 1000);
+      }
+      
+      global.kickedUsers.set(targetUserId, {
+        ...kickInfo,
+        unbanTimestamp
+      });
+      
+      // 通知被踢用户
+      io.to(targetSocketId).emit("user_kicked", {
+        message: `您已被管理员 ${adminInfo.nickname} 踢出聊天室`,
+        duration: duration,
+        reason: kickInfo.reason,
+        timestamp: kickInfo.timestamp
+      });
+      
+      // 断开目标用户连接
+      io.sockets.sockets.get(targetSocketId)?.disconnect(true);
+      
+      // 从在线用户列表中移除
+      onlineUsers.delete(targetSocketId);
+      
+      // 向管理员发送踢人成功通知
+      socket.emit("kick_success", {
+        message: `已成功踢出用户 ${targetUserInfo.nickname}`,
+        kickedUserId: targetUserId,
+        kickedUsername: targetUserInfo.nickname,
+        duration: duration
+      });
+      
+      // 广播踢人事件给其他用户
+      socket.broadcast.emit("user_kicked_notification", {
+        kickedUserId: targetUserId,
+        kickedUsername: targetUserInfo.nickname,
+        kickedByUsername: adminInfo.nickname,
+        duration: duration,
+        timestamp: kickInfo.timestamp
+      });
+      
+      // 更新用户列表
+      const usersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+        return userInfoMap.get(uid) || { userId: uid, username: null };
+      });
+      
+      io.emit("user_list_updated", usersList);
+      
+      console.log(`管理员 ${adminInfo.nickname} 踢出了用户 ${targetUserInfo.nickname}，时长: ${duration === 0 ? '永久' : duration + '分钟'}`);
     });
 
     // 用户断开连接

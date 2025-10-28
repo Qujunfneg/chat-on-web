@@ -48,7 +48,7 @@
           
           <!-- 聊天头部 -->
           <div class="chat-header">
-            <h2>公共大厅</h2>
+            <h2 @click="handleTitleClick">公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
               <AnnouncementBar style="margin-right: 10px;"/>
@@ -73,7 +73,7 @@
               </el-button>
             </div>
           </div>
-
+          
           <!-- 弹幕显示区域 -->
           <div class="danmu-display-area">
             <div
@@ -318,11 +318,13 @@
       :selected-message="selectedMessage"
       :selected-image-url="selectedImageUrl"
       :current-user-id="userId"
+      :is-admin-mode="isAdminMode"
       @hide-menu="hideContextMenu"
       @mention-user="handleMentionUser"
       @quote-message="handleQuoteMessage"
       @edit-nickname="handleEditNickname"
       @recall-message="handleRecallMessage"
+      @kick-user="handleKickUser"
     ></ContextMenu>
 
     <!-- @用户弹层 -->
@@ -343,6 +345,36 @@
       :userId="userId"
       @confirmed="handleSaveNickname"
     ></NameDialog>
+
+    <!-- 踢人对话框 -->
+    <el-dialog
+      v-model="showKickDialog"
+      title="踢人设置"
+      width="30%"
+      :before-close="cancelKickUser"
+    >
+      <div class="kick-dialog-content">
+        <p v-if="selectedUserForKick">确定要踢出用户 <strong>{{ typeof selectedUserForKick === 'object' ? selectedUserForKick.username : selectedUserForKick }}</strong> 吗？</p>
+        <p v-else>未选择要踢出的用户</p>
+        <div class="kick-duration-setting">
+          <label>下线时长：</label>
+          <el-select v-model="kickDuration" placeholder="请选择">
+            <el-option label="1分钟" :value="1"></el-option>
+            <el-option label="5分钟" :value="5"></el-option>
+            <el-option label="10分钟" :value="10"></el-option>
+            <el-option label="30分钟" :value="30"></el-option>
+            <el-option label="1小时" :value="60"></el-option>
+            <el-option label="永久" :value="0"></el-option>
+          </el-select>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelKickUser">取消</el-button>
+          <el-button type="primary" @click="confirmKickUser" :disabled="!selectedUserForKick">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -807,6 +839,85 @@ export default {
       socket.on("recall_failed", (data) => {
         ElMessage.error(data.message || "消息撤回失败");
       });
+
+      // 处理被踢事件
+      socket.on("user_kicked", (data) => {
+        ElMessage.error({
+          message: data.message,
+          duration: 0, // 不自动关闭
+          showClose: true
+        });
+        
+        // 显示被踢原因和时长
+        const durationText = data.duration === 0 ? '永久' : data.duration + '分钟';
+        ElMessage.error(`原因：${data.reason || "违反聊天室规定"}，禁期：${durationText}`);
+        
+        // 断开socket连接
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // 清除用户信息
+        username.value = "";
+        userId.value = "";
+        coreId.value = "";
+        isLoggedIn.value = false;
+        
+        // 清除localStorage中的用户信息，但保留userId和coreId
+        // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
+        localStorage.removeItem("username");
+        
+        // 延迟跳转到登录页，让用户看到被踢信息
+        setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 3000);
+      });
+
+      // 处理踢人成功事件
+      socket.on("kick_success", (data) => {
+        ElMessage.success({
+          message: data.message,
+          duration: 3000
+        });
+      });
+
+      // 处理踢人失败事件
+      socket.on("kick_failed", (data) => {
+        ElMessage.error({
+          message: data.message || "踢人失败",
+          duration: 3000
+        });
+      });
+
+      // 处理用户被禁事件（尝试重新连接时）
+      socket.on("user_banned", (data) => {
+        ElMessage.error({
+          message: data.message,
+          duration: 0, // 不自动关闭
+          showClose: true
+        });
+        
+        // 显示被踢原因和剩余时间
+        ElMessage.error(`原因：${data.reason || "违反聊天室规定"}，剩余禁期：${data.remainingTime}`);
+        
+        // 断开socket连接
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // 清除用户信息
+        username.value = "";
+        userId.value = "";
+        coreId.value = "";
+        isLoggedIn.value = false;
+        
+        // 延迟跳转到登录页，让用户看到被踢信息
+        setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 3000);
+      });
     };
 
     // 获取通知内容
@@ -903,8 +1014,8 @@ export default {
         socket = null;
       }
 
-      // 清除localStorage中的用户信息，但保留coreId
-      localStorage.removeItem("userId");
+      // 清除localStorage中的用户信息，但保留userId和coreId
+      // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
       localStorage.removeItem("username");
       // 移除对nickname的localStorage清除
       // localStorage.removeItem('nickname');
@@ -1537,6 +1648,106 @@ export default {
       });
     };
 
+    // 管理员模式相关状态
+    const isAdminMode = ref(false);
+    const titleClickCount = ref(0);
+    const titleClickTimer = ref(null);
+    
+    // 踢人对话框相关状态
+    const showKickDialog = ref(false);
+    const selectedUserForKick = ref(null);
+    const kickDuration = ref(1); // 默认1分钟
+    
+    // 处理标题点击事件
+    const handleTitleClick = () => {
+      titleClickCount.value++;
+      
+      // 清除之前的定时器
+      if (titleClickTimer.value) {
+        clearTimeout(titleClickTimer.value);
+      }
+      
+      // 设置新的定时器，3秒后重置计数
+      titleClickTimer.value = setTimeout(() => {
+        titleClickCount.value = 0;
+      }, 3000);
+      
+      // 如果点击次数达到10次，激活管理员模式
+      if (titleClickCount.value >= 10) {
+        isAdminMode.value = true;
+        titleClickCount.value = 0;
+        ElMessage.success("已进入管理员模式");
+        
+        // 清除定时器
+        if (titleClickTimer.value) {
+          clearTimeout(titleClickTimer.value);
+          titleClickTimer.value = null;
+        }
+      }
+    };
+
+    // 踢人处理函数
+    const handleKickUser = (user) => {
+      // 确保user对象有效，并标准化为对象格式
+      if (!user) {
+        ElMessage.error("无效的用户信息");
+        return;
+      }
+      
+      // 标准化用户对象
+      const normalizedUser = typeof user === 'object' ? user : { username: user };
+      
+      // 确保用户对象有username属性
+      if (!normalizedUser.username) {
+        ElMessage.error("用户信息缺少用户名");
+        return;
+      }
+      
+      selectedUserForKick.value = normalizedUser;
+      showKickDialog.value = true;
+      kickDuration.value = 1; // 重置为默认值
+    };
+
+    // 确认踢人
+    const confirmKickUser = () => {
+      if (!selectedUserForKick.value) {
+        ElMessage.error("未选择要踢出的用户");
+        return;
+      }
+
+      const userToKick = typeof selectedUserForKick.value === 'object' 
+        ? selectedUserForKick.value 
+        : { username: selectedUserForKick.value };
+      
+      // 再次验证用户对象
+      if (!userToKick.username) {
+        ElMessage.error("用户信息无效");
+        return;
+      }
+
+      // 发送踢人请求到服务器
+      socket.emit('kick_user', {
+        userId: userToKick.userId,
+        username: userToKick.username,
+        duration: kickDuration.value,
+        adminId: userId.value,
+        adminName: username.value
+      });
+
+      // 关闭对话框
+      showKickDialog.value = false;
+      selectedUserForKick.value = null;
+
+      // 不再立即显示成功消息，等待服务器返回成功事件
+      ElMessage.info(`正在踢出 ${userToKick.username}，请稍候...`);
+    };
+
+    // 取消踢人
+    const cancelKickUser = () => {
+      showKickDialog.value = false;
+      selectedUserForKick.value = null;
+    };
+
     // 处理窗口获得焦点
     const handleWindowFocus = () => {
       hasFocus = true;
@@ -1761,6 +1972,19 @@ export default {
 
       // 添加音频权限事件监听器
       window.addEventListener("click", handleGlobalClickForAudioPermission);
+      
+      // 从localStorage加载管理员模式状态
+      const savedAdminMode = localStorage.getItem('adminMode');
+      if (savedAdminMode !== null) {
+        isAdminMode.value = savedAdminMode === 'true';
+      }
+      
+      // 监听管理员模式变更事件
+      window.addEventListener('admin-mode-changed', (event) => {
+        isAdminMode.value = event.detail.adminMode;
+        // 保存管理员模式状态到localStorage
+        localStorage.setItem('adminMode', isAdminMode.value);
+      });
     });
 
     // 组件卸载时执行
@@ -1779,6 +2003,8 @@ export default {
       window.removeEventListener("contextmenu", () => {});
       // 移除音频权限事件监听器
       window.removeEventListener("click", handleGlobalClickForAudioPermission);
+      // 移除管理员模式变更事件监听器
+      window.removeEventListener('admin-mode-changed', () => {});
       // 清理标题闪烁定时器
       if (titleInterval) {
         clearInterval(titleInterval);
@@ -1808,6 +2034,10 @@ export default {
       showAudioPermissionButton,
       isLoadingMessages,
       isLoadingUsers,
+      isAdminMode,
+      showKickDialog,
+      selectedUserForKick,
+      kickDuration,
       handleLoginSuccess,
       requestAudioPermission,
       handleImageUpload,
@@ -1825,6 +2055,9 @@ export default {
       handleQuoteMessage,
       handleRecallMessage,
       handleSelectUserForMention,
+      handleKickUser,
+      confirmKickUser,
+      cancelKickUser,
       showNicknameDialog,
       editNicknameInitialValue,
       handleEditNickname,
@@ -1833,6 +2066,7 @@ export default {
       showUserList,
       toggleUserList,
       handleImageSelect,
+      handleTitleClick,
       danmuContent,
       danmuColor,
       danmuList,
@@ -1846,3 +2080,24 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.kick-dialog-content {
+  padding: 20px 0;
+}
+
+.kick-dialog-content p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.kick-duration-setting {
+  display: flex;
+  align-items: center;
+}
+
+.kick-duration-setting label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+</style>
