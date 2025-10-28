@@ -614,11 +614,11 @@ export default {
         // 发送userId、username和coreId加入聊天室
         socket.emit("join", { userId: userId.value, username: username.value, coreId: coreId.value });
 
-        // 优化：将验证超时从2秒减少到500毫秒，提高用户体验
+        // 优化：将验证超时从500毫秒减少到200毫秒，进一步提高用户体验
         validationTimeout = setTimeout(() => {
           console.log("用户ID验证通过，进入聊天室");
           isLoggedIn.value = true;
-        }, 500);
+        }, 200);
       });
 
       // 在验证失败时清除计时器

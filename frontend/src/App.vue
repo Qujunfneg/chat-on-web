@@ -113,18 +113,19 @@ function handleUsernameSubmit() {
     // userId和coreId已经在getUserId和getCoreId函数中存储到localStorage
     
     // 创建临时WebSocket连接检查用户是否被踢
-    const tempSocket = io('http://localhost:3001');
+    // 使用相对路径，让WebSocket自动使用当前页面的主机地址
+    const tempSocket = io();
     let isBanned = false;
     
-    // 设置超时，如果5秒内没有收到user_banned事件，则认为用户未被踢
+    // 设置超时，如果1秒内没有收到user_banned事件，则认为用户未被踢
     const timeout = setTimeout(() => {
       if (!isBanned) {
         tempSocket.disconnect();
         ElMessage.success(`欢迎，${username.value.trim()}`);
-        // 强制重新渲染以确保视图更新
-        location.reload();
+        // 不再使用location.reload()，而是直接更新状态
+        window.location.href = window.location.origin;
       }
-    }, 5000);
+    }, 1000);
     
     // 监听user_banned事件
     tempSocket.on('user_banned', (data) => {
