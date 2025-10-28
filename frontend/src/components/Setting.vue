@@ -1,81 +1,139 @@
 <template>
   <div class="setting-container">
-    <el-card class="setting-card">
-      <template #header>
-        <div class="card-header">
-          <span class="card-title"><el-icon><SettingIcon /></el-icon> 应用设置</span>
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <el-icon><SettingIcon /></el-icon>
+        应用设置
+      </h1>
+      <p class="page-subtitle">管理您的应用偏好设置</p>
+    </div>
+
+    <!-- 设置卡片网格 -->
+    <div class="settings-grid">
+      <!-- 音乐源设置卡片 -->
+      <el-card class="setting-card music-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <div class="header-icon">
+              <el-icon><MusicIcon /></el-icon>
+            </div>
+            <div class="header-content">
+              <h3>音乐源设置</h3>
+              <p>配置音乐播放服务</p>
+            </div>
+            <div class="header-actions">
+              <el-button 
+                v-if="!isEditing" 
+                type="primary" 
+                @click="startEditing" 
+                class="edit-btn"
+                size="small"
+              >
+                <el-icon><EditIcon /></el-icon>
+                编辑
+              </el-button>
+              <div v-else class="edit-actions">
+                <el-button 
+                  type="success" 
+                  @click="saveMusicSettings" 
+                  :loading="musicSaving"
+                  size="small"
+                >
+                  <el-icon><CheckIcon /></el-icon>
+                  保存
+                </el-button>
+                <el-button @click="cancelEditing" size="small">
+                  <el-icon><CloseIcon /></el-icon>
+                  取消
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <div class="card-content">
+          <!-- 只读模式：显示当前音乐源信息 -->
+          <div v-if="!isEditing" class="info-display">
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><MusicIcon /></el-icon>
+                <span>当前音乐源</span>
+              </div>
+              <div class="info-value">{{ currentMusicSourceName }}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><LinkIcon /></el-icon>
+                <span>音乐源URL</span>
+              </div>
+              <div class="info-value url-value">{{ musicSettings.musicSource }}</div>
+            </div>
+          </div>
+          
+          <!-- 编辑模式：显示表单 -->
+          <el-form 
+            v-else
+            ref="musicForm"
+            :model="tempMusicSettings"
+            label-position="top"
+            class="compact-form"
+            size="default"
+          >
+            <el-form-item 
+              label="选择音乐源"
+              prop="musicSource"
+              :rules="[{ required: true, message: '请选择音乐源', trigger: 'change' }]"
+            >
+              <el-select 
+                v-model="tempMusicSettings.musicSource" 
+                placeholder="请选择音乐源" 
+                class="w-full"
+              >
+                <el-option 
+                  v-for="source in musicSources"
+                  :key="source.name"
+                  :label="source.name"
+                  :value="source.url"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
         </div>
-      </template>
+      </el-card>
       
-      <el-form 
-        ref="settingForm"
-        :model="settings"
-        label-width="100px"
-        class="setting-form"
-        size="medium"
-      >
-        <!-- 音乐源设置 -->
-        <el-form-item 
-          label="音乐源"
-          prop="musicSource"
-          :rules="[{ required: true, message: '请选择音乐源', trigger: 'change' }]"
-        >
-          <el-select v-model="settings.musicSource" placeholder="请选择音乐源" class="w-full" @change="onMusicSourceChange">
-            <el-option 
-              v-for="source in musicSources"
-              :key="source.name"
-              :label="source.name"
-              :value="source.url"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-
-        <!-- 管理员模式设置 -->
-        <el-divider content-position="left">管理员设置</el-divider>
-        
-        <el-form-item label="管理员模式">
-          <el-switch 
-            v-model="settings.adminMode" 
-            active-text="启用" 
-            inactive-text="禁用"
-            @change="onAdminModeChange"
-          />
-          <div class="form-item-tip">启用后可在用户列表右键菜单中找到踢人功能</div>
-        </el-form-item>
-
-        <!-- 当前配置信息 -->
-        <el-divider content-position="left">当前配置信息</el-divider>
-        
-        <el-form-item label="当前音乐源">
-          <el-input 
-            v-model="currentMusicSourceName"
-            disabled
-            placeholder="加载中..."
-          ></el-input>
-        </el-form-item>
-
-        <el-form-item label="音乐源URL">
-          <el-input 
-            v-model="settings.musicSource"
-            disabled
-            placeholder="加载中..."
-          ></el-input>
-        </el-form-item>
-
-        <!-- 按钮组 -->
-        <div class="form-actions">
-          <el-button type="primary" @click="saveSettings" :loading="saving">
-            保存设置
-          </el-button>
-          <el-button @click="resetSettings">
-            重置
-          </el-button>
-          <el-button @click="cancel">
-            取消
-          </el-button>
+      <!-- 管理员状态卡片 -->
+      <el-card v-if="adminSettings.adminMode" class="settings-card admin-card">
+        <template #header>
+          <div class="card-header">
+            <div class="header-title">
+              <el-icon class="header-icon admin-header-icon"><UserIcon /></el-icon>
+              <span class="card-title">管理员模式</span>
+            </div>
+          </div>
+        </template>
+        <div class="card-content">
+          <div class="admin-status-content">
+            <div class="admin-status-info">
+              <el-icon class="admin-status-icon"><UserIcon /></el-icon>
+              <span class="admin-status-text">管理员模式已启用</span>
+            </div>
+            <div class="admin-actions">
+              <el-button 
+                type="danger" 
+                size="default"
+                @click="disableAdminMode"
+                class="admin-close-btn"
+              >
+                <el-icon><CloseIcon /></el-icon>
+                关闭管理员模式
+              </el-button>
+            </div>
+          </div>
         </div>
-      </el-form>
-    </el-card>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -84,17 +142,36 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 
 // 从element-plus导入所有需要的图标
-import { Setting as SettingIcon } from '@element-plus/icons-vue';
+import { 
+  Setting as SettingIcon,
+  VideoPlay as MusicIcon,
+  User as UserIcon,
+  InfoFilled as InfoIcon,
+  Check as CheckIcon,
+  Refresh as RefreshIcon,
+  Link as LinkIcon,
+  Edit as EditIcon,
+  Close as CloseIcon
+} from '@element-plus/icons-vue';
 
 export default {
   name: 'Setting',
   components: {
-    SettingIcon
+    SettingIcon,
+    MusicIcon,
+    UserIcon,
+    InfoIcon,
+    CheckIcon,
+    RefreshIcon,
+    LinkIcon,
+    EditIcon,
+    CloseIcon
   },
   emits: ['close', 'settings-changed'],
   setup(props, { emit }) {
-    const settingForm = ref(null);
-    const saving = ref(false);
+    const musicForm = ref(null);
+    const musicSaving = ref(false);
+    const isEditing = ref(false);
     
     // 音乐源列表
     const musicSources = ref([
@@ -102,127 +179,163 @@ export default {
       { name: 'qqmp3', url: 'https://www.qqmp3.vip/' }
     ]);
     
-    // 设置数据模型
-    const settings = reactive({
-      musicSource: musicSources.value[0].url, // 默认使用第一个音乐源
+    // 音乐源设置数据模型
+    const musicSettings = reactive({
+      musicSource: musicSources.value[0].url // 默认使用第一个音乐源
+    });
+    
+    // 临时音乐源设置，用于编辑模式
+    const tempMusicSettings = reactive({
+      musicSource: musicSettings.musicSource
+    });
+    
+    // 管理员设置数据模型
+    const adminSettings = reactive({
       adminMode: false // 默认禁用管理员模式
     });
     
     // 计算当前选中的音乐源名称
     const currentMusicSourceName = computed(() => {
-      const source = musicSources.value.find(item => item.url === settings.musicSource);
+      const source = musicSources.value.find(item => item.url === musicSettings.musicSource);
       return source ? source.name : '未知音乐源';
     });
     
     // 组件挂载时从localStorage加载设置
     onMounted(() => {
-      loadSettings();
+      loadMusicSettings();
+      loadAdminSettings();
       
-      // 从localStorage加载管理员模式状态
-      const savedAdminMode = localStorage.getItem('adminMode');
-      if (savedAdminMode !== null) {
-        settings.adminMode = savedAdminMode === 'true';
-      }
+      // 监听管理员模式变更事件
+      window.addEventListener('admin-mode-changed', handleAdminModeChange);
     });
     
-    // 从localStorage加载设置
-    const loadSettings = () => {
-      try {
-        const savedSettings = localStorage.getItem('appSettings');
-        if (savedSettings) {
-          const parsedSettings = JSON.parse(savedSettings);
-          Object.assign(settings, parsedSettings);
-        } else {
-          // 如果没有保存的设置，使用默认值并保存
-          saveSettingsToStorage();
-        }
-      } catch (error) {
-        console.error('加载设置失败:', error);
-        ElMessage.error('加载设置失败');
+    // 处理管理员模式变更事件
+    const handleAdminModeChange = (event) => {
+      if (event.detail && event.detail.adminMode !== undefined) {
+        adminSettings.adminMode = event.detail.adminMode;
+        saveAdminSettingsToStorage();
       }
     };
     
-    // 保存设置到localStorage
-    const saveSettings = async () => {
-      saving.value = true;
+    // 从localStorage加载音乐源设置
+    const loadMusicSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem('musicSettings');
+        if (savedSettings) {
+          const parsedSettings = JSON.parse(savedSettings);
+          Object.assign(musicSettings, parsedSettings);
+          Object.assign(tempMusicSettings, parsedSettings);
+        } else {
+          // 如果没有保存的设置，使用默认值并保存
+          saveMusicSettingsToStorage();
+        }
+      } catch (error) {
+        console.error('加载音乐源设置失败:', error);
+        ElMessage.error('加载音乐源设置失败');
+      }
+    };
+    
+    // 从localStorage加载管理员设置
+    const loadAdminSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem('adminSettings');
+        if (savedSettings) {
+          const parsedSettings = JSON.parse(savedSettings);
+          Object.assign(adminSettings, parsedSettings);
+        } else {
+          // 如果没有保存的设置，使用默认值并保存
+          saveAdminSettingsToStorage();
+        }
+      } catch (error) {
+        console.error('加载管理员设置失败:', error);
+        ElMessage.error('加载管理员设置失败');
+      }
+    };
+    
+    // 开始编辑
+    const startEditing = () => {
+      isEditing.value = true;
+      // 重置临时设置为当前设置
+      Object.assign(tempMusicSettings, musicSettings);
+    };
+    
+    // 取消编辑
+    const cancelEditing = () => {
+      isEditing.value = false;
+      // 重置临时设置为当前设置
+      Object.assign(tempMusicSettings, musicSettings);
+    };
+    
+    // 保存音乐源设置
+    const saveMusicSettings = async () => {
+      musicSaving.value = true;
       
       try {
         // 验证表单
-        await settingForm.value.validate();
+        await musicForm.value.validate();
+        
+        // 更新实际设置
+        Object.assign(musicSettings, tempMusicSettings);
         
         // 保存到localStorage
-        saveSettingsToStorage();
+        saveMusicSettingsToStorage();
         
         // 触发设置变更事件，父组件可以监听此事件
-        emit('settings-changed', { ...settings });
+        emit('settings-changed', { type: 'music', ...musicSettings });
         
         // 发送全局事件，通知Music组件重新加载
         window.dispatchEvent(new CustomEvent('music-source-changed', {
-          detail: { musicSource: settings.musicSource }
+          detail: { musicSource: musicSettings.musicSource }
         }));
         
+        // 退出编辑模式
+        isEditing.value = false;
+        
         // 显示保存成功提示
-        ElMessage.success('设置保存成功，音乐源已更新');
+        ElMessage.success('音乐源设置保存成功');
       } catch (error) {
-        console.error('保存设置失败:', error);
-        ElMessage.error('保存设置失败，请检查输入');
+        console.error('保存音乐源设置失败:', error);
+        ElMessage.error('保存音乐源设置失败，请检查输入');
       } finally {
-        saving.value = false;
+        musicSaving.value = false;
       }
     };
     
     // 单独的保存到localStorage的函数
-    const saveSettingsToStorage = () => {
-      localStorage.setItem('appSettings', JSON.stringify(settings));
+    const saveMusicSettingsToStorage = () => {
+      localStorage.setItem('musicSettings', JSON.stringify(musicSettings));
     };
     
-    // 当音乐源变更时的处理
-    const onMusicSourceChange = () => {
-      // 可以在这里添加临时预览或其他逻辑
+    const saveAdminSettingsToStorage = () => {
+      localStorage.setItem('adminSettings', JSON.stringify(adminSettings));
     };
     
-    // 当管理员模式变更时的处理
-    const onAdminModeChange = () => {
+    // 关闭管理员模式
+    const disableAdminMode = () => {
+      adminSettings.adminMode = false;
+      saveAdminSettingsToStorage();
+      
       // 发送全局事件，通知Chart组件更新管理员模式
       window.dispatchEvent(new CustomEvent('admin-mode-changed', {
-        detail: { adminMode: settings.adminMode }
+        detail: { adminMode: false }
       }));
-    };
-    
-    // 重置设置
-    const resetSettings = () => {
-      // 重置表单验证
-      settingForm.value.resetFields();
       
-      // 重置为默认值
-      Object.assign(settings, {
-        musicSource: musicSources.value[0].url,
-        adminMode: false
-      });
-      
-      ElMessage.info('设置已重置为默认值');
-    };
-    
-    // 取消操作
-    const cancel = () => {
-      // 重新加载保存的设置
-      loadSettings();
-      
-      // 触发关闭事件
-      emit('close');
+      ElMessage.info('管理员模式已关闭，需要通过连续点击公共大厅标题重新启用');
     };
     
     return {
-      settingForm,
-      saving,
-      settings,
+      musicForm,
+      musicSaving,
+      isEditing,
+      musicSettings,
+      tempMusicSettings,
+      adminSettings,
       musicSources,
       currentMusicSourceName,
-      saveSettings,
-      resetSettings,
-      cancel,
-      onMusicSourceChange,
-      onAdminModeChange
+      startEditing,
+      cancelEditing,
+      saveMusicSettings,
+      disableAdminMode
     };
   }
 };
@@ -230,128 +343,293 @@ export default {
 
 <style scoped>
 .setting-container {
-  padding: 20px;
+  padding: 24px;
   min-height: 100vh;
   background-color: var(--background-primary);
-  transition: background-color 0.3s ease;
+  box-sizing: border-box;
 }
 
-.setting-card {
-  max-width: 600px;
+/* 页面标题区域 */
+.page-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.page-title .el-icon {
+  margin-right: 12px;
+  font-size: 28px;
+  color: var(--accent-primary);
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* 设置卡片网格 */
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 800px;
   margin: 0 auto;
-  background-color: var(--background-secondary);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* 卡片样式 */
+.setting-card {
   border-radius: 16px;
+  border: 1px solid var(--border-color);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: fit-content;
 }
 
 .setting-card:hover {
-  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
+/* 卡片头部 */
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0;
 }
 
-.card-title {
+.header-left {
   display: flex;
   align-items: center;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+}
+
+.music-card .header-icon {
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  color: white;
+}
+
+.header-icon .el-icon {
+  font-size: 24px;
+}
+
+.header-content h3 {
+  margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.card-title .el-icon {
-  margin-right: 10px;
-  font-size: 20px;
+.header-content p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* 头部操作区域 */
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.edit-btn .el-icon {
+  margin-right: 6px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 卡片内容 */
+  .card-content {
+    padding: 0;
+  }
+  
+  /* 管理员卡片样式 */
+  .admin-card {
+    border: 1px solid var(--el-color-danger-light-7);
+  }
+  
+  .admin-header-icon {
+    background: linear-gradient(135deg, #f56c6c, #e64242);
+    color: white;
+  }
+  
+  .admin-status-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .admin-status-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background-color: var(--el-color-danger-light-9);
+    border-radius: 8px;
+    border-left: 4px solid var(--el-color-danger);
+  }
+  
+  .admin-status-icon {
+    color: var(--el-color-danger);
+    font-size: 24px;
+  }
+  
+  .admin-status-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
+  }
+  
+  .admin-actions {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .admin-close-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+  }
+
+.compact-form {
+  padding: 0;
+}
+
+.compact-form :deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+.compact-form :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: var(--text-primary);
+  padding-bottom: 8px;
+}
+
+/* 信息展示区域 */
+.info-display {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.info-label .el-icon {
+  margin-right: 8px;
+  font-size: 16px;
   color: var(--accent-primary);
 }
 
-.setting-form {
-  padding: 30px 20px;
+.info-value {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
-.setting-form .el-divider {
-  margin: 25px 0;
-  background-color: var(--border-color);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-}
-
-/* 动画效果 */
-.el-form-item {
-  transition: all 0.3s ease;
-}
-
-.el-button {
-  transition: all 0.3s ease;
-  border-radius: 8px;
-}
-
-.el-select .el-input__wrapper {
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.el-input .el-input__wrapper {
-  border-radius: 8px;
-}
-
-/* 表单项提示样式 */
-.form-item-tip {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 6px;
-  line-height: 1.4;
+.url-value {
+  word-break: break-all;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  background-color: var(--background-tertiary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
 }
 
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
   .setting-container {
-    padding: 10px;
+    padding: 16px;
   }
   
-  .setting-card {
-    max-width: 100%;
-    border-radius: 12px;
+  .page-title {
+    font-size: 24px;
   }
   
-  .form-actions {
+  .page-subtitle {
+    font-size: 14px;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .card-header {
     flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
   }
   
-  .form-actions .el-button {
+  .header-actions {
     width: 100%;
-  }
-  
-  .card-title {
-    font-size: 16px;
-  }
-  
-  .setting-form {
-    padding: 20px 15px;
+    justify-content: flex-end;
   }
 }
 
 /* 暗黑主题适配 - Element Plus组件 */
 /* 输入框基础样式 */
 .theme-dark :deep(.el-input__wrapper) {
-  background-color: var(--background-tertiary) !important;
+  background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
+  box-shadow: none !important;
 }
 
 .theme-dark :deep(.el-input__wrapper:hover) {
@@ -368,21 +646,9 @@ export default {
   background-color: transparent !important;
 }
 
-/* 禁用的输入框样式 */
-.theme-dark :deep(.el-input__wrapper.is-disabled) {
-  background-color: var(--background-tertiary) !important;
-  border-color: var(--border-color) !important;
-}
-
-.theme-dark :deep(.el-input__wrapper.is-disabled .el-input__inner) {
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
-  background-color: transparent !important;
-}
-
-/* 选择器样式 - 增强穿透 */
+/* 选择器样式 */
 .theme-dark :deep(.el-select .el-input__wrapper) {
-  background-color: var(--background-tertiary) !important;
+  background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
 }
 
@@ -391,36 +657,32 @@ export default {
   background-color: transparent !important;
 }
 
-/* 按钮样式 - 增强穿透 */
-.theme-dark :deep(.el-button) {
+/* 卡片样式 */
+.theme-dark :deep(.el-card) {
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark :deep(.el-card__header) {
+  border-bottom-color: var(--border-color) !important;
+}
+
+/* 标签样式 */
+.theme-dark :deep(.el-tag) {
   background-color: var(--background-tertiary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-.theme-dark :deep(.el-button:hover) {
-  background-color: var(--background-secondary) !important;
-  border-color: var(--border-color) !important;
+.theme-dark :deep(.el-tag.el-tag--success) {
+  background-color: rgba(103, 194, 58, 0.2) !important;
+  border-color: rgba(103, 194, 58, 0.3) !important;
+  color: #67c23a !important;
 }
 
-/* 主要按钮保持原有样式 */
-.theme-dark :deep(.el-button--primary) {
-  background-color: var(--accent-primary) !important;
-  border-color: var(--accent-primary) !important;
-  color: white !important;
-}
-
-.theme-dark :deep(.el-button--primary:hover) {
-  background-color: var(--accent-primary-light) !important;
-  border-color: var(--accent-primary-light) !important;
-}
-
-/* 确保表单元素在暗黑模式下完全适配 */
-.theme-dark :deep(.el-form-item__label) {
-  color: var(--text-primary) !important;
-}
-
-.theme-dark :deep(.el-divider__text) {
-  color: var(--text-primary) !important;
+.theme-dark :deep(.el-tag.el-tag--info) {
+  background-color: rgba(144, 147, 153, 0.2) !important;
+  border-color: rgba(144, 147, 153, 0.3) !important;
+  color: #909399 !important;
 }
 </style>

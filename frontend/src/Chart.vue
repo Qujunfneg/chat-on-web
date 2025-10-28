@@ -48,7 +48,7 @@
           
           <!-- 聊天头部 -->
           <div class="chat-header">
-            <h2 @click="handleTitleClick">公共大厅</h2>
+            <h2 @click="handleTitleClick" style="cursor: pointer;user-select:  none;">公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
               <AnnouncementBar style="margin-right: 10px;"/>
@@ -1678,6 +1678,14 @@ export default {
         titleClickCount.value = 0;
         ElMessage.success("已进入管理员模式");
         
+        // 更新localStorage中的管理员模式设置
+        localStorage.setItem('adminSettings', JSON.stringify({ adminMode: true }));
+        
+        // 发送全局事件，通知其他组件管理员模式已启用
+        window.dispatchEvent(new CustomEvent('admin-mode-changed', {
+          detail: { adminMode: true }
+        }));
+        
         // 清除定时器
         if (titleClickTimer.value) {
           clearTimeout(titleClickTimer.value);
@@ -1974,16 +1982,23 @@ export default {
       window.addEventListener("click", handleGlobalClickForAudioPermission);
       
       // 从localStorage加载管理员模式状态
-      const savedAdminMode = localStorage.getItem('adminMode');
-      if (savedAdminMode !== null) {
-        isAdminMode.value = savedAdminMode === 'true';
+      const savedAdminSettings = localStorage.getItem('adminSettings');
+      if (savedAdminSettings !== null) {
+        try {
+          const adminSettings = JSON.parse(savedAdminSettings);
+          isAdminMode.value = adminSettings.adminMode || false;
+        } catch (error) {
+          console.error('Failed to parse admin settings:', error);
+          isAdminMode.value = false;
+        }
       }
       
       // 监听管理员模式变更事件
       window.addEventListener('admin-mode-changed', (event) => {
         isAdminMode.value = event.detail.adminMode;
         // 保存管理员模式状态到localStorage
-        localStorage.setItem('adminMode', isAdminMode.value);
+        const adminSettings = { adminMode: isAdminMode.value };
+        localStorage.setItem('adminSettings', JSON.stringify(adminSettings));
       });
     });
 
