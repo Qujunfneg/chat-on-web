@@ -82,6 +82,9 @@ export default {
     // 获取头像文字
     const getAvatarText = (user) => {
       const username = getUsername(user);
+      if (!username) {
+        return "?";
+      }
       return username.charAt(0).toUpperCase();
     };
 

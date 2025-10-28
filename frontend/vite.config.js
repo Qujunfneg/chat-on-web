@@ -12,21 +12,21 @@ export default defineConfig({
     proxy: {
       // 代理Socket.IO请求
       "/socket.io": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3001",
         ws: true,
         changeOrigin: true,
       },
       // 代理API请求
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
       "/emojis": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
       "/cdn-images": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
     },

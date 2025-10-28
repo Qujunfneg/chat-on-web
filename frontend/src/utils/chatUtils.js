@@ -95,5 +95,8 @@ export const getAvatarColor = (username) => {
 
 // 获取头像文字
 export const getAvatarText = (username) => {
+  if (!username) {
+    return "?";
+  }
   return username.charAt(0).toUpperCase();
 };

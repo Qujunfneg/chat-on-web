@@ -60,24 +60,71 @@ function getUserPoints(coreId) {
 
 // 增加用户积分
 function addUserPoints(coreId, points) {
-  if (!coreId || points <= 0) return false;
+  console.log(`[POINTS] 开始添加用户积分:`, {
+    coreId,
+    points
+  });
   
-  const data = readPointsData();
-  
-  if (!data[coreId]) {
-    data[coreId] = {
-      coreId: coreId,
-      points: 0,
-      createdAt: new Date().toISOString(),
-      lastDailyClaim: null,
-      onlineMinutes: 0
-    };
+  // 参数验证
+  if (!coreId || !points || points <= 0) {
+    console.log(`[POINTS] 参数验证失败:`, {
+      coreId: !!coreId,
+      points: points
+    });
+    return false;
   }
   
-  data[coreId].points += points;
-  data[coreId].updatedAt = new Date().toISOString();
-  
-  return writePointsData(data);
+  try {
+    // 读取积分数据
+    const data = readPointsData();
+    
+    // 检查用户是否存在
+    if (!data[coreId]) {
+      console.log(`[POINTS] 用户不存在，创建新用户: ${coreId}`);
+      data[coreId] = {
+        coreId: coreId,
+        points: 0,
+        createdAt: new Date().toISOString(),
+        lastDailyClaim: null,
+        onlineMinutes: 0
+      };
+    }
+    
+    // 记录添加前的积分
+    const previousPoints = data[coreId].points;
+    
+    // 添加积分
+    data[coreId].points += points;
+    data[coreId].updatedAt = new Date().toISOString();
+    
+    console.log(`[POINTS] 积分添加成功:`, {
+      coreId,
+      previousPoints,
+      addedPoints: points,
+      currentPoints: data[coreId].points
+    });
+    
+    // 保存积分数据
+    const saveSuccess = writePointsData(data);
+    
+    if (!saveSuccess) {
+      console.log(`[POINTS] 保存积分数据失败`);
+      return false;
+    }
+    
+    console.log(`[POINTS] 积分数据保存成功`);
+    
+    // 返回包含积分信息的对象
+    return {
+      success: true,
+      points: data[coreId].points,
+      addedPoints: points,
+      previousPoints: previousPoints
+    };
+  } catch (error) {
+    console.error(`[POINTS] 添加用户积分异常:`, error);
+    return false;
+  }
 }
 
 // 减少用户积分

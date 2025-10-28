@@ -1,0 +1,843 @@
+{
+  "rp_8414fc8e-9557-460b-927e-19d028bcb768": {
+    "id": "rp_8414fc8e-9557-460b-927e-19d028bcb768",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761641832678,
+    "expireTime": 1761728232678,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      9,
+      11
+    ]
+  },
+  "rp_a20b0cf8-603a-45b1-9fd5-750241d8e21a": {
+    "id": "rp_a20b0cf8-603a-45b1-9fd5-750241d8e21a",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761642167404,
+    "expireTime": 1761728567404,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      11,
+      9
+    ]
+  },
+  "rp_f11fcbc0-5c91-48bf-aa3e-7d2ab089a61f": {
+    "id": "rp_f11fcbc0-5c91-48bf-aa3e-7d2ab089a61f",
+    "senderId": "user_1761300337591_68flc6kq6",
+    "senderName": "dd",
+    "senderCoreId": "core_1761300337590_eenx2yxjg",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761642945204,
+    "expireTime": 1761729345204,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      4,
+      16
+    ]
+  },
+  "rp_63c26868-94ab-411d-9070-2c90450e7f61": {
+    "id": "rp_63c26868-94ab-411d-9070-2c90450e7f61",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643021147,
+    "expireTime": 1761729421147,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      9,
+      11
+    ]
+  },
+  "rp_54c0cff5-5efb-4df6-b5a4-0f526b431e7a": {
+    "id": "rp_54c0cff5-5efb-4df6-b5a4-0f526b431e7a",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643368066,
+    "expireTime": 1761729768066,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      2,
+      18
+    ]
+  },
+  "rp_5cf0761a-c60a-4992-975b-fd97c443f0b7": {
+    "id": "rp_5cf0761a-c60a-4992-975b-fd97c443f0b7",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643373898,
+    "expireTime": 1761729773898,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      13,
+      7
+    ]
+  },
+  "rp_1b09f230-3af5-4129-83bf-50adc47c536c": {
+    "id": "rp_1b09f230-3af5-4129-83bf-50adc47c536c",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643576147,
+    "expireTime": 1761729976147,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      4,
+      16
+    ]
+  },
+  "rp_4454fed9-b1fb-4b08-af38-164ddeb05e7f": {
+    "id": "rp_4454fed9-b1fb-4b08-af38-164ddeb05e7f",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643589066,
+    "expireTime": 1761729989066,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      7,
+      13
+    ]
+  },
+  "rp_4c936163-3a7b-43e7-a3d8-ba1e94f03d77": {
+    "id": "rp_4c936163-3a7b-43e7-a3d8-ba1e94f03d77",
+    "senderId": "user_1761300337591_68flc6kq6",
+    "senderName": "dd",
+    "senderCoreId": "core_1761300337590_eenx2yxjg",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643667211,
+    "expireTime": 1761730067211,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      4,
+      16
+    ]
+  },
+  "rp_7bc14d7b-640b-4ac9-9999-c81c6af8f2bd": {
+    "id": "rp_7bc14d7b-640b-4ac9-9999-c81c6af8f2bd",
+    "senderId": "user_1761300337591_68flc6kq6",
+    "senderName": "dd",
+    "senderCoreId": "core_1761300337590_eenx2yxjg",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643670754,
+    "expireTime": 1761730070754,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      11,
+      9
+    ]
+  },
+  "rp_e277cfdc-d5e6-4e3d-8529-9c699e32be3d": {
+    "id": "rp_e277cfdc-d5e6-4e3d-8529-9c699e32be3d",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643782954,
+    "expireTime": 1761730182954,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      5,
+      15
+    ]
+  },
+  "rp_546a8306-fca3-4f7e-a766-e5f5850100e6": {
+    "id": "rp_546a8306-fca3-4f7e-a766-e5f5850100e6",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "ff",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643785762,
+    "expireTime": 1761730185762,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      15,
+      5
+    ]
+  },
+  "rp_ac9ea7d6-6d99-4796-b83b-e4fd911507c0": {
+    "id": "rp_ac9ea7d6-6d99-4796-b83b-e4fd911507c0",
+    "senderId": "user_1761300337591_68flc6kq6",
+    "senderName": "dd",
+    "senderCoreId": "core_1761300337590_eenx2yxjg",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643818795,
+    "expireTime": 1761730218795,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      7,
+      13
+    ]
+  },
+  "rp_d89133af-5d93-4ac4-87ec-100a52cd388e": {
+    "id": "rp_d89133af-5d93-4ac4-87ec-100a52cd388e",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761643877361,
+    "expireTime": 1761730277361,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      12,
+      8
+    ]
+  },
+  "rp_56b3207b-dd36-4033-8732-2adfcb942916": {
+    "id": "rp_56b3207b-dd36-4033-8732-2adfcb942916",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761644499896,
+    "expireTime": 1761730899896,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      17,
+      3
+    ]
+  },
+  "rp_804618cc-f460-461e-b76d-00a7afe239fc": {
+    "id": "rp_804618cc-f460-461e-b76d-00a7afe239fc",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761644552312,
+    "expireTime": 1761730952312,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      18,
+      2
+    ]
+  },
+  "rp_cbe89fa0-c070-48ea-a546-684663d2f3b2": {
+    "id": "rp_cbe89fa0-c070-48ea-a546-684663d2f3b2",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761644777112,
+    "expireTime": 1761731177112,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      5,
+      15
+    ]
+  },
+  "rp_ff7e7cf2-6431-4f5f-88bf-cce7bfe1a6cc": {
+    "id": "rp_ff7e7cf2-6431-4f5f-88bf-cce7bfe1a6cc",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761644957328,
+    "expireTime": 1761731357328,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      15,
+      5
+    ]
+  },
+  "rp_79844f21-0e55-4621-8157-6ae1aac2efe0": {
+    "id": "rp_79844f21-0e55-4621-8157-6ae1aac2efe0",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761645569510,
+    "expireTime": 1761731969510,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      2,
+      18
+    ]
+  },
+  "rp_3de643c7-d33d-4785-92dc-97477828d253": {
+    "id": "rp_3de643c7-d33d-4785-92dc-97477828d253",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761645587270,
+    "expireTime": 1761731987270,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      1,
+      19
+    ]
+  },
+  "rp_c83b7494-af99-4400-8aef-5b83879bf942": {
+    "id": "rp_c83b7494-af99-4400-8aef-5b83879bf942",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761645753054,
+    "expireTime": 1761732153054,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      9,
+      11
+    ]
+  },
+  "rp_efb4e9b1-232d-4f5c-b7da-33cb849df4a9": {
+    "id": "rp_efb4e9b1-232d-4f5c-b7da-33cb849df4a9",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761645764974,
+    "expireTime": 1761732164974,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      17,
+      3
+    ]
+  },
+  "rp_aebea696-0c70-4435-9d5a-0ba92917c4ac": {
+    "id": "rp_aebea696-0c70-4435-9d5a-0ba92917c4ac",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761646045446,
+    "expireTime": 1761732445446,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      1,
+      19
+    ]
+  },
+  "rp_fa181d23-7560-4c4c-8749-f236ad18beae": {
+    "id": "rp_fa181d23-7560-4c4c-8749-f236ad18beae",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761646243455,
+    "expireTime": 1761732643455,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      6,
+      14
+    ]
+  },
+  "rp_a4c8e8cf-ecaa-48b5-88b2-2cefa30f699c": {
+    "id": "rp_a4c8e8cf-ecaa-48b5-88b2-2cefa30f699c",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761646434262,
+    "expireTime": 1761732834262,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      16,
+      4
+    ]
+  },
+  "rp_037110a8-b79f-4381-baf2-b6ca72b29e4f": {
+    "id": "rp_037110a8-b79f-4381-baf2-b6ca72b29e4f",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761646478918,
+    "expireTime": 1761732878918,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      16,
+      4
+    ]
+  },
+  "rp_e271f9be-45d3-4f17-8262-906b2739ee04": {
+    "id": "rp_e271f9be-45d3-4f17-8262-906b2739ee04",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761646949589,
+    "expireTime": 1761733349589,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761296655027_hmw01ds00",
+        "username": "B",
+        "coreId": "core_1761296655027_an0fffaaz_iesrkmk0b",
+        "amount": 5,
+        "receiveTime": 1761646957788
+      },
+      {
+        "userId": "user_1761537507128_2eaydpstz",
+        "username": "A",
+        "coreId": "core_1761537507128_mhkhol4uw",
+        "amount": 15,
+        "receiveTime": 1761646968032
+      }
+    ],
+    "amounts": [
+      5,
+      15
+    ]
+  },
+  "rp_0895cae7-2751-49f9-abb0-0ebadb6e8e94": {
+    "id": "rp_0895cae7-2751-49f9-abb0-0ebadb6e8e94",
+    "senderId": "user_1761537507128_2eaydpstz",
+    "senderName": "A",
+    "senderCoreId": "core_1761537507128_mhkhol4uw",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761647576965,
+    "expireTime": 1761733976965,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761296655027_hmw01ds00",
+        "username": "B",
+        "coreId": "core_1761296655027_an0fffaaz_iesrkmk0b",
+        "amount": 3,
+        "receiveTime": 1761647580488
+      },
+      {
+        "userId": "user_1761537507128_2eaydpstz",
+        "username": "A",
+        "coreId": "core_1761537507128_mhkhol4uw",
+        "amount": 17,
+        "receiveTime": 1761647598744
+      }
+    ],
+    "amounts": [
+      3,
+      17
+    ]
+  },
+  "rp_54e4331d-a528-44fc-ad99-cff92233ad55": {
+    "id": "rp_54e4331d-a528-44fc-ad99-cff92233ad55",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ff",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761647870211,
+    "expireTime": 1761734270211,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 19,
+        "receiveTime": 1761647872227
+      },
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ff",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 1,
+        "receiveTime": 1761647883322
+      }
+    ],
+    "amounts": [
+      19,
+      1
+    ]
+  },
+  "rp_5463fd6d-afdc-478b-955d-0509884a4473": {
+    "id": "rp_5463fd6d-afdc-478b-955d-0509884a4473",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ff",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761647926475,
+    "expireTime": 1761734326475,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 4,
+        "receiveTime": 1761647928701
+      },
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ff",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 16,
+        "receiveTime": 1761647931537
+      }
+    ],
+    "amounts": [
+      4,
+      16
+    ]
+  },
+  "rp_7697f27b-d473-4b3e-8980-6652117e3713": {
+    "id": "rp_7697f27b-d473-4b3e-8980-6652117e3713",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ff",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761648098842,
+    "expireTime": 1761734498842,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 7,
+        "receiveTime": 1761648102428
+      },
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ff",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 13,
+        "receiveTime": 1761648114373
+      }
+    ],
+    "amounts": [
+      7,
+      13
+    ]
+  },
+  "rp_3dcb78a9-dc46-4063-8ed5-67ca1ca0f0df": {
+    "id": "rp_3dcb78a9-dc46-4063-8ed5-67ca1ca0f0df",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ff",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761648300459,
+    "expireTime": 1761734700459,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 7,
+        "receiveTime": 1761648303612
+      },
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ff",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 13,
+        "receiveTime": 1761648306749
+      }
+    ],
+    "amounts": [
+      7,
+      13
+    ]
+  },
+  "rp_a1cacf42-5391-4c0f-8262-7870a9469fa6": {
+    "id": "rp_a1cacf42-5391-4c0f-8262-7870a9469fa6",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761648394227,
+    "expireTime": 1761734794227,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 14,
+        "receiveTime": 1761648396047
+      },
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 6,
+        "receiveTime": 1761648401372
+      }
+    ],
+    "amounts": [
+      14,
+      6
+    ]
+  },
+  "rp_55eb84f7-a54f-450e-a69f-40353b228ad6": {
+    "id": "rp_55eb84f7-a54f-450e-a69f-40353b228ad6",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 3,
+    "remainingAmount": 20,
+    "remainingCount": 3,
+    "greeting": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+    "createTime": 1761648633636,
+    "expireTime": 1761735033636,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      10,
+      5,
+      5
+    ]
+  },
+  "rp_45224b19-293a-42e6-8401-aa9e500b2d23": {
+    "id": "rp_45224b19-293a-42e6-8401-aa9e500b2d23",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "22222222222222222222",
+    "createTime": 1761648753723,
+    "expireTime": 1761735153723,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      2,
+      18
+    ]
+  },
+  "rp_9446ecc0-ad94-4dd0-9e7b-3802d8274200": {
+    "id": "rp_9446ecc0-ad94-4dd0-9e7b-3802d8274200",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "返回指定单位下两个日期时间之间的差异。返",
+    "createTime": 1761648813633,
+    "expireTime": 1761735213633,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 15,
+        "receiveTime": 1761648845738
+      },
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 5,
+        "receiveTime": 1761648873877
+      }
+    ],
+    "amounts": [
+      15,
+      5
+    ]
+  }
+}

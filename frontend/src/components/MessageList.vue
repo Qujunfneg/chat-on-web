@@ -133,6 +133,23 @@
               fit="cover"
             ></el-image>
           </div>
+          <!-- 红包消息 -->
+          <RedPacketMessage
+            v-else-if="message.type === 'redPacket'"
+            :id="message.redPacketData.id"
+            :sender-id="message.redPacketData.senderId"
+            :sender-name="message.redPacketData.senderName"
+            :type="message.redPacketData.type"
+            :total-amount="message.redPacketData.totalAmount"
+            :count="message.redPacketData.count"
+            :total-count="message.redPacketData.totalCount"
+            :message="message.redPacketData.message"
+            :timestamp="message.redPacketData.timestamp"
+            :status="message.redPacketData.status"
+            :remaining-count="message.redPacketData.remainingCount"
+            @receive-red-packet="(redPacketId) => $emit('openRedPacket', redPacketId)"
+            @open-details="(redPacketId) => $emit('openRedPacket', redPacketId)"
+          ></RedPacketMessage>
         </div>
         <div class="message-time">{{ formatTime(message.timestamp) }}</div>
       </div>
@@ -156,12 +173,14 @@ import { ref, onMounted, watch, onUnmounted } from "vue";
 import { ElMessage, ElImage } from "element-plus";
 import { Bell } from "@element-plus/icons-vue";
 import QuoteMessage from "./quoteMessage.vue";
+import RedPacketMessage from "./RedPacketMessage.vue";
 import dayjs from "dayjs";
 
 export default {
   name: "MessageList",
   components: {
     QuoteMessage,
+    RedPacketMessage,
   },
   props: {
     messages: {
@@ -193,7 +212,7 @@ export default {
       default: "default",
     },
   },
-  emits: ["messageContextMenu", "userContextMenu"],
+  emits: ["messageContextMenu", "userContextMenu", "openRedPacket"],
   setup(props, { emit }) {
     const messagesContainer = ref(null);
     const newMessageAlert = ref(false);

@@ -7,6 +7,7 @@ const { MAX_HISTORY } = require('../config/constants');
 const { 
   getUserPoints, 
   addUserPoints, 
+  reduceUserPoints,
   canClaimDailyPoints, 
   claimDailyPoints,
   addUserOnlineMinutes,
@@ -14,6 +15,13 @@ const {
   getUserInfo,
   cleanupInactiveUsers
 } = require('../services/pointsService');
+const {
+  createRedPacket,
+  receiveRedPacket,
+  getRedPacketDetails,
+  getUserRedPacketHistory,
+  cleanupExpiredRedPackets
+} = require('../services/redPacketService');
 
 module.exports = (io) => {
   // 确保只有一个定时器在运行 - 使用全局变量
@@ -528,6 +536,312 @@ module.exports = (io) => {
       console.log(`管理员 ${adminInfo.nickname} 踢出了用户 ${targetUserInfo.nickname}，时长: ${duration === 0 ? '永久' : duration + '分钟'}`);
     });
 
+    // 处理创建红包请求
+    socket.on("create_red_packet", (data) => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || !userInfo.coreId) {
+        socket.emit("create_red_packet_failed", { message: "用户信息不完整" });
+        return;
+      }
+      
+      const { type, totalAmount, count, message } = data;
+      
+      // 验证参数
+      if (!type || !totalAmount || !count) {
+        socket.emit("create_red_packet_failed", { message: "红包参数不完整" });
+        return;
+      }
+      
+      // 验证红包类型
+      if (type !== 'random' && type !== 'average') {
+        socket.emit("create_red_packet_failed", { message: "红包类型无效" });
+        return;
+      }
+      
+      // 验证金额和数量
+      if (totalAmount <= 0 || count <= 0) {
+        socket.emit("create_red_packet_failed", { message: "金额或数量必须大于0" });
+        return;
+      }
+      
+      // 检查用户积分是否足够
+      const userPoints = getUserPoints(userInfo.coreId);
+      if (userPoints < totalAmount) {
+        socket.emit("create_red_packet_failed", { message: "积分不足" });
+        return;
+      }
+      
+      // 创建红包
+      const redPacket = createRedPacket(
+        userInfo.coreId,
+        userId,
+        userInfo.nickname || userInfo.username,
+        type,
+        totalAmount,
+        count,
+        message
+      );
+      
+      if (redPacket.success) {
+        // 扣除用户积分
+        console.log(`准备扣除用户 ${userInfo.coreId} 的积分，当前积分: ${getUserPoints(userInfo.coreId)}，要扣除: ${totalAmount}`);
+        const pointsDeducted = reduceUserPoints(userInfo.coreId, totalAmount);
+        console.log(`积分扣除结果: ${pointsDeducted}，扣除后积分: ${getUserPoints(userInfo.coreId)}`);
+        
+        if (!pointsDeducted) {
+          socket.emit("create_red_packet_failed", { message: "积分扣除失败" });
+          return;
+        }
+        
+        // 更新用户列表中的积分信息
+        const updatedUsersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+          const user = userInfoMap.get(uid) || { userId: uid, username: null };
+          const userPoints = user.coreId ? getUserPoints(user.coreId) : 0;
+          return {
+            ...user,
+            points: userPoints
+          };
+        });
+        
+        // 发送创建成功事件
+        socket.emit("create_red_packet_success", {
+          redPacketId: redPacket.redPacketId,
+          totalAmount: redPacket.redPacket.totalAmount,
+          count: redPacket.redPacket.totalCount,
+          remainingPoints: getUserPoints(userInfo.coreId)
+        });
+        
+        // 广播红包消息给所有用户
+        io.emit("new_red_packet", {
+          id: redPacket.redPacketId,
+          senderId: userId,
+          senderName: userInfo.nickname || userInfo.username,
+          type: redPacket.redPacket.type,
+          totalAmount: redPacket.redPacket.totalAmount,
+          count: redPacket.redPacket.totalCount,
+          remainingCount: redPacket.redPacket.totalCount, // 初始剩余数量等于总数量
+          totalCount: redPacket.redPacket.totalCount,
+          message: redPacket.redPacket.greeting,
+          timestamp: Date.now(),
+          status: redPacket.redPacket.status
+        });
+        
+        // 广播更新后的用户列表
+        io.emit("users_updated", updatedUsersList);
+        
+        // 向用户发送积分更新通知
+        socket.emit("points_updated", {
+          coreId: userInfo.coreId,
+          points: getUserPoints(userInfo.coreId),
+          addedPoints: -totalAmount
+        });
+        
+        console.log(`用户 ${userInfo.nickname} 创建了一个${type === 'random' ? '随机' : '平均'}红包，总金额: ${totalAmount}，数量: ${count}`);
+      } else {
+        socket.emit("create_red_packet_failed", { message: "创建红包失败" });
+      }
+    });
+
+    // 处理领取红包请求
+    socket.on("receive_red_packet", async (data) => {
+      console.log(`[SOCKET] 收到领取红包请求:`, {
+        socketId: socket.id,
+        data: data
+      });
+      
+      try {
+        const userId = onlineUsers.get(socket.id);
+        const userInfo = userInfoMap.get(userId);
+        
+        console.log(`[SOCKET] User info:`, {
+          userId,
+          userInfo: !!userInfo,
+          coreId: userInfo?.coreId,
+          username: userInfo?.username || userInfo?.nickname
+        });
+        
+        if (!userInfo || !userInfo.coreId) {
+          console.log(`[SOCKET] 用户信息验证失败`);
+          socket.emit("receive_red_packet_failed", { message: "用户信息不完整" });
+          return;
+        }
+        
+        // 验证请求数据
+        if (!data || !data.redPacketId) {
+          console.log(`[SOCKET] 请求数据验证失败: 缺少红包ID`);
+          socket.emit("receive_red_packet_failed", { message: "请求数据无效" });
+          return;
+        }
+        
+        const { redPacketId, coreId } = data;
+        
+        console.log(`[SOCKET] Extracted parameters:`, {
+          redPacketId,
+          coreId,
+          userCoreId: userInfo.coreId
+        });
+        
+        // 优先使用前端传递的coreId，如果没有则使用userInfo中的coreId
+        const userCoreId = coreId || userInfo.coreId;
+        
+        console.log(`[SOCKET] Final userCoreId:`, userCoreId);
+        
+        // 领取红包
+        console.log(`[SOCKET] Calling receiveRedPacket function...`);
+        const result = receiveRedPacket(redPacketId, userCoreId, userId, userInfo.nickname || userInfo.username);
+        
+        console.log(`[SOCKET] 红包领取结果:`, result);
+        
+        if (result.success) {
+          try {
+            // 增加用户积分
+            console.log(`[SOCKET] Adding user points:`, {
+              userCoreId,
+              points: result.amount
+            });
+            
+            const pointsResult = addUserPoints(userCoreId, result.amount);
+            
+            console.log(`[SOCKET] Points addition result:`, pointsResult);
+            
+            // 更新用户列表中的积分信息
+            const updatedUsersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+              const user = userInfoMap.get(uid) || { userId: uid, username: null };
+              const userPoints = user.coreId ? getUserPoints(user.coreId) : 0;
+              return {
+                ...user,
+                points: userPoints
+              };
+            });
+            
+            // 发送领取成功事件
+            socket.emit("receive_red_packet_success", {
+              redPacketId: redPacketId,
+              amount: result.amount,
+              message: result.message,
+              remainingPoints: getUserPoints(userCoreId),
+              pointsAdded: true
+            });
+            
+            // 广播红包状态更新
+            io.emit("red_packet_status_update", {
+              redPacketId: redPacketId,
+              status: result.status,
+              remainingCount: result.remainingCount,
+              totalCount: result.totalCount
+            });
+            
+            // 如果红包已领完，广播红包完成事件
+            if (result.status === 'completed') {
+              io.emit("red_packet_completed", {
+                redPacketId: redPacketId,
+                totalAmount: result.totalAmount,
+                totalCount: result.totalCount
+              });
+            }
+            
+            // 广播更新后的用户列表
+            io.emit("users_updated", updatedUsersList);
+            
+            // 广播积分更新通知给所有用户
+            io.emit("points_updated", {
+              coreId: userCoreId,
+              points: getUserPoints(userCoreId),
+              addedPoints: result.amount
+            });
+            
+            console.log(`用户 ${userInfo.nickname} 领取了红包，金额: ${result.amount}`);
+          } catch (pointsError) {
+            console.error(`[SOCKET] 积分添加异常:`, pointsError);
+            socket.emit("receive_red_packet_failed", { 
+              message: "积分添加异常，但红包领取成功" 
+            });
+          }
+        } else {
+          console.log(`[SOCKET] receiveRedPacket failed:`, result.message);
+          socket.emit("receive_red_packet_failed", { 
+            message: result.message || "领取红包失败" 
+          });
+        }
+      } catch (error) {
+        console.error(`[SOCKET] 领取红包处理异常:`, error);
+        
+        socket.emit("receive_red_packet_failed", {
+          message: "领取红包时发生异常"
+        });
+      }
+    });
+
+    // 处理获取红包详情请求
+    socket.on("get_red_packet_details", (data) => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || !userInfo.coreId) {
+        socket.emit("get_red_packet_details_failed", { message: "用户信息不完整" });
+        return;
+      }
+      
+      const { redPacketId, coreId } = data;
+      
+      if (!redPacketId) {
+        socket.emit("get_red_packet_details_failed", { message: "红包ID不能为空" });
+        return;
+      }
+      
+      // 优先使用前端传递的coreId，如果没有则使用userInfo中的coreId
+      const userCoreId = coreId || userInfo.coreId;
+      
+      // 获取红包详情
+      const details = getRedPacketDetails(redPacketId, userCoreId);
+      
+      if (details) {
+        // 检查用户是否已领取过该红包
+        const hasReceived = details.receivers.some(r => r.coreId === userCoreId);
+        
+        socket.emit("get_red_packet_details_success", {
+          redPacketId: redPacketId,
+          senderName: details.senderName,
+          type: details.type,
+          totalAmount: details.totalAmount,
+          count: details.totalCount,
+          message: details.greeting,
+          timestamp: details.createTime,
+          status: details.status,
+          receivers: details.receivers.map(r => ({
+            userId: r.userId,
+            username: r.username,
+            coreId: r.coreId,
+            amount: r.amount,
+            timestamp: r.receiveTime
+          })),
+          hasReceived: hasReceived
+        });
+      } else {
+        socket.emit("get_red_packet_details_failed", { message: "红包不存在或已过期" });
+      }
+    });
+
+    // 处理获取用户红包历史请求
+    socket.on("get_user_red_packet_history", () => {
+      const userId = onlineUsers.get(socket.id);
+      const userInfo = userInfoMap.get(userId);
+      
+      if (!userInfo || !userInfo.coreId) {
+        socket.emit("get_user_red_packet_history_failed", { message: "用户信息不完整" });
+        return;
+      }
+      
+      // 获取用户红包历史
+      const history = getUserRedPacketHistory(userInfo.coreId, userInfo.userId);
+      
+      socket.emit("get_user_red_packet_history_success", {
+        history: history
+      });
+    });
+
     // 用户断开连接
     socket.on("disconnect", () => {
       const userId = onlineUsers.get(socket.id);
@@ -560,4 +874,37 @@ module.exports = (io) => {
       }
     });
   });
+  
+  // 定时清理过期红包（每5分钟执行一次）
+  setInterval(() => {
+    const expiredRedPackets = cleanupExpiredRedPackets();
+    
+    if (expiredRedPackets.length > 0) {
+      console.log(`清理了 ${expiredRedPackets.length} 个过期红包`);
+      
+      // 通知所有客户端过期红包已退款
+      expiredRedPackets.forEach(redPacket => {
+        if (redPacket.remainingAmount > 0) {
+          // 退还剩余积分给发送者
+          addUserPoints(redPacket.senderCoreId, redPacket.remainingAmount);
+          
+          // 通知发送者
+          const senderSocketId = Array.from(onlineUsers.entries()).find(
+            ([_, userId]) => {
+              const userInfo = userInfoMap.get(userId);
+              return userInfo && userInfo.coreId === redPacket.senderCoreId;
+            }
+          )?.[0];
+          
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("red_packet_expired", {
+              redPacketId: redPacket.id,
+              refundAmount: redPacket.remainingAmount,
+              message: "红包已过期，剩余积分已退还"
+            });
+          }
+        }
+      });
+    }
+  }, 5 * 60 * 1000); // 5分钟
 };

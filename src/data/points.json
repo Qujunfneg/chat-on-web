@@ -9,11 +9,11 @@
   },
   "core_1761550492217_tfcrfpqq5": {
     "coreId": "core_1761550492217_tfcrfpqq5",
-    "points": 660,
+    "points": 680,
     "createdAt": "2025-10-27T07:34:53.150Z",
     "lastDailyClaim": "2025-10-27T08:48:33.939Z",
     "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T03:08:56.132Z"
+    "updatedAt": "2025-10-28T10:48:06.235Z"
   },
   "core_1761550540345_pnmgn6e4t": {
     "coreId": "core_1761550540345_pnmgn6e4t",
@@ -33,11 +33,11 @@
   },
   "core_1761551890134_2wzih0trk": {
     "coreId": "core_1761551890134_2wzih0trk",
-    "points": 280,
+    "points": 458,
     "createdAt": "2025-10-27T07:58:13.223Z",
-    "lastDailyClaim": "2025-10-27T07:58:13.223Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T02:50:14.521Z"
+    "lastDailyClaim": "2025-10-28T08:01:13.843Z",
+    "onlineMinutes": 20,
+    "updatedAt": "2025-10-28T10:54:33.882Z"
   },
   "core_1761552309501_ezw6hiuf7": {
     "coreId": "core_1761552309501_ezw6hiuf7",
@@ -89,10 +89,34 @@
   },
   "core_1761617379932_64gdvocdv": {
     "coreId": "core_1761617379932_64gdvocdv",
-    "points": 150,
+    "points": 112,
     "createdAt": "2025-10-28T02:09:44.133Z",
     "lastDailyClaim": "2025-10-28T02:09:44.133Z",
+    "onlineMinutes": 10,
+    "updatedAt": "2025-10-28T10:54:05.742Z"
+  },
+  "core_1761537507128_mhkhol4uw": {
+    "coreId": "core_1761537507128_mhkhol4uw",
+    "points": 112,
+    "createdAt": "2025-10-28T07:51:19.918Z",
+    "lastDailyClaim": "2025-10-28T08:57:56.983Z",
     "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T03:04:55.861Z"
+    "updatedAt": "2025-10-28T10:37:38.252Z"
+  },
+  "core_1761300337590_eenx2yxjg": {
+    "coreId": "core_1761300337590_eenx2yxjg",
+    "points": 60,
+    "createdAt": "2025-10-28T08:06:44.776Z",
+    "lastDailyClaim": "2025-10-28T08:17:10.114Z",
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T10:22:04.693Z"
+  },
+  "core_1761296655027_an0fffaaz_iesrkmk0b": {
+    "coreId": "core_1761296655027_an0fffaaz_iesrkmk0b",
+    "points": 78,
+    "createdAt": "2025-10-28T09:19:30.265Z",
+    "lastDailyClaim": null,
+    "onlineMinutes": 0,
+    "updatedAt": "2025-10-28T10:37:43.971Z"
   }
 }

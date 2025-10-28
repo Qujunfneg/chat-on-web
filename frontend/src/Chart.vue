@@ -105,6 +105,7 @@
             :background="selectedBackground"
             @message-context-menu="handleMessageContextMenu"
             @user-context-menu="handleUserContextMenu"
+            @open-red-packet="openRedPacketDialog"
           >
         </MessageList>
 
@@ -190,6 +191,11 @@
               
               <!-- 背景图片选择器 -->
               <BackgroundSelector @background-changed="handleBackgroundChange"></BackgroundSelector>
+              
+              <!-- 红包按钮 -->
+              <el-button class="red-packet-btn" @click="openCreateRedPacketDialog">
+                <el-icon><present /></el-icon>
+              </el-button>
             </div>
             <div class="input-container">
               <el-input
@@ -375,6 +381,34 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 红包详情对话框 -->
+    <RedPacketDialog
+      v-model="showRedPacketDialog"
+      :red-packet-id="selectedRedPacketId"
+      :sender-id="redPacketDetails?.senderId || ''"
+      :sender-name="redPacketDetails?.senderName || ''"
+      :sender-avatar="redPacketDetails?.senderAvatar || ''"
+      :type="redPacketDetails?.type || 'average'"
+      :total-amount="redPacketDetails?.totalAmount || 0"
+      :count="redPacketDetails?.count || 0"
+      :message="redPacketDetails?.message || ''"
+      :timestamp="redPacketDetails?.timestamp || Date.now()"
+      :status="redPacketDetails?.status || 'active'"
+      :receivers="redPacketDetails?.receivers || []"
+      :has-received="redPacketDetails?.hasReceived || false"
+      :current-user-id="userId"
+      :current-core-id="coreId?.value || ''"
+      :show-all-amounts="true"
+      @receive="handleReceiveRedPacket"
+    ></RedPacketDialog>
+
+    <!-- 发红包对话框 -->
+    <CreateRedPacketDialog
+      v-model="showCreateRedPacketDialog"
+      :user-points="userPoints"
+      @create="handleCreateRedPacket"
+    ></CreateRedPacketDialog>
   </div>
 </template>
 
@@ -397,6 +431,8 @@ import ThemeSelector from "./components/ThemeSelector.vue";
 import DailyOneFloating from './components/DailyOneFloating.vue';
 import AnnouncementBar from './components/AnnouncementBar.vue';
 import BackgroundSelector from './components/BackgroundSelector.vue';
+import RedPacketDialog from './components/RedPacketDialog.vue';
+import CreateRedPacketDialog from './components/CreateRedPacketDialog.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -424,6 +460,8 @@ export default {
     DailyOneFloating,
     AnnouncementBar,
     BackgroundSelector,
+    RedPacketDialog,
+    CreateRedPacketDialog,
   },
   setup() {
     // 基本状态
@@ -485,6 +523,13 @@ export default {
     const favoriteEmojis = ref(
       JSON.parse(localStorage.getItem("favoriteEmojis") || "[]")
     );
+
+    // 红包相关
+    const showRedPacketDialog = ref(false);
+    const showCreateRedPacketDialog = ref(false);
+    const selectedRedPacketId = ref("");
+    const redPacketDetails = ref(null); // 红包详情数据
+    const userPoints = ref(0); // 初始用户积分，将从服务器获取
 
     // 动态表情映射表
     const dynamicEmojis = {
@@ -765,6 +810,14 @@ export default {
         users.value = data.users;
         // 更新用户信息映射
         updateUserInfoMap(data.username, data.nickname);
+        
+        // 获取当前用户的积分
+        const currentUser = users.value.find(user => user.coreId === coreId.value);
+        if (currentUser && currentUser.points !== undefined) {
+          userPoints.value = currentUser.points;
+          console.log(`获取当前用户 ${currentUser.username} 的积分为 ${currentUser.points}`);
+        }
+        
         // 用户列表加载完成，更新loading状态
         isLoadingUsers.value = false;
       });
@@ -818,11 +871,17 @@ export default {
         console.log("积分更新:", data);
         
         // 更新用户列表中对应coreId的用户的积分
-        if (data.coreId && data.updatedPoints !== undefined) {
+        if (data.coreId && data.points !== undefined) {
           const userIndex = users.value.findIndex(user => user.coreId === data.coreId);
           if (userIndex !== -1) {
-            users.value[userIndex].points = data.updatedPoints;
-            console.log(`更新用户 ${users.value[userIndex].username} 的积分为 ${data.updatedPoints}`);
+            users.value[userIndex].points = data.points;
+            console.log(`更新用户 ${users.value[userIndex].username} 的积分为 ${data.points}`);
+          }
+          
+          // 如果是当前用户的积分更新，也更新userPoints
+          if (data.coreId === coreId.value) {
+            userPoints.value = data.points;
+            console.log(`更新当前用户积分为 ${data.points}`);
           }
         }
       });
@@ -832,6 +891,13 @@ export default {
         console.log("用户列表更新:", data);
         if (Array.isArray(data)) {
           users.value = data;
+          
+          // 获取当前用户的积分
+          const currentUser = users.value.find(user => user.coreId === coreId.value);
+          if (currentUser && currentUser.points !== undefined) {
+            userPoints.value = currentUser.points;
+            console.log(`更新当前用户 ${currentUser.username} 的积分为 ${currentUser.points}`);
+          }
         }
       });
 
@@ -918,6 +984,164 @@ export default {
           window.location.href = window.location.origin;
         }, 3000);
       });
+
+      // 处理红包创建成功事件
+      socket.on("create_red_packet_success", (data) => {
+        console.log("红包创建成功:", data);
+        // 更新用户积分
+        userPoints.value = data.remainingPoints;
+        
+        // 更新用户列表中当前用户的积分
+        const userIndex = users.value.findIndex(user => user.coreId === coreId.value);
+        if (userIndex !== -1) {
+          users.value[userIndex].points = data.remainingPoints;
+          console.log(`更新用户列表中 ${users.value[userIndex].username} 的积分为 ${data.remainingPoints}`);
+        }
+        
+        // 关闭创建红包对话框
+        showCreateRedPacketDialog.value = false;
+        
+        ElMessage.success("红包发送成功！");
+      });
+
+      // 处理红包创建失败事件
+      socket.on("create_red_packet_failed", (data) => {
+        console.error("红包创建失败:", data);
+        ElMessage.error(data.message || "红包创建失败");
+      });
+
+      // 处理红包领取成功事件
+      socket.on("receive_red_packet_success", (data) => {
+        console.log("红包领取成功:", data);
+        // 更新用户积分
+        userPoints.value = data.remainingPoints;
+        
+        // 更新用户列表中当前用户的积分
+        const userIndex = users.value.findIndex(user => user.coreId === coreId.value);
+        if (userIndex !== -1) {
+          users.value[userIndex].points = data.remainingPoints;
+          console.log(`更新用户列表中 ${users.value[userIndex].username} 的积分为 ${data.remainingPoints}`);
+        }
+        
+        ElMessage.success(`恭喜您领取了${data.amount}积分！`);
+        
+        // 如果红包详情对话框正在显示，刷新红包详情
+        if (showRedPacketDialog.value && selectedRedPacketId.value === data.redPacketId) {
+          socket.emit('get_red_packet_details', {
+            redPacketId: data.redPacketId,
+            userId: userId.value,
+            coreId: coreId.value
+          });
+        }
+      });
+
+      // 处理红包领取失败事件
+      socket.on("receive_red_packet_failed", (data) => {
+        console.error("红包领取失败:", data);
+        ElMessage.error(data.message || "红包领取失败");
+      });
+
+      // 处理获取红包详情成功事件
+      socket.on("get_red_packet_details_success", (data) => {
+        console.log("获取红包详情成功:", data);
+        // 更新红包详情数据
+        redPacketDetails.value = data;
+        // 显示红包详情对话框
+        showRedPacketDialog.value = true;
+      });
+
+      // 处理获取红包详情失败事件
+      socket.on("get_red_packet_details_failed", (data) => {
+        console.error("获取红包详情失败:", data);
+        ElMessage.error(data.message || "获取红包详情失败");
+      });
+
+      // 处理新红包消息
+      socket.on("new_red_packet", (data) => {
+        // 将红包消息添加到消息列表
+        const redPacketMessage = {
+          id: `red_packet_${data.id}`,
+          userId: data.senderId,
+          username: data.senderName,
+          type: "redPacket",
+          content: data.message || "发了一个红包",
+          redPacketId: data.id,
+          redPacketData: {
+            id: data.id,
+            senderId: data.senderId,
+            senderName: data.senderName,
+            type: data.type,
+            totalAmount: data.totalAmount,
+            count: data.count,
+            totalCount: data.totalCount,
+            message: data.message,
+            timestamp: data.timestamp,
+            status: data.status,
+            remainingCount: data.remainingCount
+          },
+          timestamp: data.timestamp
+        };
+        
+        messages.value.push(redPacketMessage);
+        
+        // 播放提示音
+        if (audioPermissionGranted.value) {
+          const audio = new Audio(qqSound);
+          audio.play().catch(error => console.warn("播放提示音失败:", error));
+        }
+        
+        // 如果页面不在焦点，显示通知
+        if (!document.hasFocus()) {
+          showNotification(`${data.senderName}发了一个红包`, data.message || "发了一个红包");
+        }
+      });
+
+      // 处理红包状态更新
+      socket.on("red_packet_status_update", (data) => {
+        // 查找对应的红包消息
+        const messageIndex = messages.value.findIndex(msg => 
+          msg.type === "redPacket" && msg.redPacketId === data.redPacketId
+        );
+        
+        if (messageIndex !== -1) {
+          // 更新红包状态
+          messages.value[messageIndex].redPacketData.status = data.status;
+          messages.value[messageIndex].redPacketData.remainingCount = data.remainingCount;
+        }
+      });
+
+      // 处理红包完成事件
+      socket.on("red_packet_completed", (data) => {
+        // 查找对应的红包消息
+        const messageIndex = messages.value.findIndex(msg => 
+          msg.type === "redPacket" && msg.redPacketId === data.redPacketId
+        );
+        
+        if (messageIndex !== -1) {
+          // 更新红包状态为已完成
+          messages.value[messageIndex].redPacketData.status = "completed";
+          messages.value[messageIndex].redPacketData.remainingCount = 0;
+        }
+      });
+    };
+
+    // 显示浏览器通知
+    const showNotification = (title, body) => {
+      if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification(title, {
+          body: body,
+          icon: "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%2345B7D1' d='M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z'/%3E%3Cpath fill='%2345B7D1' d='M22 16h4v16h-4zm0 20h4v4h-4z'/%3E%3C/svg%3E",
+          tag: "chat-message",
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // 5秒后自动关闭通知
+        setTimeout(() => notification.close(), 5000);
+      }
     };
 
     // 获取通知内容
@@ -2027,6 +2251,55 @@ export default {
       }
     });
 
+    // 打开发红包对话框
+    const openCreateRedPacketDialog = () => {
+      showCreateRedPacketDialog.value = true;
+    };
+
+    // 打开红包详情对话框
+    const openRedPacketDialog = (redPacketId) => {
+      selectedRedPacketId.value = redPacketId;
+      // 先获取红包详情
+      if (socket) {
+        socket.emit('get_red_packet_details', {
+          redPacketId: redPacketId,
+          userId: userId.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+      }
+    };
+
+    // 处理创建红包
+    const handleCreateRedPacket = (redPacketData) => {
+      // 通过socket发送红包数据
+      if (socket) {
+        socket.emit('create_red_packet', {
+          type: redPacketData.type,
+          count: redPacketData.count,
+          totalAmount: redPacketData.totalAmount,
+          message: redPacketData.message,
+          userId: userId.value,
+          username: username.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+        
+        ElMessage.success('红包发送成功！');
+      }
+    };
+
+    // 处理领取红包
+    const handleReceiveRedPacket = (redPacketId) => {
+      // 通过socket发送领取红包请求
+      if (socket) {
+        socket.emit('receive_red_packet', {
+          redPacketId: redPacketId,
+          userId: userId.value,
+          username: username.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+      }
+    };
+
     return {
       username,
       isLoggedIn,
@@ -2091,6 +2364,16 @@ export default {
       selectedBackground,
       handleBackgroundChange,
       getBackgroundStyle,
+      showRedPacketDialog,
+      showCreateRedPacketDialog,
+      selectedRedPacketId,
+      redPacketDetails,
+      userPoints,
+      openCreateRedPacketDialog,
+      openRedPacketDialog,
+      handleCreateRedPacket,
+      handleReceiveRedPacket,
+      updateUserInfoMap,
     };
   },
 };
@@ -2114,5 +2397,16 @@ export default {
 .kick-duration-setting label {
   margin-right: 10px;
   font-weight: bold;
+}
+
+.red-packet-btn {
+  margin-left: 10px;
+  background: linear-gradient(135deg, #ff4d4d, #ff7875);
+  border: none;
+  color: white;
+}
+
+.red-packet-btn:hover {
+  background: linear-gradient(135deg, #ff7875, #ff9c9c);
 }
 </style>
