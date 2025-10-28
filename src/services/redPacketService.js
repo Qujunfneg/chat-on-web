@@ -412,10 +412,20 @@ function getUserRedPacketHistory(coreId, userId, limit = 20) {
 }
 
 // 清理过期红包数据
-function cleanupExpiredRedPackets() {
+function cleanupExpiredRedPackets(customOptions = {}) {
   const data = readRedPacketData();
   const now = Date.now();
   let cleanedCount = 0;
+  
+  // 默认配置
+  const defaultOptions = {
+    expiredRetentionDays: 7,    // 过期红包保留天数
+    completedRetentionDays: 30,  // 已完成红包保留天数
+    forceCleanup: false         // 是否强制清理所有过期/完成的红包
+  };
+  
+  // 合并配置
+  const options = { ...defaultOptions, ...customOptions };
   
   // 遍历所有红包
   for (const redPacketId in data) {
@@ -424,44 +434,77 @@ function cleanupExpiredRedPackets() {
     // 检查并更新红包状态
     checkAndUpdateRedPacketStatus(redPacket);
     
-    // 删除超过7天的过期红包
-    if (redPacket.status === RED_PACKET_STATUS.EXPIRED && 
-        now - redPacket.expireTime > 7 * 24 * 60 * 60 * 1000) {
-      delete data[redPacketId];
-      cleanedCount++;
+    // 清理过期红包
+    if (redPacket.status === RED_PACKET_STATUS.EXPIRED) {
+      const retentionTime = options.expiredRetentionDays * 24 * 60 * 60 * 1000;
+      if (options.forceCleanup || now - redPacket.expireTime > retentionTime) {
+        delete data[redPacketId];
+        cleanedCount++;
+        console.log(`清理过期红包: ${redPacketId} (过期时间: ${new Date(redPacket.expireTime).toLocaleString()})`);
+      }
+    }
+    
+    // 清理已完成红包
+    else if (redPacket.status === RED_PACKET_STATUS.COMPLETED) {
+      const lastReceiveTime = Math.max(...redPacket.receivers.map(r => r.receiveTime));
+      const retentionTime = options.completedRetentionDays * 24 * 60 * 60 * 1000;
+      if (options.forceCleanup || now - lastReceiveTime > retentionTime) {
+        delete data[redPacketId];
+        cleanedCount++;
+        console.log(`清理已完成红包: ${redPacketId} (最后领取时间: ${new Date(lastReceiveTime).toLocaleString()})`);
+      }
     }
   }
   
   // 保存更新后的数据
   if (cleanedCount > 0) {
     writeRedPacketData(data);
-    console.log(`清理了 ${cleanedCount} 个过期红包数据`);
+    console.log(`清理了 ${cleanedCount} 个过期/已完成红包数据`);
+  } else {
+    console.log(`没有需要清理的红包数据`);
   }
   
   return cleanedCount;
 }
 
 // 设置定时清理过期红包
-function scheduleCleanup() {
-  // 每天凌晨3点执行一次清理
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(3, 0, 0, 0);
+function scheduleCleanup(intervalDays = 3) {
+  // 每隔指定天数执行一次清理，默认为3天
+  const intervalMs = intervalDays * 24 * 60 * 60 * 1000;
   
-  const timeUntilTomorrow = tomorrow.getTime() - now.getTime();
+  // 立即执行一次清理
+  console.log(`启动红包清理任务，每${intervalDays}天执行一次清理`);
+  cleanupExpiredRedPackets();
   
-  setTimeout(() => {
+  // 设置定时清理
+  cleanupIntervalId = setInterval(() => {
+    console.log(`执行定期红包清理任务...`);
     cleanupExpiredRedPackets();
-    // 递归调用，安排下一次清理
-    scheduleCleanup();
-  }, timeUntilTomorrow);
+  }, intervalMs);
   
-  console.log(`将在 ${tomorrow.toLocaleString()} 执行下一次过期红包清理`);
+  return cleanupIntervalId;
 }
 
-// 初始化时启动定时清理
-scheduleCleanup();
+// 停止清理定时器
+function stopCleanupScheduler() {
+  if (cleanupIntervalId) {
+    clearInterval(cleanupIntervalId);
+    cleanupIntervalId = null;
+    console.log(`红包清理定时器已停止`);
+    return true;
+  }
+  return false;
+}
+
+// 启动清理定时器
+function startCleanupScheduler(intervalDays = 3) {
+  stopCleanupScheduler(); // 先停止现有的定时器
+  return scheduleCleanup(intervalDays);
+}
+
+// 初始化时启动定时清理，每隔3天清理一次
+let cleanupIntervalId = null;
+scheduleCleanup(3);
 
 module.exports = {
   RED_PACKET_STATUS,
@@ -469,5 +512,8 @@ module.exports = {
   receiveRedPacket,
   getRedPacketDetails,
   getUserRedPacketHistory,
-  cleanupExpiredRedPackets
+  cleanupExpiredRedPackets,
+  scheduleCleanup,
+  startCleanupScheduler,
+  stopCleanupScheduler
 };

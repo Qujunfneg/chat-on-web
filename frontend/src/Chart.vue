@@ -2379,5 +2379,6 @@ export default {
 .kick-duration-setting label {
   margin-right: 10px;
   font-weight: bold;
+  min-width: 100px;
 }
 </style>

@@ -28,7 +28,6 @@
         </div>
       </div>
     </div>
-    <div class="red-packet-time">{{ formatTime(timestamp) }}</div>
 
     <!-- 右键菜单 -->
     <div

@@ -911,5 +911,165 @@
       6,
       14
     ]
+  },
+  "rp_623c291d-b890-4d75-b07c-a3a967486984": {
+    "id": "rp_623c291d-b890-4d75-b07c-a3a967486984",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761650245232,
+    "expireTime": 1761736645232,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      8,
+      12
+    ]
+  },
+  "rp_a6569dd2-41bb-412c-8334-4454da0ec70f": {
+    "id": "rp_a6569dd2-41bb-412c-8334-4454da0ec70f",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761650256743,
+    "expireTime": 1761736656743,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 3,
+        "receiveTime": 1761650258683
+      },
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 17,
+        "receiveTime": 1761650262629
+      }
+    ],
+    "amounts": [
+      3,
+      17
+    ]
+  },
+  "rp_6a84a3bd-63ae-4384-a564-d4dd21517a54": {
+    "id": "rp_6a84a3bd-63ae-4384-a564-d4dd21517a54",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761650265463,
+    "expireTime": 1761736665463,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 19,
+        "receiveTime": 1761650267016
+      },
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 1,
+        "receiveTime": 1761650269770
+      }
+    ],
+    "amounts": [
+      19,
+      1
+    ]
+  },
+  "rp_ab96b61f-4ef2-4cd9-b727-01e99c4b4c76": {
+    "id": "rp_ab96b61f-4ef2-4cd9-b727-01e99c4b4c76",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 33,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761650278327,
+    "expireTime": 1761736678327,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 25,
+        "receiveTime": 1761650279346
+      },
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 8,
+        "receiveTime": 1761650281553
+      }
+    ],
+    "amounts": [
+      25,
+      8
+    ]
+  },
+  "rp_219f30f2-7fab-4d59-8756-ddef11d43076": {
+    "id": "rp_219f30f2-7fab-4d59-8756-ddef11d43076",
+    "senderId": "user_1761619518145_n70918aqf",
+    "senderName": "ee",
+    "senderCoreId": "core_1761551890134_2wzih0trk",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 0,
+    "remainingCount": 0,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761650463239,
+    "expireTime": 1761736863239,
+    "status": "completed",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 17,
+        "receiveTime": 1761650466747
+      },
+      {
+        "userId": "user_1761619518145_n70918aqf",
+        "username": "ee",
+        "coreId": "core_1761551890134_2wzih0trk",
+        "amount": 3,
+        "receiveTime": 1761650472114
+      }
+    ],
+    "amounts": [
+      17,
+      3
+    ]
   }
 }
