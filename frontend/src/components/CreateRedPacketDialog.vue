@@ -1,12 +1,17 @@
 <template>
-  <div v-if="modelValue" class="create-red-packet-dialog-overlay" @click="closeDialog">
-    <div class="create-red-packet-dialog" @click.stop>
-      <div class="dialog-header">
-        <h3>发红包</h3>
-        <button class="close-btn" @click="closeDialog">×</button>
-      </div>
-      
-      <div class="dialog-content">
+  <el-popover
+    placement="top"
+    :width="300"
+    trigger="click"
+    v-model="visible"
+    popper-class="red-packet-popper"
+  >
+    <div class="red-packet-box">
+      <div class="red-packet-content">
+        <div class="red-packet-header">
+          <h4>发红包</h4>
+        </div>
+        
         <div class="red-packet-type-selector">
           <div class="type-option" 
                :class="{ active: type === 'random' }" 
@@ -48,36 +53,42 @@
             rows="2"></textarea>
           <div class="char-count">{{ message.length }}/20</div>
         </div>
-      </div>
-      
-      <div class="dialog-footer">
-        <button class="cancel-btn" @click="closeDialog">取消</button>
-        <button class="create-btn" 
-                @click="createRedPacket" 
-                :disabled="!canCreate">
+        
+        <div class="red-packet-tips">
+          <small>💡 红包发出后24小时未被领取将自动退款</small>
+        </div>
+        
+        <el-button
+          type="primary"
+          :disabled="!canCreate"
+          @click="createRedPacket"
+          class="send-red-packet-button"
+        >
           发红包
-        </button>
+        </el-button>
       </div>
     </div>
-  </div>
+    <template #reference>
+      <el-button class="red-packet-trigger-btn" title="发红包">
+        <el-icon><present /></el-icon>
+      </el-button>
+    </template>
+  </el-popover>
 </template>
 
 <script>
 export default {
   name: 'CreateRedPacketDialog',
   props: {
-    modelValue: {
-      type: Boolean,
-      default: false
-    },
     userPoints: {
       type: Number,
       required: true
     }
   },
-  emits: ['update:modelValue', 'close', 'create'],
+  emits: ['create'],
   data() {
     return {
+      visible: false,
       type: 'random', // 'random' 或 'average'
       count: 2,
       totalAmount: 20,
@@ -109,10 +120,6 @@ export default {
     }
   },
   methods: {
-    closeDialog() {
-      this.$emit('update:modelValue', false);
-      this.$emit('close');
-    },
     selectType(type) {
       this.type = type;
     },
@@ -133,242 +140,232 @@ export default {
       this.message = '';
       
       // 关闭弹框
-      this.$emit('update:modelValue', false);
+      this.visible = false;
     }
   }
 }
 </script>
 
 <style scoped>
-.create-red-packet-dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.create-red-packet-dialog {
-  background: #fff;
+/* 红包弹出框整体样式 */
+.red-packet-box {
+  background-color: var(--background-secondary, #fff);
   border-radius: 12px;
-  width: 90%;
-  max-width: 360px;
-  max-height: 90vh;
-  overflow: hidden;
+  border: 1px solid var(--border-color, #f0f0f0);
+  box-shadow: var(--shadow-light, 0 4px 12px rgba(0, 0, 0, 0.15));
+  height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background-color: #fff;
-}
-
-.dialog-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #999;
-  padding: 0;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  color: #666;
-  background-color: #f8f9fa;
-}
-
-.dialog-content {
+/* 内容区域，使用百分比高度 */
+.red-packet-content {
+  padding: 12px;
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background-color: #fff;
+  overflow-x: hidden;
 }
 
+/* 自定义滚动条样式 */
+.red-packet-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.red-packet-content::-webkit-scrollbar-track {
+  background: var(--background-secondary, #f1f1f1);
+  border-radius: 2px;
+}
+
+.red-packet-content::-webkit-scrollbar-thumb {
+  background: var(--border-color, #c1c1c1);
+  border-radius: 2px;
+}
+
+.red-packet-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary, #a8a8a8);
+}
+
+/* 红包弹出框头部 */
+.red-packet-header {
+  margin-bottom: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.red-packet-header h4 {
+  margin: 0;
+  color: var(--text-primary, #333);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 红包类型选择器 */
 .red-packet-type-selector {
   display: flex;
-  margin-bottom: 20px;
-  gap: 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e0e0e0);
+  flex-shrink: 0;
 }
 
 .type-option {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 8px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  background-color: var(--background-primary, #f9f9f9);
+  transition: all 0.3s;
 }
 
 .type-option.active {
-  border-color: #ff4d4f;
-  background-color: rgba(255, 77, 79, 0.1);
+  background-color: #fff2f0;
+  color: #ff4d4f;
+}
+
+.type-option:hover:not(.active) {
+  background-color: var(--background-hover, #f0f0f0);
 }
 
 .type-icon {
-  font-size: 20px;
-  margin-bottom: 6px;
+  font-size: 18px;
+  margin-bottom: 2px;
 }
 
 .type-name {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-
-
+/* 表单样式 */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: #333;
+  margin-bottom: 4px;
+  font-size: 13px;
   font-weight: 500;
-}
-
-
-
-.form-group textarea {
-  width: 100%;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  resize: none;
-  font-family: inherit;
-  background-color: #f8f9fa;
-  transition: border-color 0.3s;
-}
-
-.form-group textarea:focus {
-  outline: none;
-  border-color: #ff4d4f;
-  background-color: #fff;
+  color: var(--text-primary, #333);
 }
 
 .simple-input {
   display: flex;
   align-items: center;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 0 12px;
-  border: 1px solid #e9ecef;
-  transition: border-color 0.3s;
-}
-
-.simple-input:focus-within {
-  border-color: #ff4d4f;
+  border: 1px solid var(--border-color, #d9d9d9);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .simple-input input {
   flex: 1;
-  height: 40px;
   border: none;
-  background: none;
   outline: none;
-  font-size: 16px;
-  padding: 0;
+  padding: 6px 10px;
+  font-size: 13px;
+  background-color: var(--background-primary, #fff);
+  color: var(--text-primary, #333);
 }
 
 .input-unit {
-  margin-left: 8px;
-  color: #666;
-  font-size: 14px;
-  min-width: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+  background-color: var(--background-secondary, #f5f5f5);
 }
 
 .balance-info {
-  font-size: 12px;
-  color: #999;
-  margin-top: 8px;
-  text-align: right;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-secondary, #999);
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color, #d9d9d9);
+  border-radius: 6px;
+  resize: none;
+  font-size: 13px;
+  background-color: var(--background-primary, #fff);
+  color: var(--text-primary, #333);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-group textarea:focus {
+  border-color: #ff4d4f;
 }
 
 .char-count {
-  font-size: 12px;
-  color: #999;
-  margin-top: 4px;
+  margin-top: 2px;
   text-align: right;
+  font-size: 11px;
+  color: var(--text-secondary, #999);
 }
 
-
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
+/* 提示信息 */
+.red-packet-tips {
+  margin-bottom: 12px;
+  padding: 6px 0;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-.cancel-btn {
-  padding: 10px 20px;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  background: #fff;
-  color: #6c757d;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.red-packet-tips small {
+  color: var(--text-secondary, #999);
+  font-size: 11px;
 }
 
-.cancel-btn:hover {
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-}
-
-.create-btn {
-  padding: 10px 20px;
+/* 发送按钮 */
+.send-red-packet-button {
+  width: 100%;
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
   border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ff6b6b, #ff4d4f);
-  color: #fff;
-  font-size: 14px;
+  border-radius: 6px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
+  height: 32px;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
-.create-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+.send-red-packet-button:hover {
+  background: linear-gradient(135deg, #ff7875, #ff9c9c);
 }
 
-.create-btn:disabled {
-  background: #adb5bd;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.send-red-packet-button:disabled {
+  background: var(--background-disabled, #f5f5f5);
+  color: var(--text-disabled, #bbb);
+}
+
+/* 触发按钮样式 */
+.red-packet-trigger-btn {
+  margin-left: 10px;
+  background: linear-gradient(135deg, #ff4d4d, #ff7875);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+}
+
+.red-packet-trigger-btn:hover {
+  background: linear-gradient(135deg, #ff7875, #ff9c9c);
+  transform: scale(1.05);
+}
+</style>
+
+<style>
+/* 全局样式，用于弹出框 */
+.red-packet-popper {
+  height: 70vh !important;
+  max-height: 494px !important;
+  overflow: hidden !important;
 }
 </style>

@@ -193,9 +193,10 @@
               <BackgroundSelector @background-changed="handleBackgroundChange"></BackgroundSelector>
               
               <!-- 红包按钮 -->
-              <el-button class="red-packet-btn" @click="openCreateRedPacketDialog">
-                <el-icon><present /></el-icon>
-              </el-button>
+              <CreateRedPacketDialog
+                :user-points="userPoints"
+                @create="handleCreateRedPacket"
+              ></CreateRedPacketDialog>
             </div>
             <div class="input-container">
               <el-input
@@ -402,13 +403,6 @@
       :show-all-amounts="true"
       @receive="handleReceiveRedPacket"
     ></RedPacketDialog>
-
-    <!-- 发红包对话框 -->
-    <CreateRedPacketDialog
-      v-model="showCreateRedPacketDialog"
-      :user-points="userPoints"
-      @create="handleCreateRedPacket"
-    ></CreateRedPacketDialog>
   </div>
 </template>
 
@@ -526,7 +520,6 @@ export default {
 
     // 红包相关
     const showRedPacketDialog = ref(false);
-    const showCreateRedPacketDialog = ref(false);
     const selectedRedPacketId = ref("");
     const redPacketDetails = ref(null); // 红包详情数据
     const userPoints = ref(0); // 初始用户积分，将从服务器获取
@@ -1000,8 +993,6 @@ export default {
         
         // 关闭创建红包对话框
         showCreateRedPacketDialog.value = false;
-        
-        ElMessage.success("红包发送成功！");
       });
 
       // 处理红包创建失败事件
@@ -2251,11 +2242,6 @@ export default {
       }
     });
 
-    // 打开发红包对话框
-    const openCreateRedPacketDialog = () => {
-      showCreateRedPacketDialog.value = true;
-    };
-
     // 打开红包详情对话框
     const openRedPacketDialog = (redPacketId) => {
       selectedRedPacketId.value = redPacketId;
@@ -2282,8 +2268,6 @@ export default {
           username: username.value,
           coreId: coreId.value // 添加coreId参数
         });
-        
-        ElMessage.success('红包发送成功！');
       }
     };
 
@@ -2365,11 +2349,9 @@ export default {
       handleBackgroundChange,
       getBackgroundStyle,
       showRedPacketDialog,
-      showCreateRedPacketDialog,
       selectedRedPacketId,
       redPacketDetails,
       userPoints,
-      openCreateRedPacketDialog,
       openRedPacketDialog,
       handleCreateRedPacket,
       handleReceiveRedPacket,
@@ -2397,16 +2379,5 @@ export default {
 .kick-duration-setting label {
   margin-right: 10px;
   font-weight: bold;
-}
-
-.red-packet-btn {
-  margin-left: 10px;
-  background: linear-gradient(135deg, #ff4d4d, #ff7875);
-  border: none;
-  color: white;
-}
-
-.red-packet-btn:hover {
-  background: linear-gradient(135deg, #ff7875, #ff9c9c);
 }
 </style>

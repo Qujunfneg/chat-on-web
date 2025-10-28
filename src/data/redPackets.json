@@ -839,5 +839,77 @@
       15,
       5
     ]
+  },
+  "rp_40a97ffa-ead0-4aad-81ff-265ecd8aff88": {
+    "id": "rp_40a97ffa-ead0-4aad-81ff-265ecd8aff88",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "average",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 10,
+    "remainingCount": 1,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761649919936,
+    "expireTime": 1761736319936,
+    "status": "active",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 10,
+        "receiveTime": 1761649922458
+      }
+    ]
+  },
+  "rp_11949756-de8e-42b7-b8cd-b4f5903c3049": {
+    "id": "rp_11949756-de8e-42b7-b8cd-b4f5903c3049",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 20,
+    "remainingCount": 2,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761649927287,
+    "expireTime": 1761736327287,
+    "status": "active",
+    "receivers": [],
+    "amounts": [
+      2,
+      18
+    ]
+  },
+  "rp_dbf7b958-3fc9-44d0-bcfd-5784fcecb89a": {
+    "id": "rp_dbf7b958-3fc9-44d0-bcfd-5784fcecb89a",
+    "senderId": "user_1761617379932_apnvyqx3p",
+    "senderName": "ddddd",
+    "senderCoreId": "core_1761617379932_64gdvocdv",
+    "type": "random",
+    "totalAmount": 20,
+    "totalCount": 2,
+    "remainingAmount": 14,
+    "remainingCount": 1,
+    "greeting": "恭喜发财，大吉大利",
+    "createTime": 1761649945048,
+    "expireTime": 1761736345048,
+    "status": "active",
+    "receivers": [
+      {
+        "userId": "user_1761617379932_apnvyqx3p",
+        "username": "ddddd",
+        "coreId": "core_1761617379932_64gdvocdv",
+        "amount": 6,
+        "receiveTime": 1761649946164
+      }
+    ],
+    "amounts": [
+      6,
+      14
+    ]
   }
 }
