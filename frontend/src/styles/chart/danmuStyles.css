@@ -58,21 +58,56 @@
 /* 弹幕输入框样式 */
 .danmu-input {
   margin-bottom: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.danmu-input:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.danmu-box .el-input {
+  width: 100%;
+}
+
+.danmu-box .el-input__wrapper {
+  border-radius: 12px;
+  padding: 4px;
+  background-color: var(--background-primary);
+  box-shadow: 0 0 0 1px var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.danmu-box .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--border-color-hover);
+}
+
+.danmu-box .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 2px var(--accent-primary);
 }
 
 .danmu-box .el-input__inner {
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: none;
+  padding: 12px 16px;
   font-size: 14px;
-  transition: all 0.3s ease;
-  border: 2px solid var(--border-color);
-  background-color: var(--background-primary);
   color: var(--text-primary);
+  background-color: transparent;
+  line-height: 1.5;
 }
 
-.danmu-box .el-input__inner:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
+.danmu-box .el-input__inner::placeholder {
+  color: var(--text-placeholder);
+}
+
+.danmu-box .el-input__count {
+  background-color: var(--background-secondary);
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin-right: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
 /* 弹幕颜色选择器样式 */
@@ -187,14 +222,31 @@
   color: var(--text-primary);
 }
 
-.theme-dark .danmu-box .el-input__inner {
+.theme-dark .danmu-box .el-input__wrapper {
   background-color: var(--background-primary);
-  border-color: var(--border-color);
+  box-shadow: 0 0 0 1px var(--border-color);
+}
+
+.theme-dark .danmu-box .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--border-color-hover);
+}
+
+.theme-dark .danmu-box .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.theme-dark .danmu-box .el-input__inner {
+  background-color: transparent;
   color: var(--text-primary);
 }
 
-.theme-dark .danmu-box .el-input__inner:focus {
-  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
+.theme-dark .danmu-box .el-input__inner::placeholder {
+  color: var(--text-placeholder);
+}
+
+.theme-dark .danmu-box .el-input__count {
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
 }
 
 .theme-dark .danmu-color-picker span {

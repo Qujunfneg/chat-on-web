@@ -146,7 +146,7 @@
                     </div>
                     <el-input
                       v-model="danmuContent"
-                      placeholder="输入弹幕内容（最多30字）"
+                      placeholder="输入弹幕内容"
                       :maxlength="30"
                       show-word-limit
                       @keydown.enter.native="sendDanmu"
