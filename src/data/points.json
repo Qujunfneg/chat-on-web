@@ -1,122 +1,18 @@
 {
-  "core_1761536803066_knos7m9ae": {
-    "coreId": "core_1761536803066_knos7m9ae",
-    "points": 530,
-    "createdAt": "2025-10-27T07:26:13.551Z",
-    "lastDailyClaim": "2025-10-27T07:34:57.850Z",
-    "onlineMinutes": 7.1666666666666705,
-    "updatedAt": "2025-10-27T07:35:33.158Z"
-  },
-  "core_1761550492217_tfcrfpqq5": {
-    "coreId": "core_1761550492217_tfcrfpqq5",
-    "points": 680,
-    "createdAt": "2025-10-27T07:34:53.150Z",
-    "lastDailyClaim": "2025-10-27T08:48:33.939Z",
+  "core_1761617379932_64gdvocdv": {
+    "coreId": "core_1761617379932_64gdvocdv",
+    "points": 100,
+    "createdAt": "2025-10-28T11:27:40.413Z",
+    "lastDailyClaim": "2025-10-28T11:27:43.359Z",
     "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T10:48:06.235Z"
-  },
-  "core_1761550540345_pnmgn6e4t": {
-    "coreId": "core_1761550540345_pnmgn6e4t",
-    "points": 870,
-    "createdAt": "2025-10-27T07:35:43.157Z",
-    "lastDailyClaim": "2025-10-27T07:35:47.073Z",
-    "onlineMinutes": 23.49999999999999,
-    "updatedAt": "2025-10-27T08:04:33.003Z"
-  },
-  "core_1761550908476_1hmu0imdc": {
-    "coreId": "core_1761550908476_1hmu0imdc",
-    "points": 490,
-    "createdAt": "2025-10-27T07:41:51.257Z",
-    "lastDailyClaim": "2025-10-27T07:41:51.257Z",
-    "onlineMinutes": 6.500000000000003,
-    "updatedAt": "2025-10-27T07:48:22.118Z"
+    "updatedAt": "2025-10-28T11:27:43.359Z"
   },
   "core_1761551890134_2wzih0trk": {
     "coreId": "core_1761551890134_2wzih0trk",
-    "points": 453,
-    "createdAt": "2025-10-27T07:58:13.223Z",
-    "lastDailyClaim": "2025-10-28T08:01:13.843Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T11:21:12.119Z"
-  },
-  "core_1761552309501_ezw6hiuf7": {
-    "coreId": "core_1761552309501_ezw6hiuf7",
-    "points": 190,
-    "createdAt": "2025-10-27T08:05:12.999Z",
-    "lastDailyClaim": "2025-10-27T08:05:12.999Z",
-    "onlineMinutes": 9,
-    "updatedAt": "2025-10-27T08:14:34.848Z"
-  },
-  "core_1761552952564_ia2mctew9": {
-    "coreId": "core_1761552952564_ia2mctew9",
-    "points": 160,
-    "createdAt": "2025-10-27T08:15:54.710Z",
-    "lastDailyClaim": "2025-10-27T08:16:09.504Z",
-    "onlineMinutes": 6,
-    "updatedAt": "2025-10-27T08:20:54.635Z"
-  },
-  "core_1761553325168_sva1zqh5l": {
-    "coreId": "core_1761553325168_sva1zqh5l",
     "points": 100,
-    "createdAt": "2025-10-27T08:22:08.989Z",
-    "lastDailyClaim": "2025-10-27T08:22:08.989Z",
+    "createdAt": "2025-10-28T11:27:50.303Z",
+    "lastDailyClaim": "2025-10-28T11:27:50.303Z",
     "onlineMinutes": 0,
-    "updatedAt": "2025-10-27T08:22:08.989Z"
-  },
-  "core_1761553420931_h1i6o2xhf": {
-    "coreId": "core_1761553420931_h1i6o2xhf",
-    "points": 110,
-    "createdAt": "2025-10-27T08:23:44.380Z",
-    "lastDailyClaim": "2025-10-27T08:23:44.380Z",
-    "onlineMinutes": 10,
-    "updatedAt": "2025-10-27T08:31:31.180Z"
-  },
-  "core_1761554106802_3vcv8zg6k": {
-    "coreId": "core_1761554106802_3vcv8zg6k",
-    "points": 270,
-    "createdAt": "2025-10-27T08:35:10.091Z",
-    "lastDailyClaim": "2025-10-28T02:03:53.366Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T02:07:21.301Z"
-  },
-  "core_1761617246013_g84pydmgl": {
-    "coreId": "core_1761617246013_g84pydmgl",
-    "points": 100,
-    "createdAt": "2025-10-28T02:07:31.581Z",
-    "lastDailyClaim": "2025-10-28T02:07:31.581Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T02:09:36.607Z"
-  },
-  "core_1761617379932_64gdvocdv": {
-    "coreId": "core_1761617379932_64gdvocdv",
-    "points": 73,
-    "createdAt": "2025-10-28T02:09:44.133Z",
-    "lastDailyClaim": "2025-10-28T02:09:44.133Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T11:21:06.751Z"
-  },
-  "core_1761537507128_mhkhol4uw": {
-    "coreId": "core_1761537507128_mhkhol4uw",
-    "points": 112,
-    "createdAt": "2025-10-28T07:51:19.918Z",
-    "lastDailyClaim": "2025-10-28T08:57:56.983Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T10:37:38.252Z"
-  },
-  "core_1761300337590_eenx2yxjg": {
-    "coreId": "core_1761300337590_eenx2yxjg",
-    "points": 70,
-    "createdAt": "2025-10-28T08:06:44.776Z",
-    "lastDailyClaim": "2025-10-28T08:17:10.114Z",
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T11:24:45.505Z"
-  },
-  "core_1761296655027_an0fffaaz_iesrkmk0b": {
-    "coreId": "core_1761296655027_an0fffaaz_iesrkmk0b",
-    "points": 78,
-    "createdAt": "2025-10-28T09:19:30.265Z",
-    "lastDailyClaim": null,
-    "onlineMinutes": 0,
-    "updatedAt": "2025-10-28T10:37:43.971Z"
+    "updatedAt": "2025-10-28T11:27:50.303Z"
   }
 }

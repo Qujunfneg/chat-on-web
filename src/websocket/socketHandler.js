@@ -406,6 +406,20 @@ module.exports = (io) => {
           canClaimDaily: canClaim
         });
         
+        // 广播更新后的用户列表给所有用户，确保积分显示正确
+        const updatedUsersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
+          const userInfo = userInfoMap.get(uid) || { userId: uid, username: null };
+          // 获取每个用户的最新积分信息
+          const userPoints = userInfo.coreId ? getUserPoints(userInfo.coreId) : 0;
+          return {
+            ...userInfo,
+            points: userPoints
+          };
+        });
+        
+        // 广播更新后的用户列表
+        io.emit("users_updated", updatedUsersList);
+        
         console.log(`用户 ${userInfo.username} 领取了每日100积分，当前积分: ${updatedPoints}`);
       } else {
         socket.emit("claim_points_failed", { message: "领取积分失败" });
