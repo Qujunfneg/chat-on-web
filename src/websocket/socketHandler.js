@@ -30,7 +30,7 @@ module.exports = (io) => {
     console.log("清理旧的积分定时器");
   }
   
-  // 每10分钟为在线用户增加10积分
+  // 每1小时为在线用户增加10积分
   global.pointsInterval = setInterval(() => {
     const now = new Date();
     console.log(`[${now.toLocaleTimeString()}] 开始为在线用户增加积分...`);
@@ -42,8 +42,8 @@ module.exports = (io) => {
         // 为在线用户增加10积分
         const success = addUserPoints(userInfo.coreId, 10);
         if (success) {
-          // 增加在线时长（10分钟）
-          addUserOnlineMinutes(userInfo.coreId, 10);
+          // 增加在线时长（60分钟）
+          addUserOnlineMinutes(userInfo.coreId, 60);
           
           // 获取更新后的积分和用户信息
           const updatedPoints = getUserPoints(userInfo.coreId);
@@ -76,9 +76,9 @@ module.exports = (io) => {
         }
       }
     });
-  }, 600000); // 每10分钟执行一次（600000毫秒）
+  }, 3600000); // 每1小时执行一次（3600000毫秒）
   
-  console.log("积分定时器已设置，每10分钟执行一次");
+  console.log("积分定时器已设置，每1小时执行一次");
   
   // 设置清理不活跃用户的定时器 - 每天执行一次
   if (global.cleanupInterval) {
