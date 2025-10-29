@@ -15,10 +15,11 @@
   },
   "dependencies": {
     "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
     "marked": "^16.3.0",
     "multer": "^2.0.2",
     "socket.io": "^4.7.2",
-    "http-proxy-middleware": "^2.0.6"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "electron": "^38.2.0",
@@ -32,8 +33,8 @@
     "productName": "ChatRoom",
     "copyright": "Copyright © 2024 Chat on Web",
     "directories": {
-    "output": "dist"
-  },
+      "output": "dist"
+    },
     "electronVersion": "38.2.0",
     "files": [
       "electron/**/*",
@@ -44,19 +45,25 @@
       {
         "from": "electron/conf.json",
         "to": "conf.json",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "data/emojis",
         "to": "emojis",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "dir",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "electron/application.ico",

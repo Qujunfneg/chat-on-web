@@ -12,6 +12,9 @@ const { CDN_SIZE_CHECK_INTERVAL_MS, ROOT_DIR } = require('./config/constants');
 
 
 // --- 启动时执行逻辑 (原全局逻辑) ---
+// 0. 初始化数据文件
+storageService.initializeDataFiles();
+
 // 1. 服务重启时清理CDN目录所有文件
 storageService.cleanCdnDirectoryOnRestart();
 

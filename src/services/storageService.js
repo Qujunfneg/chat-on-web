@@ -4,11 +4,42 @@ const {
   CDN_IMAGES_DIR, 
   TEMP_UPLOAD_DIR, 
   CDN_SIZE_LIMIT_MB, 
-  CDN_CLEAN_PERCENTAGE 
+  CDN_CLEAN_PERCENTAGE,
+  ROOT_DIR
 } = require('../config/constants');
 const { tempUploads } = require('./userService');
 
+// 定义数据文件路径
+const DATA_DIR = path.join(ROOT_DIR, 'src', 'data');
+const POINTS_FILE = path.join(DATA_DIR, 'points.json');
+const REDPACKETS_FILE = path.join(DATA_DIR, 'redPackets.json');
+
 // --- 目录初始化和清理（原全局逻辑） ---
+
+// 初始化数据文件
+function initializeDataFiles() {
+  try {
+    // 确保数据目录存在
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      console.log('已创建数据目录:', DATA_DIR);
+    }
+    
+    // 初始化points.json
+    if (!fs.existsSync(POINTS_FILE)) {
+      fs.writeFileSync(POINTS_FILE, JSON.stringify({}), 'utf8');
+      console.log('已创建points.json文件');
+    }
+    
+    // 初始化redPackets.json
+    if (!fs.existsSync(REDPACKETS_FILE)) {
+      fs.writeFileSync(REDPACKETS_FILE, JSON.stringify({}), 'utf8');
+      console.log('已创建redPackets.json文件');
+    }
+  } catch (error) {
+    console.error('初始化数据文件失败:', error);
+  }
+}
 
 // 创建临时上传目录和CDN目录
 if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
@@ -154,6 +185,7 @@ function checkDirectorySize() {
 
 // 导出所有功能
 module.exports = {
+  initializeDataFiles,
   cleanCdnDirectoryOnRestart,
   checkDirectorySize,
   mockObjectStorage,
