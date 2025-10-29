@@ -878,7 +878,12 @@ module.exports = (io) => {
         }
 
         const usersList = Array.from(onlineUsers.entries()).map(([sid, uid]) => {
-          return userInfoMap.get(uid) || { userId: uid, username: null };
+          const user = userInfoMap.get(uid) || { userId: uid, username: null };
+          const userPoints = user.coreId ? getUserPoints(user.coreId) : 0;
+          return {
+            ...user,
+            points: userPoints
+          };
         });
 
         io.emit("user_leave", {
