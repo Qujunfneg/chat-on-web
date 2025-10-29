@@ -29,6 +29,13 @@
     >
       ↩️ 撤回
     </div>
+    <div
+      class="context-menu-item"
+      v-if="selectedUserForMention && isAdminMode && !isCurrentUser"
+      @click="kickUser"
+    >
+      👟 踢人
+    </div>
     <div class="context-menu-item" @click="hideMenu">取消</div>
   </div>
 </template>
@@ -66,9 +73,13 @@ export default {
     currentUserId: {
       type: String,
       default: ''
+    },
+    isAdminMode: {
+      type: Boolean,
+      default: false
     }
   },
-  emits: ['hideMenu', 'mentionUser', 'quoteMessage', 'saveAsFavorite', 'editNickname', 'recallMessage'],
+  emits: ['hideMenu', 'mentionUser', 'quoteMessage', 'saveAsFavorite', 'editNickname', 'recallMessage', 'kickUser'],
   setup(props, { emit }) {
     // 检查是否为当前用户
     const isCurrentUser = computed(() => {
@@ -141,6 +152,14 @@ export default {
       emit('hideMenu');
     };
 
+    // 踢人
+    const kickUser = () => {
+      if (props.selectedUserForMention) {
+        emit('kickUser', props.selectedUserForMention);
+      }
+      emit('hideMenu');
+    };
+
     // 隐藏菜单
     const hideMenu = () => {
       emit('hideMenu');
@@ -152,6 +171,7 @@ export default {
       saveAsFavorite,
       editNickname,
       recallMessage,
+      kickUser,
       hideMenu,
       isCurrentUser,
       isMessageOwner

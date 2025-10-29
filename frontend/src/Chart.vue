@@ -48,7 +48,7 @@
           
           <!-- 聊天头部 -->
           <div class="chat-header">
-            <h2>公共大厅</h2>
+            <h2 @click="handleTitleClick" style="cursor: pointer;user-select:  none;">公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
               <AnnouncementBar style="margin-right: 10px;"/>
@@ -73,7 +73,7 @@
               </el-button>
             </div>
           </div>
-
+          
           <!-- 弹幕显示区域 -->
           <div class="danmu-display-area">
             <div
@@ -105,6 +105,7 @@
             :background="selectedBackground"
             @message-context-menu="handleMessageContextMenu"
             @user-context-menu="handleUserContextMenu"
+            @open-red-packet="openRedPacketDialog"
           >
         </MessageList>
 
@@ -145,7 +146,7 @@
                     </div>
                     <el-input
                       v-model="danmuContent"
-                      placeholder="输入弹幕内容（最多30字）"
+                      placeholder="输入弹幕内容"
                       :maxlength="30"
                       show-word-limit
                       @keydown.enter.native="sendDanmu"
@@ -190,6 +191,12 @@
               
               <!-- 背景图片选择器 -->
               <BackgroundSelector @background-changed="handleBackgroundChange"></BackgroundSelector>
+              
+              <!-- 红包按钮 -->
+              <CreateRedPacketDialog
+                :user-points="userPoints"
+                @create="handleCreateRedPacket"
+              ></CreateRedPacketDialog>
             </div>
             <div class="input-container">
               <el-input
@@ -318,11 +325,13 @@
       :selected-message="selectedMessage"
       :selected-image-url="selectedImageUrl"
       :current-user-id="userId"
+      :is-admin-mode="isAdminMode"
       @hide-menu="hideContextMenu"
       @mention-user="handleMentionUser"
       @quote-message="handleQuoteMessage"
       @edit-nickname="handleEditNickname"
       @recall-message="handleRecallMessage"
+      @kick-user="handleKickUser"
     ></ContextMenu>
 
     <!-- @用户弹层 -->
@@ -343,6 +352,57 @@
       :userId="userId"
       @confirmed="handleSaveNickname"
     ></NameDialog>
+
+    <!-- 踢人对话框 -->
+    <el-dialog
+      v-model="showKickDialog"
+      title="踢人设置"
+      width="30%"
+      :before-close="cancelKickUser"
+    >
+      <div class="kick-dialog-content">
+        <p v-if="selectedUserForKick">确定要踢出用户 <strong>{{ typeof selectedUserForKick === 'object' ? selectedUserForKick.username : selectedUserForKick }}</strong> 吗？</p>
+        <p v-else>未选择要踢出的用户</p>
+        <div class="kick-duration-setting">
+          <label>下线时长：</label>
+          <el-select v-model="kickDuration" placeholder="请选择">
+            <el-option label="1分钟" :value="1"></el-option>
+            <el-option label="5分钟" :value="5"></el-option>
+            <el-option label="10分钟" :value="10"></el-option>
+            <el-option label="30分钟" :value="30"></el-option>
+            <el-option label="1小时" :value="60"></el-option>
+            <el-option label="永久" :value="0"></el-option>
+          </el-select>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelKickUser">取消</el-button>
+          <el-button type="primary" @click="confirmKickUser" :disabled="!selectedUserForKick">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 红包详情对话框 -->
+    <RedPacketDialog
+      v-model="showRedPacketDialog"
+      :red-packet-id="selectedRedPacketId"
+      :sender-id="redPacketDetails?.senderId || ''"
+      :sender-name="redPacketDetails?.senderName || ''"
+      :sender-avatar="redPacketDetails?.senderAvatar || ''"
+      :type="redPacketDetails?.type || 'average'"
+      :total-amount="redPacketDetails?.totalAmount || 0"
+      :count="redPacketDetails?.count || 0"
+      :message="redPacketDetails?.message || ''"
+      :timestamp="redPacketDetails?.timestamp || Date.now()"
+      :status="redPacketDetails?.status || 'active'"
+      :receivers="redPacketDetails?.receivers || []"
+      :has-received="redPacketDetails?.hasReceived || false"
+      :current-user-id="userId"
+      :current-core-id="coreId?.value || ''"
+      :show-all-amounts="true"
+      @receive="handleReceiveRedPacket"
+    ></RedPacketDialog>
   </div>
 </template>
 
@@ -365,6 +425,8 @@ import ThemeSelector from "./components/ThemeSelector.vue";
 import DailyOneFloating from './components/DailyOneFloating.vue';
 import AnnouncementBar from './components/AnnouncementBar.vue';
 import BackgroundSelector from './components/BackgroundSelector.vue';
+import RedPacketDialog from './components/RedPacketDialog.vue';
+import CreateRedPacketDialog from './components/CreateRedPacketDialog.vue';
 
 // 导入工具函数
 import { compressImage, dataURItoFile, isImageUrl } from "./utils/chatUtils.js";
@@ -392,6 +454,8 @@ export default {
     DailyOneFloating,
     AnnouncementBar,
     BackgroundSelector,
+    RedPacketDialog,
+    CreateRedPacketDialog,
   },
   setup() {
     // 基本状态
@@ -399,6 +463,7 @@ export default {
     // 移除nickname变量，统一使用username
     // const nickname = ref(""); // 添加昵称状态
     const userId = ref("");
+    const coreId = ref("");
     const isLoggedIn = ref(false);
     const messages = ref([]);
     const inputMessage = ref("");
@@ -452,6 +517,12 @@ export default {
     const favoriteEmojis = ref(
       JSON.parse(localStorage.getItem("favoriteEmojis") || "[]")
     );
+
+    // 红包相关
+    const showRedPacketDialog = ref(false);
+    const selectedRedPacketId = ref("");
+    const redPacketDetails = ref(null); // 红包详情数据
+    const userPoints = ref(0); // 初始用户积分，将从服务器获取
 
     // 动态表情映射表
     const dynamicEmojis = {
@@ -546,12 +617,13 @@ export default {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
       }
-      // 从localStorage获取userId和username
+      // 从localStorage获取userId、username和coreId
       const storedUserId = localStorage.getItem("userId");
       const storedUsername = localStorage.getItem("username");
+      const storedCoreId = localStorage.getItem("coreId");
       // 移除对nickname的获取
       // const storedNickname = localStorage.getItem('nickname');
-      if (!storedUserId || !storedUsername) {
+      if (!storedUserId || !storedUsername || !storedCoreId) {
         handleLogout();
         return;
       }
@@ -559,6 +631,7 @@ export default {
       // 确保响应式变量被正确设置
       userId.value = storedUserId;
       username.value = storedUsername;
+      coreId.value = storedCoreId;
       // 移除nickname的设置
       // nickname.value = storedNickname || storedUsername;
       // 更新用户信息映射，使用username作为nickname
@@ -566,6 +639,9 @@ export default {
 
       // 使用相对路径，让WebSocket自动使用当前页面的主机地址
       socket = io();
+      
+      // 将socket挂载到window对象上，使其他组件可以访问
+      window.socket = socket;
 
       // 设置验证超时计时器
       let validationTimeout;
@@ -573,14 +649,14 @@ export default {
       // 连接成功
       socket.on("connect", () => {
         console.log("WebSocket连接成功");
-        // 发送userId、username加入聊天室
-        socket.emit("join", { userId: userId.value, username: username.value });
+        // 发送userId、username和coreId加入聊天室
+        socket.emit("join", { userId: userId.value, username: username.value, coreId: coreId.value });
 
-        // 优化：将验证超时从2秒减少到500毫秒，提高用户体验
+        // 优化：将验证超时从500毫秒减少到200毫秒，进一步提高用户体验
         validationTimeout = setTimeout(() => {
           console.log("用户ID验证通过，进入聊天室");
           isLoggedIn.value = true;
-        }, 500);
+        }, 200);
       });
 
       // 在验证失败时清除计时器
@@ -727,6 +803,14 @@ export default {
         users.value = data.users;
         // 更新用户信息映射
         updateUserInfoMap(data.username, data.nickname);
+        
+        // 获取当前用户的积分
+        const currentUser = users.value.find(user => user.coreId === coreId.value);
+        if (currentUser && currentUser.points !== undefined) {
+          userPoints.value = currentUser.points;
+          console.log(`获取当前用户 ${currentUser.username} 的积分为 ${currentUser.points}`);
+        }
+        
         // 用户列表加载完成，更新loading状态
         isLoadingUsers.value = false;
       });
@@ -775,10 +859,280 @@ export default {
         }
       });
 
+      // 处理积分更新事件
+      socket.on("points_updated", (data) => {
+        console.log("积分更新:", data);
+        
+        // 更新用户列表中对应coreId的用户的积分
+        if (data.coreId && data.points !== undefined) {
+          const userIndex = users.value.findIndex(user => user.coreId === data.coreId);
+          if (userIndex !== -1) {
+            users.value[userIndex].points = data.points;
+            console.log(`更新用户 ${users.value[userIndex].username} 的积分为 ${data.points}`);
+          }
+          
+          // 如果是当前用户的积分更新，也更新userPoints
+          if (data.coreId === coreId.value) {
+            userPoints.value = data.points;
+            console.log(`更新当前用户积分为 ${data.points}`);
+          }
+        }
+      });
+
+      // 处理用户列表更新事件
+      socket.on("users_updated", (data) => {
+        console.log("用户列表更新:", data);
+        if (Array.isArray(data)) {
+          users.value = data;
+          
+          // 获取当前用户的积分
+          const currentUser = users.value.find(user => user.coreId === coreId.value);
+          if (currentUser && currentUser.points !== undefined) {
+            userPoints.value = currentUser.points;
+            console.log(`更新当前用户 ${currentUser.username} 的积分为 ${currentUser.points}`);
+          }
+        }
+      });
+
       // 处理消息撤回失败事件
       socket.on("recall_failed", (data) => {
         ElMessage.error(data.message || "消息撤回失败");
       });
+
+      // 处理被踢事件
+      socket.on("user_kicked", (data) => {
+        ElMessage.error({
+          message: data.message,
+          duration: 0, // 不自动关闭
+          showClose: true
+        });
+        
+        // 显示被踢原因和时长
+        const durationText = data.duration === 0 ? '永久' : data.duration + '分钟';
+        ElMessage.error(`原因：${data.reason || "违反聊天室规定"}，禁期：${durationText}`);
+        
+        // 断开socket连接
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // 清除用户信息
+        username.value = "";
+        userId.value = "";
+        coreId.value = "";
+        isLoggedIn.value = false;
+        
+        // 清除localStorage中的用户信息，但保留userId和coreId
+        // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
+        localStorage.removeItem("username");
+        
+        // 延迟跳转到登录页，让用户看到被踢信息
+        setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 3000);
+      });
+
+      // 处理踢人成功事件
+      socket.on("kick_success", (data) => {
+        ElMessage.success({
+          message: data.message,
+          duration: 3000
+        });
+      });
+
+      // 处理踢人失败事件
+      socket.on("kick_failed", (data) => {
+        ElMessage.error({
+          message: data.message || "踢人失败",
+          duration: 3000
+        });
+      });
+
+      // 处理用户被禁事件（尝试重新连接时）
+      socket.on("user_banned", (data) => {
+        ElMessage.error({
+          message: data.message,
+          duration: 0, // 不自动关闭
+          showClose: true
+        });
+        
+        // 显示被踢原因和剩余时间
+        ElMessage.error(`原因：${data.reason || "违反聊天室规定"}，剩余禁期：${data.remainingTime}`);
+        
+        // 断开socket连接
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // 清除用户信息
+        username.value = "";
+        userId.value = "";
+        coreId.value = "";
+        isLoggedIn.value = false;
+        
+        // 延迟跳转到登录页，让用户看到被踢信息
+        setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 3000);
+      });
+
+      // 处理红包创建成功事件
+      socket.on("create_red_packet_success", (data) => {
+        console.log("红包创建成功:", data);
+        // 更新用户积分
+        userPoints.value = data.remainingPoints;
+        
+        // 更新用户列表中当前用户的积分
+        const userIndex = users.value.findIndex(user => user.coreId === coreId.value);
+        if (userIndex !== -1) {
+          users.value[userIndex].points = data.remainingPoints;
+          console.log(`更新用户列表中 ${users.value[userIndex].username} 的积分为 ${data.remainingPoints}`);
+        }
+        
+        // 关闭创建红包对话框
+        showCreateRedPacketDialog.value = false;
+      });
+
+      // 处理红包创建失败事件
+      socket.on("create_red_packet_failed", (data) => {
+        console.error("红包创建失败:", data);
+        ElMessage.error(data.message || "红包创建失败");
+      });
+
+      // 处理红包领取成功事件
+      socket.on("receive_red_packet_success", (data) => {
+        console.log("红包领取成功:", data);
+        // 更新用户积分
+        userPoints.value = data.remainingPoints;
+        
+        // 更新用户列表中当前用户的积分
+        const userIndex = users.value.findIndex(user => user.coreId === coreId.value);
+        if (userIndex !== -1) {
+          users.value[userIndex].points = data.remainingPoints;
+          console.log(`更新用户列表中 ${users.value[userIndex].username} 的积分为 ${data.remainingPoints}`);
+        }
+        
+        ElMessage.success(`恭喜您领取了${data.amount}积分！`);
+        
+        // 如果红包详情对话框正在显示，刷新红包详情
+        if (showRedPacketDialog.value && selectedRedPacketId.value === data.redPacketId) {
+          socket.emit('get_red_packet_details', {
+            redPacketId: data.redPacketId,
+            userId: userId.value,
+            coreId: coreId.value
+          });
+        }
+      });
+
+      // 处理红包领取失败事件
+      socket.on("receive_red_packet_failed", (data) => {
+        console.error("红包领取失败:", data);
+        ElMessage.error(data.message || "红包领取失败");
+      });
+
+      // 处理获取红包详情成功事件
+      socket.on("get_red_packet_details_success", (data) => {
+        console.log("获取红包详情成功:", data);
+        // 更新红包详情数据
+        redPacketDetails.value = data;
+        // 显示红包详情对话框
+        showRedPacketDialog.value = true;
+      });
+
+      // 处理获取红包详情失败事件
+      socket.on("get_red_packet_details_failed", (data) => {
+        console.error("获取红包详情失败:", data);
+        ElMessage.error(data.message || "获取红包详情失败");
+      });
+
+      // 处理新红包消息
+      socket.on("new_red_packet", (data) => {
+        // 将红包消息添加到消息列表
+        const redPacketMessage = {
+          id: `red_packet_${data.id}`,
+          userId: data.senderId,
+          username: data.senderName,
+          type: "redPacket",
+          content: data.message || "发了一个红包",
+          redPacketId: data.id,
+          redPacketData: {
+            id: data.id,
+            senderId: data.senderId,
+            senderName: data.senderName,
+            type: data.type,
+            totalAmount: data.totalAmount,
+            count: data.count,
+            totalCount: data.totalCount,
+            message: data.message,
+            timestamp: data.timestamp,
+            status: data.status,
+            remainingCount: data.remainingCount
+          },
+          timestamp: data.timestamp
+        };
+        
+        messages.value.push(redPacketMessage);
+        
+        // 播放提示音
+        if (audioPermissionGranted.value) {
+          const audio = new Audio(qqSound);
+          audio.play().catch(error => console.warn("播放提示音失败:", error));
+        }
+        
+        // 如果页面不在焦点，显示通知
+        if (!document.hasFocus()) {
+          showNotification(`${data.senderName}发了一个红包`, data.message || "发了一个红包");
+        }
+      });
+
+      // 处理红包状态更新
+      socket.on("red_packet_status_update", (data) => {
+        // 查找对应的红包消息
+        const messageIndex = messages.value.findIndex(msg => 
+          msg.type === "redPacket" && msg.redPacketId === data.redPacketId
+        );
+        
+        if (messageIndex !== -1) {
+          // 更新红包状态
+          messages.value[messageIndex].redPacketData.status = data.status;
+          messages.value[messageIndex].redPacketData.remainingCount = data.remainingCount;
+        }
+      });
+
+      // 处理红包完成事件
+      socket.on("red_packet_completed", (data) => {
+        // 查找对应的红包消息
+        const messageIndex = messages.value.findIndex(msg => 
+          msg.type === "redPacket" && msg.redPacketId === data.redPacketId
+        );
+        
+        if (messageIndex !== -1) {
+          // 更新红包状态为已完成
+          messages.value[messageIndex].redPacketData.status = "completed";
+          messages.value[messageIndex].redPacketData.remainingCount = 0;
+        }
+      });
+    };
+
+    // 显示浏览器通知
+    const showNotification = (title, body) => {
+      if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification(title, {
+          body: body,
+          icon: "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%2345B7D1' d='M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z'/%3E%3Cpath fill='%2345B7D1' d='M22 16h4v16h-4zm0 20h4v4h-4z'/%3E%3C/svg%3E",
+          tag: "chat-message",
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // 5秒后自动关闭通知
+        setTimeout(() => notification.close(), 5000);
+      }
     };
 
     // 获取通知内容
@@ -861,6 +1215,7 @@ export default {
       // 清除用户信息
       username.value = "";
       userId.value = "";
+      coreId.value = ""; // 清除coreId的响应式变量，但不从localStorage中清除
       // 移除对nickname的清除
       // nickname.value = "";
       isLoggedIn.value = false;
@@ -874,11 +1229,12 @@ export default {
         socket = null;
       }
 
-      // 清除localStorage中的用户信息
-      localStorage.removeItem("userId");
+      // 清除localStorage中的用户信息，但保留userId和coreId
+      // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
       localStorage.removeItem("username");
       // 移除对nickname的localStorage清除
       // localStorage.removeItem('nickname');
+      // 注意：不删除localStorage中的coreId，因为coreId绑定的积分是唯一值
 
       // 重定向到首页（用户名输入页面）
       window.location.href = window.location.origin;
@@ -1507,6 +1863,114 @@ export default {
       });
     };
 
+    // 管理员模式相关状态
+    const isAdminMode = ref(false);
+    const titleClickCount = ref(0);
+    const titleClickTimer = ref(null);
+    
+    // 踢人对话框相关状态
+    const showKickDialog = ref(false);
+    const selectedUserForKick = ref(null);
+    const kickDuration = ref(1); // 默认1分钟
+    
+    // 处理标题点击事件
+    const handleTitleClick = () => {
+      titleClickCount.value++;
+      
+      // 清除之前的定时器
+      if (titleClickTimer.value) {
+        clearTimeout(titleClickTimer.value);
+      }
+      
+      // 设置新的定时器，3秒后重置计数
+      titleClickTimer.value = setTimeout(() => {
+        titleClickCount.value = 0;
+      }, 3000);
+      
+      // 如果点击次数达到10次，激活管理员模式
+      if (titleClickCount.value >= 10) {
+        isAdminMode.value = true;
+        titleClickCount.value = 0;
+        ElMessage.success("已进入管理员模式");
+        
+        // 更新localStorage中的管理员模式设置
+        localStorage.setItem('adminSettings', JSON.stringify({ adminMode: true }));
+        
+        // 发送全局事件，通知其他组件管理员模式已启用
+        window.dispatchEvent(new CustomEvent('admin-mode-changed', {
+          detail: { adminMode: true }
+        }));
+        
+        // 清除定时器
+        if (titleClickTimer.value) {
+          clearTimeout(titleClickTimer.value);
+          titleClickTimer.value = null;
+        }
+      }
+    };
+
+    // 踢人处理函数
+    const handleKickUser = (user) => {
+      // 确保user对象有效，并标准化为对象格式
+      if (!user) {
+        ElMessage.error("无效的用户信息");
+        return;
+      }
+      
+      // 标准化用户对象
+      const normalizedUser = typeof user === 'object' ? user : { username: user };
+      
+      // 确保用户对象有username属性
+      if (!normalizedUser.username) {
+        ElMessage.error("用户信息缺少用户名");
+        return;
+      }
+      
+      selectedUserForKick.value = normalizedUser;
+      showKickDialog.value = true;
+      kickDuration.value = 1; // 重置为默认值
+    };
+
+    // 确认踢人
+    const confirmKickUser = () => {
+      if (!selectedUserForKick.value) {
+        ElMessage.error("未选择要踢出的用户");
+        return;
+      }
+
+      const userToKick = typeof selectedUserForKick.value === 'object' 
+        ? selectedUserForKick.value 
+        : { username: selectedUserForKick.value };
+      
+      // 再次验证用户对象
+      if (!userToKick.username) {
+        ElMessage.error("用户信息无效");
+        return;
+      }
+
+      // 发送踢人请求到服务器
+      socket.emit('kick_user', {
+        userId: userToKick.userId,
+        username: userToKick.username,
+        duration: kickDuration.value,
+        adminId: userId.value,
+        adminName: username.value
+      });
+
+      // 关闭对话框
+      showKickDialog.value = false;
+      selectedUserForKick.value = null;
+
+      // 不再立即显示成功消息，等待服务器返回成功事件
+      ElMessage.info(`正在踢出 ${userToKick.username}，请稍候...`);
+    };
+
+    // 取消踢人
+    const cancelKickUser = () => {
+      showKickDialog.value = false;
+      selectedUserForKick.value = null;
+    };
+
     // 处理窗口获得焦点
     const handleWindowFocus = () => {
       hasFocus = true;
@@ -1731,6 +2195,26 @@ export default {
 
       // 添加音频权限事件监听器
       window.addEventListener("click", handleGlobalClickForAudioPermission);
+      
+      // 从localStorage加载管理员模式状态
+      const savedAdminSettings = localStorage.getItem('adminSettings');
+      if (savedAdminSettings !== null) {
+        try {
+          const adminSettings = JSON.parse(savedAdminSettings);
+          isAdminMode.value = adminSettings.adminMode || false;
+        } catch (error) {
+          console.error('Failed to parse admin settings:', error);
+          isAdminMode.value = false;
+        }
+      }
+      
+      // 监听管理员模式变更事件
+      window.addEventListener('admin-mode-changed', (event) => {
+        isAdminMode.value = event.detail.adminMode;
+        // 保存管理员模式状态到localStorage
+        const adminSettings = { adminMode: isAdminMode.value };
+        localStorage.setItem('adminSettings', JSON.stringify(adminSettings));
+      });
     });
 
     // 组件卸载时执行
@@ -1749,12 +2233,56 @@ export default {
       window.removeEventListener("contextmenu", () => {});
       // 移除音频权限事件监听器
       window.removeEventListener("click", handleGlobalClickForAudioPermission);
+      // 移除管理员模式变更事件监听器
+      window.removeEventListener('admin-mode-changed', () => {});
       // 清理标题闪烁定时器
       if (titleInterval) {
         clearInterval(titleInterval);
         document.title = originalTitle;
       }
     });
+
+    // 打开红包详情对话框
+    const openRedPacketDialog = (redPacketId) => {
+      selectedRedPacketId.value = redPacketId;
+      // 先获取红包详情
+      if (socket) {
+        socket.emit('get_red_packet_details', {
+          redPacketId: redPacketId,
+          userId: userId.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+      }
+    };
+
+    // 处理创建红包
+    const handleCreateRedPacket = (redPacketData) => {
+      // 通过socket发送红包数据
+      if (socket) {
+        socket.emit('create_red_packet', {
+          type: redPacketData.type,
+          count: redPacketData.count,
+          totalAmount: redPacketData.totalAmount,
+          message: redPacketData.message,
+          userId: userId.value,
+          username: username.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+      }
+    };
+
+    // 处理领取红包
+    const handleReceiveRedPacket = (redPacketId) => {
+      // 通过socket发送领取红包请求
+      if (socket) {
+        socket.emit('receive_red_packet', {
+          redPacketId: redPacketId,
+          userId: userId.value,
+          username: username.value,
+          coreId: coreId.value // 添加coreId参数
+        });
+      }
+    };
 
     return {
       username,
@@ -1778,6 +2306,10 @@ export default {
       showAudioPermissionButton,
       isLoadingMessages,
       isLoadingUsers,
+      isAdminMode,
+      showKickDialog,
+      selectedUserForKick,
+      kickDuration,
       handleLoginSuccess,
       requestAudioPermission,
       handleImageUpload,
@@ -1795,6 +2327,9 @@ export default {
       handleQuoteMessage,
       handleRecallMessage,
       handleSelectUserForMention,
+      handleKickUser,
+      confirmKickUser,
+      cancelKickUser,
       showNicknameDialog,
       editNicknameInitialValue,
       handleEditNickname,
@@ -1803,6 +2338,7 @@ export default {
       showUserList,
       toggleUserList,
       handleImageSelect,
+      handleTitleClick,
       danmuContent,
       danmuColor,
       danmuList,
@@ -1812,7 +2348,37 @@ export default {
       selectedBackground,
       handleBackgroundChange,
       getBackgroundStyle,
+      showRedPacketDialog,
+      selectedRedPacketId,
+      redPacketDetails,
+      userPoints,
+      openRedPacketDialog,
+      handleCreateRedPacket,
+      handleReceiveRedPacket,
+      updateUserInfoMap,
     };
   },
 };
 </script>
+
+<style scoped>
+.kick-dialog-content {
+  padding: 20px 0;
+}
+
+.kick-dialog-content p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.kick-duration-setting {
+  display: flex;
+  align-items: center;
+}
+
+.kick-duration-setting label {
+  margin-right: 10px;
+  font-weight: bold;
+  min-width: 100px;
+}
+</style>

@@ -34,6 +34,9 @@
           <span class="hotness">
             🔥 {{ getMessageCount(user) }}
           </span>
+          <span class="points">
+            💰 {{ getUserPoints(user) }}
+          </span>
         </div>
       </div>
     </div>
@@ -80,6 +83,12 @@ export default {
       return props.messages.filter((m) => m.userId === userId).length;
     };
 
+    // 获取用户积分
+    const getUserPoints = (user) => {
+      // 直接使用用户对象中的points字段，而不是从userInfoMap获取
+      return user?.points || 0;
+    };
+
     // 获取显示的用户名（优先使用昵称）
     const getDisplayUsername = (user) => {
       if (typeof user === 'string') {
@@ -114,11 +123,16 @@ export default {
       // 确保输入数据是对象数组
       const userObjects = props.users.map(user => {
         if (typeof user === 'string') {
-          // 对于字符串用户，转换为对象格式
+          // 对于字符串用户，转换为对象格式，保留所有可能的字段
           return {
             username: user,
-            userId: null // 字符串用户没有userId
+            userId: null, // 字符串用户没有userId
+            points: 0 // 默认积分为0
           };
+        }
+        // 确保对象用户有points字段
+        if (user.points === undefined) {
+          user.points = 0;
         }
         return user;
       });
@@ -159,6 +173,7 @@ export default {
       getAvatarColor,
       getAvatarText,
       getMessageCount,
+      getUserPoints,
       sortedUsers,
       getDisplayUsername,
       isCurrentUser,
@@ -298,6 +313,18 @@ export default {
 .hotness {
   font-size: 12px;
   color: var(--user-fire-color);
+  font-weight: 500;
+  background-color: var(--background-tertiary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.points {
+  font-size: 12px;
+  color: var(--accent-primary);
   font-weight: 500;
   background-color: var(--background-tertiary);
   padding: 2px 8px;
