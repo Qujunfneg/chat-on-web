@@ -23,6 +23,9 @@ const {
   cleanupExpiredRedPackets
 } = require('../services/redPacketService');
 
+const starService = require('../services/starReplyService');
+
+
 module.exports = (io) => {
   // 确保只有一个定时器在运行 - 使用全局变量
   if (global.pointsInterval) {
@@ -217,8 +220,8 @@ module.exports = (io) => {
       });
     });
 
-    // 接收消息并广播
-    socket.on("chat_message", (data) => {
+  // 接收消息并广播
+  socket.on("chat_message", async (data) => {
       const userId = onlineUsers.get(socket.id);
       const userInfo = userInfoMap.get(userId);
       
@@ -275,6 +278,58 @@ module.exports = (io) => {
       }
 
       io.emit("chat_message", processedMessage);
+
+      // 自动回复触发：当消息以 "/"开头时，生成一个明星账号的回复
+      try {
+        const rawContent = (data && data.content) ? String(data.content) : '';
+        const match = rawContent.match(/^\s*\/\s*(.+)/i);
+        if (match && !processedMessage.star) {
+          const triggerText = match[1];
+          const star = starService.pickStar();
+          const starName = star.name;
+          const palette = star.gradient;
+          let replyText = '';
+          try {
+            replyText = await starService.generateStarReply(triggerText);
+          } catch (aiErr) {
+            console.error('调用生成回复时出错，回退到本地生成：', aiErr);
+            // 使用本地生成函数回退
+            try {
+              replyText = starService.generateLocalStarReply(triggerText);
+            } catch (localErr) {
+              console.error('回退到本地生成也失败：', localErr);
+              replyText = '谢谢你的问题，我会尽快回复。';
+            }
+          }
+
+          const starMessage = {
+            id: Date.now().toString() + '_star' + Math.floor(Math.random() * 1000),
+            timestamp: Date.now(),
+            userId: `star_system_${Math.floor(Math.random() * 100000)}`,
+            username: starName,
+            nickname: starName,
+            content: replyText,
+            type: 'text',
+            localId: null,
+            // 前端根据这个字段渲染更绚丽的头像与消息气泡
+            star: true,
+            starGradient: { from: palette[0], to: palette[1] }
+          };
+
+          // 模拟人工延迟回复
+          setTimeout(() => {
+            try {
+              chatHistory.push(starMessage);
+              if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+              io.emit('chat_message', starMessage);
+            } catch (e) {
+              console.error('发送明星自动回复失败：', e);
+            }
+          }, 300);
+        }
+      } catch (e) {
+        console.error('处理自动回复触发时出错：', e);
+      }
     });
 
     // 处理弹幕消息

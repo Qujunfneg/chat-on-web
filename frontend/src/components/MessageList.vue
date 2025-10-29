@@ -34,10 +34,21 @@
         v-for="message in messages"
         :key="message.id"
         class="message-item"
-        :class="getClass(message)"
+        :class="[getClass(message), message.star ? 'star' : '']"
       >
         <div class="message-header">
-          <div
+          <div v-if="message.star"
+            class="avatar star-avatar"
+            :style="{
+              backgroundImage: `linear-gradient(135deg, ${message.starGradient?.from || '#FFD700'}, ${message.starGradient?.to || '#FF6B6B'})`,
+              boxShadow: '0 6px 20px rgba(0,0,0,0.25)'
+            }"
+            @contextmenu="($event) => handleUserContextMenu(getDisplayUsername(message))"
+          >
+            <span class="star-avatar-text">{{ getAvatarText(getDisplayUsername(message)) }}</span>
+            <span class="star-badge">⭐</span>
+          </div>
+          <div v-else
             class="avatar"
             :style="{
               backgroundColor: getAvatarColor(getDisplayUsername(message)),
@@ -95,7 +106,7 @@
                   message.type === 'quote') &&
                 message.content
               "
-              class="message-bubble"
+              :class="['message-bubble', message.star ? 'star-bubble' : '']"
               :message="message.content"
               :data-info="message"
               :user-info-map="userInfoMap"
@@ -109,7 +120,7 @@
                 message.type === 'quote') &&
               message.content
             "
-            class="message-bubble"
+            :class="['message-bubble', message.star ? 'star-bubble' : '']"
             :message="message.content"
             :data-info="message"
             :user-info-map="userInfoMap"
@@ -580,5 +591,44 @@ export default {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+/* 明星样式 */
+.star-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.6);
+}
+.star-avatar-text {
+  font-size: 18px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+.star-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  background: rgba(255,255,255,0.95);
+  color: #ffb400;
+  border-radius: 50%;
+  padding: 2px 4px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.star-bubble {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,0,128,0.08));
+  border: 1px solid rgba(255,215,0,0.18);
+  box-shadow: 0 6px 30px rgba(255,130,0,0.06);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+.message-item.star .message-time {
+  color: #ffb400;
 }
 </style>
