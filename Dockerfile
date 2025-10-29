@@ -1,5 +1,5 @@
 # 🏗️ 构建阶段：安装依赖 + 编译
-FROM node:18 AS builder
+FROM node:20.19.4 AS builder
 
 WORKDIR /usr/src/app
 
@@ -17,7 +17,7 @@ RUN cd frontend; npm ci && npm run build
 RUN npm ci
 
 # 🚀 运行阶段：只复制构建产物和必要依赖
-FROM node:18-slim AS runner
+FROM node:20.19.4-slim AS runner
 
 WORKDIR /usr/src/app
 
