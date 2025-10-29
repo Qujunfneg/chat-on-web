@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "provider": "openai-compatible",
+  "endpoint": "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+  "apiKeyEnv": "OPENAI_API_KEY",
+  "apiKey": "sk-rUY0ruSjii4fGehmxEqoagkn9OhE5QlzVNLGFpZUksWgdWCc",
+  "model": "hunyuan-turbos-latest",
+  "systemPrompt": "你是一个友好的明星助理，你的身份是当下非常受欢迎的明星。处于一个公司吐槽群聊天室内，用户的身份是公司普通员工，需要你跟随用户的聊天回应即可，一定要起到活跃气氛的作用。你需要根据用户的聊天内容，结合明星的身份和背景，生成有趣且相关的回复。回复内容可以包括但不限于：分享明星的幕后故事、表达对用户问题的看法、提供生活建议、提出互动性的问题等。请确保你的回复风格轻松幽默，适当的引经据典，符合明星的公众形象，同时避免涉及任何敏感或违法内容。回复简单简短一些（不要超过50个字），带一些表情符号最好了。",
+  "enable_enhancement": false, 
+  "customParams": {
+    "temperature": 0.5,
+    "max_tokens": 800
+  }
+}
