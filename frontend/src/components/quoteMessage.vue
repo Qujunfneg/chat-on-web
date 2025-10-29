@@ -4,19 +4,21 @@
     class="quote-message-wrapper"
     :class="{ 'has-quote': hasReply }"
   >
+  {{ console.log(processedMessage) }}
     <div
       v-for="(item, index) in processedMessage"
       :key="index"
       class="message-part-container"
     >
+      <MarkdownPreview
+        :content="item.content"
+        v-if="['ai'].includes(item.type)"
+      />
       <pre
-        v-if="
-          item.type === 'normal' ||
-          item.type === 'reply' ||
-          item.type === 'mention'
-        "
+        v-else-if="['normal', 'reply', 'mention'].includes(item.type)"
         :class="['message-part', item.type]"
-      >{{ item.content }}</pre>
+        >{{ item.content }}</pre
+      >
       <img
         v-else-if="item.type === 'emoji'"
         :src="item.content"
@@ -29,7 +31,7 @@
 </template>
 <script setup>
 import { computed } from "vue";
-
+import MarkdownPreview from "./MarkdownPreview.vue";
 const props = defineProps({
   message: {
     type: String,

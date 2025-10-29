@@ -100,12 +100,7 @@
             </div>
             <!-- 移除直接显示message.content的pre标签，让QuoteMessage组件来处理所有内容显示 -->
             <QuoteMessage
-              v-if="
-                (message.type === 'text' ||
-                  message.type === 'emoText' ||
-                  message.type === 'quote') &&
-                message.content
-              "
+              v-if="['text', 'emoText', 'quote','ai'].includes(message.type) && message.content"
               :class="['message-bubble', message.star ? 'star-bubble' : '']"
               :message="message.content"
               :data-info="message"
@@ -114,12 +109,7 @@
           </div>
           <!-- 引用消息类型 - 已经在上面显示了引用内容，这里不需要额外显示 -->
           <QuoteMessage
-            v-else-if="
-              (message.type === 'text' ||
-                message.type === 'emoText' ||
-                message.type === 'quote') &&
-              message.content
-            "
+            v-else-if="['text', 'emoText', 'quote','ai'].includes(message.type) && message.content"
             :class="['message-bubble', message.star ? 'star-bubble' : '']"
             :message="message.content"
             :data-info="message"

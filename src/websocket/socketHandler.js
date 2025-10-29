@@ -309,7 +309,7 @@ module.exports = (io) => {
             username: starName,
             nickname: starName,
             content: replyText,
-            type: 'text',
+            type: 'ai',
             localId: null,
             // 前端根据这个字段渲染更绚丽的头像与消息气泡
             star: true,
