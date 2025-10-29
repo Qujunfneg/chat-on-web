@@ -4,7 +4,6 @@
     class="quote-message-wrapper"
     :class="{ 'has-quote': hasReply }"
   >
-  {{ console.log(processedMessage) }}
     <div
       v-for="(item, index) in processedMessage"
       :key="index"
@@ -12,7 +11,7 @@
     >
       <MarkdownPreview
         :content="item.content"
-        v-if="['ai'].includes(item.type)"
+        v-if="dataInfo.type==='ai'"
       />
       <pre
         v-else-if="['normal', 'reply', 'mention'].includes(item.type)"
@@ -344,6 +343,7 @@ function handleEmojiError(event, index) {
 
 .message-part-container {
   display: inline-block;
+  max-width: 100%;
 }
 
 .message-part {

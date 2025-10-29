@@ -612,11 +612,10 @@ export default {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 .star-bubble {
-  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,0,128,0.08));
+  
   border: 1px solid rgba(255,215,0,0.18);
   box-shadow: 0 6px 30px rgba(255,130,0,0.06);
   border-radius: 14px;
-  padding: 10px 14px;
 }
 .message-item.star .message-time {
   color: #ffb400;
