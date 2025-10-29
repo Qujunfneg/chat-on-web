@@ -125,13 +125,28 @@
               <span class="uploading-text">上传中...</span>
             </div>
             <!-- 正常图片显示 -->
-            <el-image
-              v-else
-              style="max-width: 300px; cursor: pointer"
-              :src="message.imgUrl"
-              :preview-src-list="[message.imgUrl]"
-              fit="cover"
-            ></el-image>
+            <div v-else class="image-with-refresh">
+              <el-image
+                ref="imageRef"
+                style="max-width: 300px; cursor: pointer"
+                :src="message.imgUrl"
+                :preview-src-list="[message.imgUrl]"
+                fit="cover"
+                :key="message.imageKey || message.imgUrl"
+              ></el-image>
+              <!-- 刷新按钮 - 只在客户端模式显示 -->
+              <el-button
+                v-if="isElectron()"
+                class="image-refresh-btn"
+                type="primary"
+                size="small"
+                circle
+                @click="refreshImage(message)"
+                title="刷新图片"
+              >
+                <Refresh class="refresh-icon" />
+              </el-button>
+            </div>
           </div>
           <!-- 红包消息 -->
           <RedPacketMessage
@@ -171,9 +186,10 @@
 <script>
 import { ref, onMounted, watch, onUnmounted } from "vue";
 import { ElMessage, ElImage } from "element-plus";
-import { Bell } from "@element-plus/icons-vue";
+import { Bell, Refresh } from "@element-plus/icons-vue";
 import QuoteMessage from "./quoteMessage.vue";
 import RedPacketMessage from "./RedPacketMessage.vue";
+import { isElectron } from "../utils/electronUtils.js";
 import dayjs from "dayjs";
 
 export default {
@@ -343,6 +359,12 @@ export default {
       emit("userContextMenu", { event, user });
     };
 
+    // 刷新图片
+    const refreshImage = (message) => {
+      // 通过更新imageKey来强制重新加载图片
+      message.imageKey = `refresh_${Date.now()}_${Math.random()}`;
+    };
+
     const getClass = (message) => {
       return message.userId === props.currentUserId ? "self" : "other";
     };
@@ -383,6 +405,8 @@ export default {
       newMessageAlert,
       formatTime,
       getBackgroundStyle,
+      refreshImage,
+      isElectron,
     };
   },
 };
@@ -492,5 +516,69 @@ export default {
 
 .recalled-text {
   font-style: italic;
+}
+
+/* 图片刷新按钮样式 */
+.image-with-refresh {
+  position: relative;
+  display: inline-block;
+}
+
+.image-refresh-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  background-color: rgba(64, 158, 255, 0.8);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-refresh-btn:hover {
+  background-color: rgba(64, 158, 255, 0.9);
+  transform: scale(1.1);
+}
+
+.image-with-refresh:hover .image-refresh-btn {
+  opacity: 1;
+}
+
+.refresh-icon {
+  color: white;
+  width: 14px;
+  height: 14px;
+}
+
+/* 上传中状态样式 */
+.uploading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.uploading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e0e0e0;
+  border-top: 2px solid #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+.uploading-text {
+  color: #666;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
