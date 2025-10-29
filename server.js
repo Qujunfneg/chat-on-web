@@ -1,7 +1,7 @@
 const { server } = require('./src/app');
 
 // 启动服务器
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const BIND_ADDRESS = process.env.BIND_ADDRESS || "0.0.0.0";
 
 server.listen(PORT, BIND_ADDRESS, () => {
