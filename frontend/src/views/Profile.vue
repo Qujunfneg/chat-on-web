@@ -251,23 +251,28 @@ onMounted(() => {
   // 监听积分更新
   if (window.socket) {
     window.socket.on('points_updated', (data) => {
-      userPoints.value = data.points;
-      onlineMinutes.value = data.onlineMinutes || 0;
-      // 只有在明确提供了canClaimDaily状态时才更新，否则保持当前状态
-      if (data.canClaimDaily !== undefined) {
-        canClaimDaily.value = data.canClaimDaily;
-        // 保存canClaimDaily状态到localStorage
-        localStorage.setItem('canClaimDaily', data.canClaimDaily.toString());
-      }
-      // 如果没有提供lastClaimDate，但canClaimDaily为false，说明已经领取过
-      if (!data.lastClaimDate && !canClaimDaily.value) {
-        lastClaimDate.value = new Date().toISOString();
-        // 保存到localStorage
-        localStorage.setItem('lastClaimDate', lastClaimDate.value);
-      } else if (data.lastClaimDate) {
-        lastClaimDate.value = data.lastClaimDate;
-        // 保存到localStorage
-        localStorage.setItem('lastClaimDate', data.lastClaimDate);
+      // 只有当更新的是当前用户的积分时才更新
+      if (data.coreId === coreId.value) {
+        userPoints.value = data.points;
+        onlineMinutes.value = data.onlineMinutes || 0;
+        console.log(`Profile页面更新用户积分: ${data.points}`);
+        
+        // 只有在明确提供了canClaimDaily状态时才更新，否则保持当前状态
+        if (data.canClaimDaily !== undefined) {
+          canClaimDaily.value = data.canClaimDaily;
+          // 保存canClaimDaily状态到localStorage
+          localStorage.setItem('canClaimDaily', data.canClaimDaily.toString());
+        }
+        // 如果没有提供lastClaimDate，但canClaimDaily为false，说明已经领取过
+        if (!data.lastClaimDate && !canClaimDaily.value) {
+          lastClaimDate.value = new Date().toISOString();
+          // 保存到localStorage
+          localStorage.setItem('lastClaimDate', lastClaimDate.value);
+        } else if (data.lastClaimDate) {
+          lastClaimDate.value = data.lastClaimDate;
+          // 保存到localStorage
+          localStorage.setItem('lastClaimDate', data.lastClaimDate);
+        }
       }
     });
     

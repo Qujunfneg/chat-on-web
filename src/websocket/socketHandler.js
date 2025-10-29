@@ -645,8 +645,8 @@ module.exports = (io) => {
         // 广播更新后的用户列表
         io.emit("users_updated", updatedUsersList);
         
-        // 向用户发送积分更新通知
-        socket.emit("points_updated", {
+        // 广播积分更新通知给所有用户
+        io.emit("points_updated", {
           coreId: userInfo.coreId,
           points: getUserPoints(userInfo.coreId),
           addedPoints: -totalAmount
