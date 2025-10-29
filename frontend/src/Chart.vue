@@ -92,7 +92,6 @@
               {{ danmu.content }}
             </div>
           </div>
-
           <!-- 聊天消息区域 -->
           <MessageList
             :messages="messages"

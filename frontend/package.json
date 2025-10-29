@@ -12,7 +12,10 @@
     "@element-plus/icons-vue": "^2.3.2",
     "dayjs": "^1.11.18",
     "element-plus": "^2.4.2",
-    "marked": "^16.3.0",
+    "github-markdown-css": "^5.8.1",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.4.1",
+    "marked-highlight": "^2.2.2",
     "openai": "^6.7.0",
     "socket.io-client": "^4.7.2",
     "vue": "^3.3.4"
