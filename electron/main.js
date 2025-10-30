@@ -75,7 +75,7 @@ try {
   if (!config.serverUrl) {
     console.error('配置文件缺少必要的serverUrl字段');
     // 使用默认值
-    config.serverUrl = 'https://www.tianyaoshuai.dpdns.org:23000/';
+    config.serverUrl = '';
     console.log('使用默认服务器地址:', config.serverUrl);
   }
   
@@ -85,7 +85,7 @@ try {
   console.error('配置文件加载失败，使用硬编码的默认配置:', error.message);
   // 使用硬编码的默认配置作为最后的后备方案
   config = {
-    serverUrl: 'https://www.tianyaoshuai.dpdns.org:23000/'
+    serverUrl: ''
   };
   serverUrl = config.serverUrl;
   console.log('使用硬编码的默认服务器地址:', serverUrl);
@@ -221,8 +221,19 @@ function createWindow() {
   // 加载本地服务
   mainWindow.loadURL(`http://localhost:${PORT}`);
 
+  // 当页面加载完成后，设置coreId到localStorage（如果配置了coreId）
+  mainWindow.webContents.once('did-finish-load', () => {
+      console.log('设置coreId到localStorage:', config.coreId);
+      mainWindow.webContents.executeJavaScript(`
+        localStorage.setItem('coreId', '${config.coreId}');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        console.log('coreId已设置到localStorage:', '${config.coreId}');
+      `);
+  });
+
   // 移除应用程序菜单栏，这样就不会显示file、edit、view/window等工具条
-  Menu.setApplicationMenu(null);
+  // Menu.setApplicationMenu(null);
 
   // 修改关闭按钮行为，使其最小化到托盘而不是关闭
   mainWindow.on('close', function(e) {

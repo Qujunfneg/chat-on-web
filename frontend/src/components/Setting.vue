@@ -103,6 +103,83 @@
         </div>
       </el-card>
       
+      <!-- Core ID设置卡片 - 仅在客户端模式下显示 -->
+      <el-card v-if="isElectron() && adminSettings.adminMode" class="setting-card core-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <div class="header-icon">
+              <el-icon><KeyIcon /></el-icon>
+            </div>
+            <div class="header-content">
+              <h3>客户端ID设置</h3>
+              <p>配置客户端身份标识</p>
+            </div>
+            <div class="header-actions">
+              <el-button 
+                v-if="!isEditingCore" 
+                type="primary" 
+                @click="startEditingCore" 
+                class="edit-btn"
+                size="small"
+              >
+                <el-icon><EditIcon /></el-icon>
+                编辑
+              </el-button>
+              <div v-else class="edit-actions">
+                <el-button 
+                  type="success" 
+                  @click="saveCoreSettings" 
+                  :loading="coreSaving"
+                  size="small"
+                >
+                  <el-icon><CheckIcon /></el-icon>
+                  保存
+                </el-button>
+                <el-button @click="cancelEditingCore" size="small">
+                  <el-icon><CloseIcon /></el-icon>
+                  取消
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <div class="card-content">
+          <!-- 只读模式：显示当前Core ID -->
+          <div v-if="!isEditingCore" class="info-display">
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><KeyIcon /></el-icon>
+                <span>当前客户端ID</span>
+              </div>
+              <div class="info-value">{{ coreSettings.coreId || '未设置' }}</div>
+            </div>
+          </div>
+          
+          <!-- 编辑模式：显示表单 -->
+          <el-form 
+            v-else
+            ref="coreForm"
+            :model="tempCoreSettings"
+            label-position="top"
+            class="compact-form"
+            size="default"
+          >
+            <el-form-item 
+              label="客户端ID"
+              prop="coreId"
+              :rules="[{ required: true, message: '请输入客户端ID', trigger: 'blur' }]"
+            >
+              <el-input 
+                v-model="tempCoreSettings.coreId" 
+                placeholder="请输入客户端ID" 
+                class="w-full"
+              />
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-card>
+      
       <!-- 管理员状态卡片 -->
       <el-card v-if="adminSettings.adminMode" class="settings-card admin-card">
         <template #header>
@@ -140,6 +217,7 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
+import { isElectron } from "../utils/electronUtils.js";
 
 // 从element-plus导入所有需要的图标
 import { 
@@ -151,7 +229,8 @@ import {
   Refresh as RefreshIcon,
   Link as LinkIcon,
   Edit as EditIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Key as KeyIcon
 } from '@element-plus/icons-vue';
 
 export default {
@@ -165,13 +244,18 @@ export default {
     RefreshIcon,
     LinkIcon,
     EditIcon,
-    CloseIcon
+    CloseIcon,
+    KeyIcon
   },
   emits: ['close', 'settings-changed'],
   setup(props, { emit }) {
     const musicForm = ref(null);
+    const coreForm = ref(null);
     const musicSaving = ref(false);
+    const coreSaving = ref(false);
     const isEditing = ref(false);
+    const isEditingCore = ref(false);
+    
     
     // 音乐源列表
     const musicSources = ref([
@@ -189,6 +273,16 @@ export default {
       musicSource: musicSettings.musicSource
     });
     
+    // Core ID设置数据模型
+    const coreSettings = reactive({
+      coreId: localStorage.getItem('coreId') || ''
+    });
+    
+    // 临时Core ID设置，用于编辑模式
+    const tempCoreSettings = reactive({
+      coreId: coreSettings.coreId
+    });
+    
     // 管理员设置数据模型
     const adminSettings = reactive({
       adminMode: false // 默认禁用管理员模式
@@ -203,6 +297,7 @@ export default {
     // 组件挂载时从localStorage加载设置
     onMounted(() => {
       loadMusicSettings();
+      loadCoreSettings();
       loadAdminSettings();
       
       // 监听管理员模式变更事件
@@ -214,6 +309,20 @@ export default {
       if (event.detail && event.detail.adminMode !== undefined) {
         adminSettings.adminMode = event.detail.adminMode;
         saveAdminSettingsToStorage();
+      }
+    };
+    
+    // 从localStorage加载Core ID设置
+    const loadCoreSettings = () => {
+      try {
+        const savedCoreId = localStorage.getItem('coreId');
+        if (savedCoreId) {
+          coreSettings.coreId = savedCoreId;
+          tempCoreSettings.coreId = savedCoreId;
+        }
+      } catch (error) {
+        console.error('加载Core ID设置失败:', error);
+        ElMessage.error('加载Core ID设置失败');
       }
     };
     
@@ -264,6 +373,53 @@ export default {
       isEditing.value = false;
       // 重置临时设置为当前设置
       Object.assign(tempMusicSettings, musicSettings);
+    };
+    
+    // 开始编辑Core ID
+    const startEditingCore = () => {
+      isEditingCore.value = true;
+      // 重置临时设置为当前设置
+      Object.assign(tempCoreSettings, coreSettings);
+    };
+    
+    // 取消编辑Core ID
+    const cancelEditingCore = () => {
+      isEditingCore.value = false;
+      // 重置临时设置为当前设置
+      Object.assign(tempCoreSettings, coreSettings);
+    };
+    
+    // 保存Core ID设置
+    const saveCoreSettings = async () => {
+      coreSaving.value = true;
+      
+      try {
+        // 验证表单
+        await coreForm.value.validate();
+        
+        // 更新实际设置
+        Object.assign(coreSettings, tempCoreSettings);
+        
+        // 保存到localStorage
+        localStorage.setItem('coreId', coreSettings.coreId);
+        
+        
+        // 退出编辑模式
+        isEditingCore.value = false;
+        
+        // 显示保存成功提示
+        ElMessage.success('客户端ID设置保存成功，即将重载应用');
+        
+        // 延迟重载应用，让用户看到成功提示
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } catch (error) {
+        console.error('保存Core ID设置失败:', error);
+        ElMessage.error('保存Core ID设置失败，请检查输入');
+      } finally {
+        coreSaving.value = false;
+      }
     };
     
     // 保存音乐源设置
@@ -325,17 +481,26 @@ export default {
     
     return {
       musicForm,
+      coreForm,
       musicSaving,
+      coreSaving,
       isEditing,
+      isEditingCore,
       musicSettings,
       tempMusicSettings,
+      coreSettings,
+      tempCoreSettings,
       adminSettings,
       musicSources,
       currentMusicSourceName,
       startEditing,
       cancelEditing,
+      startEditingCore,
+      cancelEditingCore,
       saveMusicSettings,
-      disableAdminMode
+      saveCoreSettings,
+      disableAdminMode,
+      isElectron
     };
   }
 };
@@ -426,6 +591,11 @@ export default {
 
 .music-card .header-icon {
   background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  color: white;
+}
+
+.core-card .header-icon {
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
 }
 
