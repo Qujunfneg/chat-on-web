@@ -14,7 +14,6 @@
     
     <div class="iframe-container" :class="{ loading: loading }">
       <div v-if="loading" class="loading-overlay">
-        <el-loading-spinner></el-loading-spinner>
         <p>{{ loadingText }}</p>
       </div>
       <iframe 

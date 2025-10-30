@@ -398,7 +398,7 @@
       :receivers="redPacketDetails?.receivers || []"
       :has-received="redPacketDetails?.hasReceived || false"
       :current-user-id="userId"
-      :current-core-id="coreId?.value || ''"
+      :current-core-id="coreId"
       :show-all-amounts="true"
       @receive="handleReceiveRedPacket"
     ></RedPacketDialog>
@@ -408,7 +408,7 @@
 <script>
 import { io } from "socket.io-client";
 import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance } from "vue";
-import { ElMessage, ElIcon } from "element-plus";
+import { ElMessage, ElIcon, } from "element-plus";
 import { useEventBus, useGlobalEvents } from "./utils/eventBus.js";
 import { Delete, CircleCloseFilled } from "@element-plus/icons-vue";
 
@@ -2289,6 +2289,7 @@ export default {
     };
 
     return {
+      coreId,
       username,
       isLoggedIn,
       messages,

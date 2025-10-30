@@ -12,16 +12,17 @@
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
         <el-icon v-if="item.icon === 'profile'" class="icon"><User /></el-icon>
         <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
+        <el-icon v-if="item.icon === 'ai'" class="icon"><Cpu /></el-icon>
       </li>
     </ul>
   </div>
 </template>
 <script setup>
 import { ref } from "vue";
-import { ChatLineRound, Service, User, Setting } from '@element-plus/icons-vue';
+import { ChatLineRound, Service, User, Setting, Cpu } from '@element-plus/icons-vue';
 
 const menuList = [
-   {
+  {
     label: "我的主页",
     name: "profile",
     icon: "profile",
@@ -41,6 +42,11 @@ const menuList = [
     name: "settings",
     icon: "settings",
   },
+  {
+    label: "AI配置",
+    name: "aiSettings",
+    icon: "ai",
+  },
 ];
 const currentMenu = ref("chart");
 const emit = defineEmits(["menuClick"]);
@@ -54,8 +60,9 @@ function setActiveMenu(name) {
   } else if (name === 'profile') {
     window.location.href = '#/profile';
   } else if (name === 'settings') {
-    // 通过emit和路由更新来确保设置页面正确显示
-    // 不再依赖Chart.vue中的事件处理
+    // 设置页面处理
+  } else if (name === 'aiSettings') {
+    // AI设置页面处理
   }
 }
 </script>

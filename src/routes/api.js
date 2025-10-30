@@ -1,25 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
-
+const path = require('path');
+const { DATA_DIR } = require('../config/constants');
 const { validateUserId } = require('../middleware/auth');
-const { 
-  mockObjectStorage, 
-  TEMP_UPLOAD_DIR, 
-  CDN_IMAGES_DIR,
-  path // 导入 path 供 mock-upload 使用
-} = require('../services/storageService'); 
-const { 
-  tempUploads, 
-  userInfoMap, 
-  chatHistory 
-} = require('../services/userService');
-const { 
-  NOTICE_FILE_PATH, 
-  DATA_DIR 
-} = require('../config/constants');
-const { cleanupInactiveUsers } = require('../services/pointsService');
-
 
 // 获取临时签名URL接口
 router.post(
@@ -299,6 +283,96 @@ router.post("/api/cleanup-inactive-users", validateUserId, (req, res) => {
       success: false,
       message: "服务器错误"
     });
+  }
+});
+// 添加AI配置读取API
+router.get('/api/ai-config', validateUserId, (req, res) => {
+  try {
+    const aiConfigPath = path.join(__dirname, '..', 'config', 'aiConfig.json');
+    if (fs.existsSync(aiConfigPath)) {
+      const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
+      const config = JSON.parse(rawConfig);
+      // 只返回需要暴露的三个字段
+      res.json({
+        success: true,
+        data: {
+          enable_enhancement: config.enable_enhancement || false,
+          systemPrompt: config.systemPrompt || '',
+          temperature: config.customParams?.temperature || 0.8,
+          model: config.model || 'hunyuan-turbos-latest',
+        }
+      });
+    } else {
+      // 如果配置文件不存在，返回默认值
+      res.json({
+        success: true,
+        data: {
+          enable_enhancement: false,
+          systemPrompt: '',
+          temperature: 0.8
+        }
+      });
+    }
+  } catch (error) {
+    console.error('读取AI配置失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '读取配置失败'
+    });
+  }
+});
+
+// 添加AI配置更新API
+router.post('/api/ai-config', validateUserId, (req, res) => {
+  try {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const aiConfigPath = path.join(__dirname, '..', 'config', 'aiConfig.json');
+        
+        // 读取现有配置
+        let existingConfig = {};
+        if (fs.existsSync(aiConfigPath)) {
+          const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
+          existingConfig = JSON.parse(rawConfig);
+        }
+
+        // 更新指定的三个字段
+        existingConfig.enable_enhancement = data.enable_enhancement || false;
+        existingConfig.systemPrompt = data.systemPrompt || '';
+        existingConfig.customParams = existingConfig.customParams || {};
+        // 更新模型
+        existingConfig.model = data.model || 'hunyuan-turbos-latest';
+        const temperature = parseFloat(data.temperature);
+        existingConfig.customParams.temperature = isNaN(temperature) ? 0.8 : Math.max(0, Math.min(2, temperature));
+
+        // 写回配置文件
+        fs.writeFileSync(aiConfigPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
+
+        // 通知所有客户端配置已更新
+        const io = req.app.get('io');
+        console.log(existingConfig)
+        io.emit('ai-config-updated', {
+          enable_enhancement: existingConfig.enable_enhancement,
+          systemPrompt: existingConfig.systemPrompt,
+          temperature: existingConfig.customParams.temperature,
+          model: existingConfig.model || 'hunyuan-turbos-latest'
+        });
+
+        res.json({ success: true, message: '配置更新成功' });
+      } catch (error) {
+        console.error('解析请求数据失败:', error);
+        res.status(400).json({ success: false, message: '请求数据格式错误' });
+      }
+    });
+  } catch (error) {
+    console.error('更新AI配置失败:', error);
+    res.status(500).json({ success: false, message: '更新配置失败' });
   }
 });
 
