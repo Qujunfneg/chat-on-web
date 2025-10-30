@@ -655,6 +655,8 @@ export default {
         validationTimeout = setTimeout(() => {
           console.log("用户ID验证通过，进入聊天室");
           isLoggedIn.value = true;
+          // 将isLoggedIn状态挂载到window对象上，以便其他组件可以检查
+          window.isLoggedIn = true;
         }, 200);
       });
 
@@ -823,6 +825,9 @@ export default {
       // 连接断开
       socket.on("disconnect", () => {
         console.log("WebSocket连接断开");
+        // 更新isLoggedIn状态
+        isLoggedIn.value = false;
+        window.isLoggedIn = false;
         // 清除心跳包计时器
         if (heartbeatInterval) {
           clearInterval(heartbeatInterval);

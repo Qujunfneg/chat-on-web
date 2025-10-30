@@ -142,7 +142,21 @@ import {
 } from "element-plus";
 import { InfoFilled } from "@element-plus/icons-vue";
 const getUserId = () => {
-  return localStorage.getItem("userId");
+  // 优先尝试获取userId
+  let userId = localStorage.getItem("userId");
+  
+  // 如果没有userId，尝试使用coreId作为备用
+  if (!userId) {
+    userId = localStorage.getItem("coreId");
+  }
+  
+  // 如果仍然没有ID，生成一个临时的ID
+  if (!userId) {
+    userId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("userId", userId);
+  }
+  
+  return userId;
 };
 export default {
   name: "AISettings",
@@ -224,6 +238,22 @@ export default {
     // 加载AI配置
     const loadAiConfig = async () => {
       try {
+        // 检查用户是否已经通过WebSocket连接加入聊天室
+        if (!window.socket || !window.socket.connected) {
+          console.log('用户未连接到聊天室，延迟加载AI配置');
+          // 延迟1秒后重试
+          setTimeout(loadAiConfig, 1000);
+          return;
+        }
+        
+        // 检查用户是否已经成功加入聊天室（通过检查isLoggedIn状态）
+        if (typeof window.isLoggedIn === 'undefined' || !window.isLoggedIn) {
+          console.log('用户尚未成功加入聊天室，延迟加载AI配置');
+          // 延迟1秒后重试
+          setTimeout(loadAiConfig, 1000);
+          return;
+        }
+        
         const response = await fetch("/api/ai-config", {
           headers: {
             "x-user-id": userId,
@@ -233,7 +263,7 @@ export default {
         if (data.success) {
           Object.assign(aiConfig, data.data);
         } else {
-          ElMessage.error("加载AI配置失败");
+          ElMessage.error("加载AI配置失败: " + data.message);
         }
       } catch (error) {
         console.error("加载AI配置失败:", error);
@@ -256,6 +286,12 @@ export default {
     const saveConfig = async () => {
       await aiConfigForm.value.validate();
       try {
+        // 检查用户是否已经通过WebSocket连接加入聊天室
+        if (!window.socket || !window.socket.connected) {
+          ElMessage.error("请先连接到聊天室");
+          return;
+        }
+        
         const response = await fetch("/api/ai-config", {
           method: "POST",
           headers: {
