@@ -26,26 +26,29 @@
     <div v-else class="main-content">
       <Menu class="menu" @menuClick="setActiveMenu" />
       <div class="content-area">
-        <Chart v-show="currentMenu === 'chart'"></Chart>
+        <Chat v-show="currentMenu === 'chart'"/>
         <Music v-show="currentMenu === 'music'"/>
         <Profile v-show="currentMenu === 'profile'"/>
         <Setting v-if="currentMenu === 'settings'"/>
+        <AISettings v-if="currentMenu === 'aiSettings'"/>
       </div>
     </div>
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
-import Chart from "./Chart.vue";
+import Chat from "./Chat.vue";
 import { ElMessage } from "element-plus";
 import { Message, User } from '@element-plus/icons-vue';
 import Setting from "./components/Setting.vue";
 import Menu from "./components/Menu.vue";
 import Music from "./components/Music.vue";
 import Profile from "./views/Profile.vue";
+import AISettings from "./components/AISettings.vue";
 import { io } from "socket.io-client";
 import './styles/theme.scss'; // 导入主题样式
 const username = ref("");
+const currentMenu = ref('chart');
 
 // 生成永不重复的用户ID
 const generateUserId = () => {
@@ -66,7 +69,6 @@ const getCoreId = () => {
   }
   return storedCoreId;
 };
-const currentMenu = ref('chart');
 
 // 检查用户是否已有用户名
 const hasUsername = () => {

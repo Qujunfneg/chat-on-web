@@ -1,5 +1,5 @@
 <template>
-  <div class="menu-container">
+  <div class="menu-container" @click="handleContainerClick">
     <ul class="menu">
       <li
         v-for="item in menuList"
@@ -12,16 +12,17 @@
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
         <el-icon v-if="item.icon === 'profile'" class="icon"><User /></el-icon>
         <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
+        <el-icon v-if="item.icon === 'ai' && showAiSettings" class="icon"><Cpu /></el-icon>
       </li>
     </ul>
   </div>
 </template>
 <script setup>
-import { ref } from "vue";
-import { ChatLineRound, Service, User, Setting } from '@element-plus/icons-vue';
+import { ref, onMounted, onUnmounted } from "vue";
+import { ChatLineRound, Service, User, Setting, Cpu } from '@element-plus/icons-vue';
 
 const menuList = [
-   {
+  {
     label: "我的主页",
     name: "profile",
     icon: "profile",
@@ -41,9 +42,52 @@ const menuList = [
     name: "settings",
     icon: "settings",
   },
+  {
+    label: "AI配置",
+    name: "aiSettings",
+    icon: "ai",
+  },
 ];
 const currentMenu = ref("chart");
 const emit = defineEmits(["menuClick"]);
+const showAiSettings = ref(false); // 控制AI配置入口显示状态
+let clickCount = 0; // 点击计数
+let lastClickTime = 0; // 上次点击时间
+const MAX_CLICK_TIME = 2000; // 两次点击之间的最大时间间隔（毫秒）
+const REQUIRED_CLICKS = 5; // 所需的点击次数
+
+// 从localStorage读取显示状态
+onMounted(() => {
+  const savedState = localStorage.getItem('showAiSettings');
+  if (savedState === 'true') {
+    showAiSettings.value = true;
+  }
+});
+
+// 处理菜单容器点击事件
+function handleContainerClick(event) {
+  // 检查点击是否发生在菜单空白区域（非菜单项）
+  if (event.target.classList.contains('menu-container')) {
+    const now = Date.now();
+    
+    // 如果距离上次点击时间超过最大间隔，重置计数
+    if (now - lastClickTime > MAX_CLICK_TIME) {
+      clickCount = 0;
+    }
+    
+    clickCount++;
+    lastClickTime = now;
+    
+    // 达到所需点击次数，切换显示状态
+    if (clickCount >= REQUIRED_CLICKS) {
+      showAiSettings.value = !showAiSettings.value;
+      // 保存状态到localStorage
+      localStorage.setItem('showAiSettings', showAiSettings.value.toString());
+      clickCount = 0; // 重置计数
+    }
+  }
+}
+
 function setActiveMenu(name) {
   currentMenu.value = name;
   emit("menuClick", name);
@@ -54,8 +98,9 @@ function setActiveMenu(name) {
   } else if (name === 'profile') {
     window.location.href = '#/profile';
   } else if (name === 'settings') {
-    // 通过emit和路由更新来确保设置页面正确显示
-    // 不再依赖Chart.vue中的事件处理
+    // 设置页面处理
+  } else if (name === 'aiSettings' && showAiSettings.value) {
+    // AI设置页面处理
   }
 }
 </script>
@@ -70,6 +115,7 @@ function setActiveMenu(name) {
   width: 60px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  cursor: default; /* 设置默认鼠标样式 */
 }
 
 /* 菜单列表样式 */

@@ -124,10 +124,8 @@ async function aiRequestJson(endpoint, apiKey, body, extraHeaders = {}, timeout 
 }
 
 async function callAiForReply(topic) {
-  if (!aiConfig || !aiConfig.enabled) return null;
 
   const endpoint = aiConfig.endpoint;
-  const provider = (aiConfig.provider || 'openai-compatible').toLowerCase();
   const apiKey = process.env[aiConfig.apiKeyEnv] || aiConfig.apiKey || '';
 
   // 构建 prompt / body
@@ -135,11 +133,7 @@ async function callAiForReply(topic) {
   const userTemplate = aiConfig.userPromptTemplate || '{{topic}}';
   const userPrompt = userTemplate.replace('{{topic}}', topic || '');
 
-  let body = {};
-
-  // 针对腾讯混元（hunyuan）使用的请求体结构（兼容其 Chat Completions 风格）
-  if (provider.includes('hunyuan') || provider.includes('hunyuan-tencent') || provider.includes('hun')) {
-    body = Object.assign({
+  const body = Object.assign({
       model: aiConfig.model || 'hunyuan-turbos-latest',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -152,18 +146,6 @@ async function callAiForReply(topic) {
       body.enable_enhancement = aiConfig.enable_enhancement;
     }
 
-  } else {
-    // 默认使用 OpenAI Chat Completions 格式
-    body = Object.assign({
-      model: aiConfig.model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: aiConfig.temperature || 0.8,
-      max_tokens: aiConfig.max_tokens || 600
-    }, aiConfig.customParams || {});
-  }
 
   try {
   // 混元的部分部署可能要求不同的 header，但一般遵循 Bearer token 认证
