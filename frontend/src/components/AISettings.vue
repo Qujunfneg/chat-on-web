@@ -254,7 +254,13 @@ export default {
           return;
         }
         
-        const response = await fetch("/api/ai-config", {
+        // 检查是否在Electron环境中
+        const isElectron = window.electronAPI || navigator.userAgent.toLowerCase().indexOf('electron') > -1;
+        
+        // 在Electron环境中，直接使用本地API
+        const apiUrl = isElectron ? '/api/ai-config' : '/api/ai-config';
+        
+        const response = await fetch(apiUrl, {
           headers: {
             "x-user-id": userId,
           },
@@ -292,7 +298,13 @@ export default {
           return;
         }
         
-        const response = await fetch("/api/ai-config", {
+        // 检查是否在Electron环境中
+        const isElectron = window.electronAPI || navigator.userAgent.toLowerCase().indexOf('electron') > -1;
+        
+        // 在Electron环境中，直接使用本地API
+        const apiUrl = isElectron ? '/api/ai-config' : '/api/ai-config';
+        
+        const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

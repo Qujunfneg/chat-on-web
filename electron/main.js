@@ -117,11 +117,11 @@ staticApp.get('/api/ai-config', (req, res) => {
     if (fs.existsSync(aiConfigPath)) {
       const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
       const config = JSON.parse(rawConfig);
-      // 只返回需要暴露的三个字段
+      // 返回完整的配置数据，确保与前端期望的数据结构一致
       res.json({
         success: true,
         data: {
-          enable_enhancement: config.enable_enhancement || false,
+          enable_enhancement: config.enable_enhancement !== undefined ? config.enable_enhancement : false,
           systemPrompt: config.systemPrompt || '',
           temperature: config.customParams?.temperature || 0.8,
           model: config.model || 'hunyuan-turbos-latest',
@@ -134,7 +134,8 @@ staticApp.get('/api/ai-config', (req, res) => {
         data: {
           enable_enhancement: false,
           systemPrompt: '',
-          temperature: 0.8
+          temperature: 0.8,
+          model: 'hunyuan-turbos-latest',
         }
       });
     }
@@ -169,8 +170,8 @@ staticApp.post('/api/ai-config', (req, res) => {
           existingConfig = JSON.parse(rawConfig);
         }
 
-        // 更新指定的三个字段
-        existingConfig.enable_enhancement = data.enable_enhancement || false;
+        // 更新指定的字段
+        existingConfig.enable_enhancement = data.enable_enhancement !== undefined ? data.enable_enhancement : false;
         existingConfig.systemPrompt = data.systemPrompt || '';
         existingConfig.customParams = existingConfig.customParams || {};
         // 更新模型
@@ -184,7 +185,17 @@ staticApp.post('/api/ai-config', (req, res) => {
         // 通知所有客户端配置已更新（如果有WebSocket连接）
         console.log('AI配置已更新:', existingConfig);
 
-        res.json({ success: true, message: '配置更新成功' });
+        // 返回成功响应
+        res.json({ 
+          success: true, 
+          message: '配置更新成功',
+          data: {
+            enable_enhancement: existingConfig.enable_enhancement,
+            systemPrompt: existingConfig.systemPrompt,
+            temperature: existingConfig.customParams.temperature,
+            model: existingConfig.model
+          }
+        });
       } catch (error) {
         console.error('解析请求数据失败:', error);
         res.status(400).json({ success: false, message: '请求数据格式错误' });
@@ -338,7 +349,7 @@ function createWindow() {
   });
 
   // 移除应用程序菜单栏，这样就不会显示file、edit、view/window等工具条
-  // Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
 
   // 修改关闭按钮行为，使其最小化到托盘而不是关闭
   mainWindow.on('close', function(e) {
