@@ -226,8 +226,6 @@ function createWindow() {
       console.log('设置coreId到localStorage:', config.coreId);
       mainWindow.webContents.executeJavaScript(`
         localStorage.setItem('coreId', '${config.coreId}');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('username');
         console.log('coreId已设置到localStorage:', '${config.coreId}');
       `);
   });
