@@ -112,11 +112,45 @@ staticApp.get('/api/ai-config', (req, res) => {
   try {
     const fs = require('fs');
     const path = require('path');
-    const aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
+    
+    // 根据是否打包环境确定配置文件路径
+    let aiConfigPath;
+    if (app.isPackaged) {
+      // 打包环境下，配置文件放在用户数据目录
+      const userDataPath = app.getPath('userData');
+      aiConfigPath = path.join(userDataPath, 'aiConfig.json');
+      console.log('打包模式 - 用户数据目录:', userDataPath);
+      console.log('AI配置文件路径:', aiConfigPath);
+      
+      // 如果用户数据目录中没有配置文件，从资源目录复制默认配置
+      if (!fs.existsSync(aiConfigPath)) {
+        const defaultConfigPath = path.join(process.resourcesPath, 'aiConfig.json');
+        console.log('默认配置文件路径:', defaultConfigPath);
+        console.log('默认配置文件是否存在:', fs.existsSync(defaultConfigPath));
+        
+        if (fs.existsSync(defaultConfigPath)) {
+          // 确保用户数据目录存在
+          if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+            console.log('创建用户数据目录:', userDataPath);
+          }
+          // 复制默认配置到用户数据目录
+          fs.copyFileSync(defaultConfigPath, aiConfigPath);
+          console.log('已复制默认配置到用户数据目录');
+        }
+      }
+    } else {
+      // 开发环境下，使用源码目录中的配置文件
+      aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
+      console.log('开发模式 - AI配置文件路径:', aiConfigPath);
+    }
+    
+    console.log('AI配置文件是否存在:', fs.existsSync(aiConfigPath));
     
     if (fs.existsSync(aiConfigPath)) {
       const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
       const config = JSON.parse(rawConfig);
+      console.log('读取到的AI配置:', config);
       // 返回完整的配置数据，确保与前端期望的数据结构一致
       res.json({
         success: true,
@@ -129,6 +163,7 @@ staticApp.get('/api/ai-config', (req, res) => {
       });
     } else {
       // 如果配置文件不存在，返回默认值
+      console.log('配置文件不存在，返回默认值');
       res.json({
         success: true,
         data: {
@@ -161,13 +196,36 @@ staticApp.post('/api/ai-config', (req, res) => {
         const fs = require('fs');
         const path = require('path');
         const data = JSON.parse(body);
-        const aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
+        console.log('接收到的AI配置更新请求:', data);
+        
+        // 根据是否打包环境确定配置文件路径
+        let aiConfigPath;
+        if (app.isPackaged) {
+          // 打包环境下，配置文件放在用户数据目录
+          const userDataPath = app.getPath('userData');
+          aiConfigPath = path.join(userDataPath, 'aiConfig.json');
+          console.log('打包模式 - 用户数据目录:', userDataPath);
+          console.log('AI配置文件路径:', aiConfigPath);
+          
+          // 确保用户数据目录存在
+          if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+            console.log('创建用户数据目录:', userDataPath);
+          }
+        } else {
+          // 开发环境下，使用源码目录中的配置文件
+          aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
+          console.log('开发模式 - AI配置文件路径:', aiConfigPath);
+        }
         
         // 读取现有配置
         let existingConfig = {};
         if (fs.existsSync(aiConfigPath)) {
           const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
           existingConfig = JSON.parse(rawConfig);
+          console.log('读取到的现有配置:', existingConfig);
+        } else {
+          console.log('配置文件不存在，将创建新配置文件');
         }
 
         // 更新指定的字段
@@ -181,6 +239,7 @@ staticApp.post('/api/ai-config', (req, res) => {
 
         // 写回配置文件
         fs.writeFileSync(aiConfigPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
+        console.log('已更新AI配置文件:', existingConfig);
 
         // 通知所有客户端配置已更新（如果有WebSocket连接）
         console.log('AI配置已更新:', existingConfig);
