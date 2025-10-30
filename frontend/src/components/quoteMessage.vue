@@ -48,7 +48,6 @@ const props = defineProps({
 
 const processedMessage = computed(() => {
   if (typeof props.message === "string" && /^\]\n/.test(props.message)) {
-    debugger;
     return parseMessageContent(props.message.slice(2));
   }
   return parseMessageContent(props.message);

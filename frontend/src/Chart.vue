@@ -371,7 +371,7 @@
             <el-option label="10分钟" :value="10"></el-option>
             <el-option label="30分钟" :value="30"></el-option>
             <el-option label="1小时" :value="60"></el-option>
-            <el-option label="永久" :value="0"></el-option>
+            <el-option label="永久" :value="9999999"></el-option>
           </el-select>
         </div>
       </div>
@@ -922,9 +922,10 @@ export default {
         userId.value = "";
         coreId.value = "";
         isLoggedIn.value = false;
-        
-        // 清除localStorage中的用户信息，但保留userId和coreId
-        // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
+        localStorage.setItem("kickTime", Date.now());
+        localStorage.setItem("duration", data.duration);
+        // 清除localStorage中的用户信息
+        localStorage.removeItem("userId");
         localStorage.removeItem("username");
         
         // 延迟跳转到登录页，让用户看到被踢信息
@@ -971,6 +972,10 @@ export default {
         userId.value = "";
         coreId.value = "";
         isLoggedIn.value = false;
+        
+        // 清除localStorage中的用户信息
+        localStorage.removeItem("userId");
+        localStorage.removeItem("username");
         
         // 延迟跳转到登录页，让用户看到被踢信息
         setTimeout(() => {
@@ -1229,8 +1234,8 @@ export default {
         socket = null;
       }
 
-      // 清除localStorage中的用户信息，但保留userId和coreId
-      // localStorage.removeItem("userId"); // 保留userId，以便踢人禁期能正确应用
+      // 清除localStorage中的用户信息
+      localStorage.removeItem("userId");
       localStorage.removeItem("username");
       // 移除对nickname的localStorage清除
       // localStorage.removeItem('nickname');

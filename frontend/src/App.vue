@@ -101,6 +101,16 @@ const getUserId = () => {
 // 处理用户名提交
 function handleUsernameSubmit() {
   if (username.value.trim()) {
+    const kickTime = Number(localStorage.getItem("kickTime"));
+    const duration = Number(localStorage.getItem("duration"));
+    if (kickTime && duration) {
+      const now = Date.now();
+      const remainingTime = duration*60*1000 - (now - kickTime);
+      if (remainingTime > 0) {
+        ElMessage.error(`您已被禁言 ${Math.ceil(remainingTime / 60000)} 分钟`);
+        return;
+      }
+    }
     // 获取或生成userId（使用已存在的，而不是每次都生成新的）
     const userId = getUserId();
     
@@ -108,6 +118,8 @@ function handleUsernameSubmit() {
     const coreId = getCoreId();
     
     // 存储到localStorage
+    localStorage.removeItem("kickTime");
+    localStorage.removeItem("duration");
     localStorage.setItem("username", username.value.trim());
     localStorage.setItem("nickname", username.value.trim());
     // userId和coreId已经在getUserId和getCoreId函数中存储到localStorage
@@ -146,7 +158,8 @@ function handleUsernameSubmit() {
       // 清除用户信息
       localStorage.removeItem("username");
       localStorage.removeItem("nickname");
-      // 保留userId和coreId，以便禁期能正确应用
+      localStorage.removeItem("userId");
+      localStorage.removeItem("coreId");
       
       // 重置输入框
       username.value = "";
