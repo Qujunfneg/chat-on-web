@@ -26,7 +26,7 @@
     <div v-else class="main-content">
       <Menu class="menu" @menuClick="setActiveMenu" />
       <div class="content-area">
-        <Chart v-show="currentMenu === 'chart'"></Chart>
+        <Chat v-show="currentMenu === 'chart'"></Chat>
         <Music v-show="currentMenu === 'music'"/>
         <Profile v-show="currentMenu === 'profile'"/>
         <Setting v-if="currentMenu === 'settings'"/>
@@ -36,7 +36,7 @@
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
-import Chart from "./Chart.vue";
+import Chat from "./Chat.vue";
 import { ElMessage } from "element-plus";
 import { Message, User } from '@element-plus/icons-vue';
 import Setting from "./components/Setting.vue";

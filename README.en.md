@@ -170,7 +170,7 @@ chat-on-web/
 │   ├── index.html       # Entry HTML file
 │   ├── src/             # Frontend source code
 │   │   ├── App.vue      # Root component
-│   │   ├── Chart.vue    # Main chat room component
+│   │   ├── Chat.vue    # Main chat room component
 │   │   ├── components/  # Vue components
 │   │   ├── main.js      # Entry file
 │   │   ├── styles/      # Style files
