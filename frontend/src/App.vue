@@ -120,6 +120,7 @@ function handleUsernameSubmit() {
     // 存储到localStorage
     localStorage.removeItem("kickTime");
     localStorage.removeItem("duration");
+    localStorage.removeItem("userKicked");
     localStorage.setItem("username", username.value.trim());
     localStorage.setItem("nickname", username.value.trim());
     // userId和coreId已经在getUserId和getCoreId函数中存储到localStorage
