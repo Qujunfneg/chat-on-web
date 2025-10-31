@@ -11,7 +11,7 @@
     "electron": "electron electron/main.js",
     "electron:dev": "npm run build && electron electron/main.js",
     "electron:package": "npm run build && electron-builder",
-    "electron:package:win": "npm run build && electron-builder --win --x64 && if exist dist\\chart-room-win rd /s /q dist\\chart-room-win && xcopy /s /e /y dist\\win-unpacked\\* dist\\chart-room-win\\ && rd /s /q dist\\win-unpacked"
+    "win": "npm run build && electron-builder --win --x64 && if exist dist\\chart-room-win rd /s /q dist\\chart-room-win && xcopy /s /e /y dist\\win-unpacked\\* dist\\chart-room-win\\ && rd /s /q dist\\win-unpacked"
   },
   "dependencies": {
     "express": "^4.18.2",

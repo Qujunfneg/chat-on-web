@@ -7,8 +7,13 @@
         <!-- 生成5个骨架屏用户项 -->
         <div v-for="i in 5" :key="i" class="skeleton-user-item">
           <div class="skeleton-avatar"></div>
-          <div class="skeleton-username"></div>
-          <div class="skeleton-hotness"></div>
+          <div class="user-info">
+            <div class="skeleton-username"></div>
+            <div class="user-stats">
+              <div class="skeleton-hotness"></div>
+              <div class="skeleton-points"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -30,13 +35,17 @@
             {{ getAvatarText(getDisplayUsername(user)) }}
             <span v-if="isCurrentUser(user)" class="current-user-indicator">我</span>
           </div>
-          <span class="username" :title="getDisplayUsername(user)">{{ formatUsername(getDisplayUsername(user)) }}</span>
-          <span class="hotness">
-            🔥 {{ getMessageCount(user) }}
-          </span>
-          <span class="points">
-            💰 {{ getUserPoints(user) }}
-          </span>
+          <div class="user-info">
+            <span class="username" :title="getDisplayUsername(user)">{{ getDisplayUsername(user) }}</span>
+            <div class="user-stats">
+              <span class="hotness">
+                🔥 {{ getMessageCount(user) }}
+              </span>
+              <span class="points">
+                💰 {{ getUserPoints(user) }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -110,14 +119,6 @@ export default {
       return username === props.currentUsername;
     };
 
-    // 处理用户名过长显示
-    const formatUsername = (username) => {
-      if (username.length > 12) {
-        return username.substring(0, 10) + '...';
-      }
-      return username;
-    };
-
     // 计算排序后的用户列表，当前用户置顶，其余按热度排序
     const sortedUsers = computed(() => {
       // 确保输入数据是对象数组
@@ -177,7 +178,6 @@ export default {
       sortedUsers,
       getDisplayUsername,
       isCurrentUser,
-      formatUsername,
       handleUserContextMenu
     };
   }
@@ -300,14 +300,27 @@ export default {
   border: 2px solid var(--background-secondary);
 }
 
-.username {
+.user-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* 允许内容收缩 */
+}
+
+.username {
   font-weight: 500;
   color: var(--text-primary);
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.user-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .hotness {
@@ -319,7 +332,6 @@ export default {
   border-radius: 12px;
   display: flex;
   align-items: center;
-  margin-right: 4px;
 }
 
 .points {
@@ -339,7 +351,7 @@ export default {
 
 .skeleton-user-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 12px;
   margin-bottom: 8px;
   background-color: var(--background-secondary);
@@ -353,6 +365,7 @@ export default {
   background-color: #e6f7ff;
   margin-right: 12px;
   animation: skeleton-loading 1.5s infinite;
+  flex-shrink: 0;
 }
 
 .skeleton-username {
@@ -361,12 +374,22 @@ export default {
   background-color: #f0f0f0;
   border-radius: 4px;
   animation: skeleton-loading 1.5s infinite;
+  margin-bottom: 8px;
 }
 
 .skeleton-hotness {
   width: 50px;
   height: 20px;
   background-color: #fff7e6;
+  border-radius: 10px;
+  animation: skeleton-loading 1.5s infinite;
+  margin-right: 8px;
+}
+
+.skeleton-points {
+  width: 50px;
+  height: 20px;
+  background-color: #f0f9ff;
   border-radius: 10px;
   animation: skeleton-loading 1.5s infinite;
 }
