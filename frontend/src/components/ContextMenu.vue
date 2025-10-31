@@ -31,7 +31,7 @@
     </div>
     <div
       class="context-menu-item"
-      v-if="selectedUserForMention && isAdminMode && !isCurrentUser"
+      v-if="selectedUserForMention && adminMode && !isCurrentUser"
       @click="kickUser"
     >
       👟 踢人
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 export default {
   name: 'ContextMenu',
@@ -73,14 +73,42 @@ export default {
     currentUserId: {
       type: String,
       default: ''
-    },
-    isAdminMode: {
-      type: Boolean,
-      default: false
     }
   },
   emits: ['hideMenu', 'mentionUser', 'quoteMessage', 'saveAsFavorite', 'editNickname', 'recallMessage', 'kickUser'],
   setup(props, { emit }) {
+    // 管理员模式状态
+    const adminMode = ref(false);
+    
+    // 从localStorage读取管理员模式状态
+    const isLocalAdminMode = computed(() => {
+      try {
+        const adminSettings = JSON.parse(localStorage.getItem('adminSettings') || '{}');
+        return adminSettings.adminMode || false;
+      } catch (error) {
+        console.error('Failed to parse admin settings:', error);
+        return false;
+      }
+    });
+
+    // 初始化管理员模式状态
+    adminMode.value = isLocalAdminMode.value;
+
+    // 监听管理员模式变更事件
+    const handleAdminModeChanged = (event) => {
+      adminMode.value = event.detail.adminMode;
+    };
+
+    // 组件挂载时添加事件监听
+    onMounted(() => {
+      window.addEventListener('admin-mode-changed', handleAdminModeChanged);
+    });
+
+    // 组件卸载时移除事件监听
+    onUnmounted(() => {
+      window.removeEventListener('admin-mode-changed', handleAdminModeChanged);
+    });
+
     // 检查是否为当前用户
     const isCurrentUser = computed(() => {
       if (!props.selectedUserForMention || !props.currentUserId) {
@@ -166,6 +194,7 @@ export default {
     };
 
     return {
+      adminMode,
       mentionUser,
       quoteMessage,
       saveAsFavorite,

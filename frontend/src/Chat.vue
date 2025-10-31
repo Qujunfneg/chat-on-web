@@ -48,7 +48,7 @@
           
           <!-- 聊天头部 -->
           <div class="chat-header">
-            <h2 @click="handleTitleClick" style="cursor: pointer;user-select:  none;">公共大厅</h2>
+            <h2 style="user-select: none;">公共大厅</h2>
             <div class="chat-header-right">
               <ThemeSelector />
               <AnnouncementBar style="margin-right: 10px;"/>
@@ -324,7 +324,6 @@
       :selected-message="selectedMessage"
       :selected-image-url="selectedImageUrl"
       :current-user-id="userId"
-      :is-admin-mode="isAdminMode"
       @hide-menu="hideContextMenu"
       @mention-user="handleMentionUser"
       @quote-message="handleQuoteMessage"
@@ -1872,54 +1871,26 @@ export default {
       });
     };
 
-    // 管理员模式相关状态
-    const isAdminMode = ref(false);
-    const titleClickCount = ref(0);
-    const titleClickTimer = ref(null);
-    
     // 踢人对话框相关状态
     const showKickDialog = ref(false);
     const selectedUserForKick = ref(null);
     const kickDuration = ref(1); // 默认1分钟
-    
-    // 处理标题点击事件
-    const handleTitleClick = () => {
-      titleClickCount.value++;
-      
-      // 清除之前的定时器
-      if (titleClickTimer.value) {
-        clearTimeout(titleClickTimer.value);
-      }
-      
-      // 设置新的定时器，3秒后重置计数
-      titleClickTimer.value = setTimeout(() => {
-        titleClickCount.value = 0;
-      }, 3000);
-      
-      // 如果点击次数达到10次，激活管理员模式
-      if (titleClickCount.value >= 10) {
-        isAdminMode.value = true;
-        titleClickCount.value = 0;
-        ElMessage.success("已进入管理员模式");
-        
-        // 更新localStorage中的管理员模式设置
-        localStorage.setItem('adminSettings', JSON.stringify({ adminMode: true }));
-        
-        // 发送全局事件，通知其他组件管理员模式已启用
-        window.dispatchEvent(new CustomEvent('admin-mode-changed', {
-          detail: { adminMode: true }
-        }));
-        
-        // 清除定时器
-        if (titleClickTimer.value) {
-          clearTimeout(titleClickTimer.value);
-          titleClickTimer.value = null;
-        }
-      }
-    };
 
     // 踢人处理函数
     const handleKickUser = (user) => {
+      // 检查管理员模式状态
+      try {
+        const adminSettings = JSON.parse(localStorage.getItem('adminSettings') || '{}');
+        if (!adminSettings.adminMode) {
+          ElMessage.error("需要开启管理员模式才能踢人");
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to parse admin settings:', error);
+        ElMessage.error("管理员模式状态异常");
+        return;
+      }
+      
       // 确保user对象有效，并标准化为对象格式
       if (!user) {
         ElMessage.error("无效的用户信息");
@@ -2204,26 +2175,6 @@ export default {
 
       // 添加音频权限事件监听器
       window.addEventListener("click", handleGlobalClickForAudioPermission);
-      
-      // 从localStorage加载管理员模式状态
-      const savedAdminSettings = localStorage.getItem('adminSettings');
-      if (savedAdminSettings !== null) {
-        try {
-          const adminSettings = JSON.parse(savedAdminSettings);
-          isAdminMode.value = adminSettings.adminMode || false;
-        } catch (error) {
-          console.error('Failed to parse admin settings:', error);
-          isAdminMode.value = false;
-        }
-      }
-      
-      // 监听管理员模式变更事件
-      window.addEventListener('admin-mode-changed', (event) => {
-        isAdminMode.value = event.detail.adminMode;
-        // 保存管理员模式状态到localStorage
-        const adminSettings = { adminMode: isAdminMode.value };
-        localStorage.setItem('adminSettings', JSON.stringify(adminSettings));
-      });
     });
 
     // 组件卸载时执行
@@ -2242,8 +2193,6 @@ export default {
       window.removeEventListener("contextmenu", () => {});
       // 移除音频权限事件监听器
       window.removeEventListener("click", handleGlobalClickForAudioPermission);
-      // 移除管理员模式变更事件监听器
-      window.removeEventListener('admin-mode-changed', () => {});
       // 清理标题闪烁定时器
       if (titleInterval) {
         clearInterval(titleInterval);
@@ -2316,7 +2265,6 @@ export default {
       showAudioPermissionButton,
       isLoadingMessages,
       isLoadingUsers,
-      isAdminMode,
       showKickDialog,
       selectedUserForKick,
       kickDuration,
@@ -2348,7 +2296,6 @@ export default {
       showUserList,
       toggleUserList,
       handleImageSelect,
-      handleTitleClick,
       danmuContent,
       danmuColor,
       danmuList,

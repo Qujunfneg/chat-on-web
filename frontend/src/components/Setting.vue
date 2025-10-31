@@ -7,6 +7,10 @@
         应用设置
       </h1>
       <p class="page-subtitle">管理您的应用偏好设置</p>
+      <div class="version-info" @click="handleVersionClick" title="连续点击10次激活管理员模式">
+        <span class="version-label">版本：</span>
+        <span class="version-number">{{ appVersion }}</span>
+      </div>
     </div>
 
     <!-- 设置卡片网格 -->
@@ -180,36 +184,7 @@
         </div>
       </el-card>
       
-      <!-- 管理员状态卡片 -->
-      <el-card v-if="adminSettings.adminMode" class="settings-card admin-card">
-        <template #header>
-          <div class="card-header">
-            <div class="header-title">
-              <el-icon class="header-icon admin-header-icon"><UserIcon /></el-icon>
-              <span class="card-title">管理员模式</span>
-            </div>
-          </div>
-        </template>
-        <div class="card-content">
-          <div class="admin-status-content">
-            <div class="admin-status-info">
-              <el-icon class="admin-status-icon"><UserIcon /></el-icon>
-              <span class="admin-status-text">管理员模式已启用</span>
-            </div>
-            <div class="admin-actions">
-              <el-button 
-                type="danger" 
-                size="default"
-                @click="disableAdminMode"
-                class="admin-close-btn"
-              >
-                <el-icon><CloseIcon /></el-icon>
-                关闭管理员模式
-              </el-button>
-            </div>
-          </div>
-        </div>
-      </el-card>
+
       
       <!-- AI设置卡片 -->
       <el-card class="setting-card ai-card" shadow="hover" v-if="adminSettings.adminMode">
@@ -364,6 +339,37 @@
           </el-form>
         </div>
       </el-card>
+
+            <!-- 管理员状态卡片 -->
+      <el-card v-if="adminSettings.adminMode" class="settings-card admin-card">
+        <template #header>
+          <div class="card-header">
+            <div class="header-title">
+              <el-icon class="header-icon admin-header-icon"><UserIcon /></el-icon>
+              <span class="card-title">管理员模式</span>
+            </div>
+          </div>
+        </template>
+        <div class="card-content">
+          <div class="admin-status-content">
+            <div class="admin-status-info">
+              <el-icon class="admin-status-icon"><UserIcon /></el-icon>
+              <span class="admin-status-text">管理员模式已启用</span>
+            </div>
+            <div class="admin-actions">
+              <el-button 
+                type="danger" 
+                size="default"
+                @click="disableAdminMode"
+                class="admin-close-btn"
+              >
+                <el-icon><CloseIcon /></el-icon>
+                关闭管理员模式
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
@@ -467,6 +473,13 @@ export default {
     const adminSettings = reactive({
       adminMode: false // 默认禁用管理员模式
     });
+    
+    // 版本号点击计数器
+    const versionClickCount = ref(0);
+    let versionClickTimer = null;
+    
+    // 应用版本号
+    const appVersion = ref(import.meta.env.VUE_APP_VERSION || '1.0.0');
     
     // AI配置数据模型
     const aiConfig = reactive({
@@ -839,7 +852,43 @@ export default {
         detail: { adminMode: false }
       }));
       
-      ElMessage.info('管理员模式已关闭，需要通过连续点击公共大厅标题重新启用');
+      ElMessage.info('管理员模式已关闭，需要通过连续点击版本号重新启用');
+    };
+    
+    // 处理版本号点击事件
+    const handleVersionClick = () => {
+      versionClickCount.value++;
+      
+      // 清除之前的定时器
+      if (versionClickTimer) {
+        clearTimeout(versionClickTimer);
+      }
+      
+      // 设置新的定时器，3秒后重置计数
+      versionClickTimer = setTimeout(() => {
+        versionClickCount.value = 0;
+      }, 3000);
+      
+      // 如果点击次数达到10次，激活管理员模式
+      if (versionClickCount.value >= 10) {
+        adminSettings.adminMode = true;
+        versionClickCount.value = 0;
+        ElMessage.success("已进入管理员模式");
+        
+        // 更新localStorage中的管理员模式设置
+        localStorage.setItem('adminSettings', JSON.stringify({ adminMode: true }));
+        
+        // 发送全局事件，通知其他组件管理员模式已启用
+        window.dispatchEvent(new CustomEvent('admin-mode-changed', {
+          detail: { adminMode: true }
+        }));
+        
+        // 清除定时器
+        if (versionClickTimer) {
+          clearTimeout(versionClickTimer);
+          versionClickTimer = null;
+        }
+      }
     };
     
     return {
@@ -864,6 +913,8 @@ export default {
       saveCoreSettings,
       disableAdminMode,
       isElectron,
+      appVersion,
+      handleVersionClick,
       // AI配置相关
       aiConfigForm,
       aiSaving,
@@ -916,6 +967,38 @@ export default {
   color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
+}
+
+/* 版本信息样式 */
+.version-info {
+  user-select: none;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: var(--background-tertiary);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+}
+
+.version-info:hover {
+  background-color: var(--background-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.version-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.version-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-primary);
 }
 
 /* 设置卡片网格 */
@@ -1255,5 +1338,9 @@ export default {
   background-color: rgba(144, 147, 153, 0.2) !important;
   border-color: rgba(144, 147, 153, 0.3) !important;
   color: #909399 !important;
+}
+.header-title{
+  display: flex;
+  align-items: center;
 }
 </style>
