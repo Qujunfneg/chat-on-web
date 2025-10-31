@@ -210,14 +210,187 @@
           </div>
         </div>
       </el-card>
+      
+      <!-- AI设置卡片 -->
+      <el-card class="setting-card ai-card" shadow="hover" v-if="adminSettings.adminMode">
+        <template #header>
+          <div class="card-header">
+            <div class="header-icon">
+              <el-icon><CpuIcon /></el-icon>
+            </div>
+            <div class="header-content">
+              <h3>AI配置</h3>
+              <p>配置AI增强功能</p>
+            </div>
+            <div class="header-actions">
+              <el-button 
+                v-if="!isEditingAi" 
+                type="primary" 
+                @click="startEditingAi" 
+                class="edit-btn"
+                size="small"
+              >
+                <el-icon><EditIcon /></el-icon>
+                编辑
+              </el-button>
+              <div v-else class="edit-actions">
+                <el-button 
+                  type="success" 
+                  @click="saveAiConfig" 
+                  :loading="aiSaving"
+                  size="small"
+                >
+                  <el-icon><CheckIcon /></el-icon>
+                  保存
+                </el-button>
+                <el-button @click="cancelEditingAi" size="small">
+                  <el-icon><CloseIcon /></el-icon>
+                  取消
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <div class="card-content">
+          <!-- 只读模式：显示当前AI配置 -->
+          <div v-if="!isEditingAi" class="info-display">
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><CpuIcon /></el-icon>
+                <span>AI模型</span>
+              </div>
+              <div class="info-value">{{ aiConfig.model || '未设置' }}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><InfoIcon /></el-icon>
+                <span>增强搜索</span>
+              </div>
+              <div class="info-value">{{ aiConfig.enable_enhancement ? '已启用' : '未启用' }}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><InfoIcon /></el-icon>
+                <span>AI身份描述</span>
+              </div>
+              <div class="info-value">{{ aiConfig.systemPrompt || '未设置' }}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">
+                <el-icon><InfoIcon /></el-icon>
+                <span>多样性阈值</span>
+              </div>
+              <div class="info-value">{{ aiConfig.temperature || 0.8 }}</div>
+            </div>
+          </div>
+          
+          <!-- 编辑模式：显示表单 -->
+          <el-form 
+            v-else
+            ref="aiConfigForm"
+            :model="tempAiConfig"
+            label-position="top"
+            class="compact-form"
+            size="default"
+          >
+            <el-form-item 
+              label="AI模型"
+              prop="model"
+              :rules="[{ required: true, message: '请选择AI模型', trigger: 'change' }]"
+            >
+              <el-select 
+                v-model="tempAiConfig.model" 
+                placeholder="请选择AI模型" 
+                class="w-full"
+              >
+                <el-option-group
+                  v-for="group in availableModelOptions"
+                  :key="group.label"
+                  :label="group.label"
+                >
+                  <el-option
+                    v-for="item in group.options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  >
+                    <div class="model-option">
+                      <div class="model-label">{{ item.label }}</div>
+                      <div class="model-description" v-html="item.description"></div>
+                    </div>
+                  </el-option>
+                </el-option-group>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="增强搜索">
+              <el-switch v-model="tempAiConfig.enable_enhancement" />
+            </el-form-item>
+            
+            <el-form-item 
+              label="AI身份描述"
+              prop="systemPrompt"
+              :rules="[
+                { required: true, message: '请输入AI身份描述', trigger: 'blur' },
+                { min: 20, message: 'AI身份描述至少需要20个字符', trigger: 'blur' }
+              ]"
+            >
+              <el-input 
+                v-model="tempAiConfig.systemPrompt" 
+                type="textarea" 
+                :rows="4"
+                placeholder="请输入AI身份描述，至少20个字符" 
+                class="w-full"
+              />
+            </el-form-item>
+            
+            <el-form-item 
+              label="多样性阈值"
+              prop="temperature"
+            >
+              <el-slider 
+                v-model="tempAiConfig.temperature" 
+                :min="0" 
+                :max="2" 
+                :step="0.1"
+                show-input
+                :show-input-controls="false"
+              />
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { isElectron } from "../utils/electronUtils.js";
+
+// 获取用户ID的函数
+const getUserId = () => {
+  // 优先尝试获取userId
+  let userId = localStorage.getItem("userId");
+  
+  // 如果没有userId，尝试使用coreId作为备用
+  if (!userId) {
+    userId = localStorage.getItem("coreId");
+  }
+  
+  // 如果仍然没有ID，生成一个临时的ID
+  if (!userId) {
+    userId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("userId", userId);
+  }
+  
+  return userId;
+};
 
 // 从element-plus导入所有需要的图标
 import { 
@@ -230,7 +403,8 @@ import {
   Link as LinkIcon,
   Edit as EditIcon,
   Close as CloseIcon,
-  Key as KeyIcon
+  Key as KeyIcon,
+  Cpu as CpuIcon
 } from '@element-plus/icons-vue';
 
 export default {
@@ -245,7 +419,8 @@ export default {
     LinkIcon,
     EditIcon,
     CloseIcon,
-    KeyIcon
+    KeyIcon,
+    CpuIcon
   },
   emits: ['close', 'settings-changed'],
   setup(props, { emit }) {
@@ -255,6 +430,11 @@ export default {
     const coreSaving = ref(false);
     const isEditing = ref(false);
     const isEditingCore = ref(false);
+    
+    // AI配置相关状态
+    const aiConfigForm = ref(null);
+    const aiSaving = ref(false);
+    const isEditingAi = ref(false);
     
     
     // 音乐源列表
@@ -288,6 +468,70 @@ export default {
       adminMode: false // 默认禁用管理员模式
     });
     
+    // AI配置数据模型
+    const aiConfig = reactive({
+      model: "hunyuan-turbos-latest",
+      enable_enhancement: false,
+      systemPrompt: "",
+      temperature: 0.8,
+    });
+    
+    // 临时AI配置，用于编辑模式
+    const tempAiConfig = reactive({});
+    
+    // 可用的AI模型选项
+    const availableModelOptions = ref([
+      {
+        label: "通用文生文",
+        options: [
+          {
+            value: "hunyuan-turbos-latest",
+            label: "hunyuan-turbos-latest",
+            description: `hunyuan-TurboS 混元旗舰大模型最新版本，具备更强的思考能力，更优的体验效果，已更新至最新版本。`,
+          },
+          {
+            value: "hunyuan-turbos-20250716",
+            label: "hunyuan-turbos-20250716",
+            description: `<div>通用优化：提升文创的内容质量和丰富度，提升文科通用的理解能力、专业知识能力和指令遵循能力，提升理科的推理能力，解题能力</div>`,
+          },
+        ],
+      },
+      {
+        label: "角色扮演",
+        options: [
+          {
+            value: "hunyuan-large-role-latest",
+            label: "hunyuan-large-role-latest",
+            description: `适用场景：<div>AI 数字分身、AI 角色扮演、AI情感陪聊等</div>
+<div>特性说明：显著提升了角色一致性与对话深度。通过在大规模高质量角色对话数据上的强化训练，模型能深度理解并稳定维持角色设定，有效减少 OOC（脱离角色）问题。</div>
+不仅在多轮互动中保持上下文连贯，更大幅提升了聊天的趣味性和沉浸感，使每次对话都生动而富有深度。`,
+          },
+          {
+            value: "hunyuan-role",
+            label: "hunyuan-role",
+            description: `混元最新版角色扮演模型，混元官方精调训练推出的角色扮演模型，基于混元模型结合角色扮演场景数据集进行增训，在角色扮演场景具有更好的基础效果。`,
+          },
+        ],
+      },
+      {
+        label: "文生文-推理模型",
+        options: [
+          {
+            value: "hunyuan-t1-latest",
+            label: "hunyuan-t1-latest",
+            description:
+              "业内首个超大规模 Hybrid-Transformer-Mamba 推理模型，扩展推理能力，超强解码速度，进一步对齐人类偏好。",
+          },
+          {
+            value: "hunyuan-t1-20250822",
+            label: "hunyuan-t1-20250822",
+            description: `<div>大幅提升主模型慢思考模型的高难数学、复杂推理、高难代码、指令遵循、文本创作质量等能力。</div>
+<div>通用能力上，相比线上版本，数学难题提升5pp，逻辑推理提升1.8pp，科学提升3pp，代码竞赛提升4pp，文创写作质量提升3pp，知识问答提升4.8pp。</div>`,
+          },
+        ],
+      },
+    ]);
+    
     // 计算当前选中的音乐源名称
     const currentMusicSourceName = computed(() => {
       const source = musicSources.value.find(item => item.url === musicSettings.musicSource);
@@ -299,10 +543,29 @@ export default {
       loadMusicSettings();
       loadCoreSettings();
       loadAdminSettings();
+      loadAiConfig(); // 加载AI配置
       
       // 监听管理员模式变更事件
       window.addEventListener('admin-mode-changed', handleAdminModeChange);
+      
+      // 监听AI配置更新事件
+      if (window.io && window.socket) {
+        window.socket.on("ai-config-updated", handleAiConfigUpdate);
+      }
     });
+    
+    // 组件卸载时清理事件监听
+    onUnmounted(() => {
+      // 清理事件监听
+      if (window.io && window.socket) {
+        window.socket.off("ai-config-updated", handleAiConfigUpdate);
+      }
+    });
+    
+    // 处理AI配置更新事件
+    const handleAiConfigUpdate = (updatedConfig) => {
+      Object.assign(aiConfig, updatedConfig);
+    };
     
     // 处理管理员模式变更事件
     const handleAdminModeChange = (event) => {
@@ -361,6 +624,50 @@ export default {
       }
     };
     
+    // 加载AI配置
+    const loadAiConfig = async () => {
+      try {
+        // 检查用户是否已经通过WebSocket连接加入聊天室
+        if (!window.socket || !window.socket.connected) {
+          console.log('用户未连接到聊天室，延迟加载AI配置');
+          // 延迟1秒后重试
+          setTimeout(loadAiConfig, 1000);
+          return;
+        }
+        
+        // 检查用户是否已经成功加入聊天室（通过检查isLoggedIn状态）
+        if (typeof window.isLoggedIn === 'undefined' || !window.isLoggedIn) {
+          console.log('用户尚未成功加入聊天室，延迟加载AI配置');
+          // 延迟1秒后重试
+          setTimeout(loadAiConfig, 1000);
+          return;
+        }
+        
+        // 检查是否在Electron环境中
+        const isElectron = window.electronAPI || navigator.userAgent.toLowerCase().indexOf('electron') > -1;
+        
+        // 在Electron环境中，直接使用本地API
+        const apiUrl = isElectron ? '/api/ai-config' : '/api/ai-config';
+        
+        const userId = getUserId();
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            "x-user-id": userId,
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          Object.assign(aiConfig, data.data);
+        } else {
+          ElMessage.error("加载AI配置失败: " + data.message);
+        }
+      } catch (error) {
+        console.error("加载AI配置失败:", error);
+        ElMessage.error("加载AI配置失败");
+      }
+    };
+    
     // 开始编辑
     const startEditing = () => {
       isEditing.value = true;
@@ -387,6 +694,62 @@ export default {
       isEditingCore.value = false;
       // 重置临时设置为当前设置
       Object.assign(tempCoreSettings, coreSettings);
+    };
+    
+    // 开始编辑AI配置
+    const startEditingAi = () => {
+      Object.assign(tempAiConfig, aiConfig);
+      isEditingAi.value = true;
+    };
+
+    // 取消编辑AI配置
+    const cancelEditingAi = () => {
+      isEditingAi.value = false;
+    };
+
+    // 保存AI配置
+    const saveAiConfig = async () => {
+      await aiConfigForm.value.validate();
+      aiSaving.value = true;
+      
+      try {
+        // 检查用户是否已经通过WebSocket连接加入聊天室
+        if (!window.socket || !window.socket.connected) {
+          ElMessage.error("请先连接到聊天室");
+          aiSaving.value = false;
+          return;
+        }
+        
+        // 检查是否在Electron环境中
+        const isElectron = window.electronAPI || navigator.userAgent.toLowerCase().indexOf('electron') > -1;
+        
+        // 在Electron环境中，直接使用本地API
+        const apiUrl = isElectron ? '/api/ai-config' : '/api/ai-config';
+        
+        const userId = getUserId();
+        
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": userId,
+          },
+          body: JSON.stringify(tempAiConfig),
+        });
+        const data = await response.json();
+        if (data.success) {
+          Object.assign(aiConfig, tempAiConfig);
+          isEditingAi.value = false;
+          ElMessage.success("AI配置保存成功");
+        } else {
+          ElMessage.error("保存失败: " + data.message);
+        }
+      } catch (error) {
+        console.error("保存AI配置失败:", error);
+        ElMessage.error("保存AI配置失败");
+      } finally {
+        aiSaving.value = false;
+      }
     };
     
     // 保存Core ID设置
@@ -500,7 +863,19 @@ export default {
       saveMusicSettings,
       saveCoreSettings,
       disableAdminMode,
-      isElectron
+      isElectron,
+      // AI配置相关
+      aiConfigForm,
+      aiSaving,
+      isEditingAi,
+      aiConfig,
+      tempAiConfig,
+      availableModelOptions,
+      startEditingAi,
+      cancelEditingAi,
+      saveAiConfig,
+      loadAiConfig,
+      handleAiConfigUpdate
     };
   }
 };
@@ -651,6 +1026,32 @@ export default {
   .admin-header-icon {
     background: linear-gradient(135deg, #f56c6c, #e64242);
     color: white;
+  }
+  
+  /* AI卡片样式 */
+  .ai-card {
+    border: 1px solid var(--el-color-primary-light-7);
+  }
+  
+  .ai-card .header-icon {
+    background: linear-gradient(135deg, #409eff, #337ecc);
+    color: white;
+  }
+  
+  .model-option {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .model-label {
+    font-weight: 500;
+  }
+  
+  .model-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
   }
   
   .admin-status-content {

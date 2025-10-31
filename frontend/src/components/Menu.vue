@@ -12,14 +12,13 @@
         <el-icon v-if="item.icon === 'music'" class="icon"><Service /></el-icon>
         <el-icon v-if="item.icon === 'profile'" class="icon"><User /></el-icon>
         <el-icon v-if="item.icon === 'settings'" class="icon"><Setting /></el-icon>
-        <el-icon v-if="item.icon === 'ai' && showAiSettings" class="icon"><Cpu /></el-icon>
       </li>
     </ul>
   </div>
 </template>
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
-import { ChatLineRound, Service, User, Setting, Cpu } from '@element-plus/icons-vue';
+import { ChatLineRound, Service, User, Setting } from '@element-plus/icons-vue';
 
 const menuList = [
   {
@@ -42,26 +41,17 @@ const menuList = [
     name: "settings",
     icon: "settings",
   },
-  {
-    label: "AI配置",
-    name: "aiSettings",
-    icon: "ai",
-  },
 ];
 const currentMenu = ref("chart");
 const emit = defineEmits(["menuClick"]);
-const showAiSettings = ref(false); // 控制AI配置入口显示状态
 let clickCount = 0; // 点击计数
 let lastClickTime = 0; // 上次点击时间
 const MAX_CLICK_TIME = 2000; // 两次点击之间的最大时间间隔（毫秒）
 const REQUIRED_CLICKS = 5; // 所需的点击次数
 
-// 从localStorage读取显示状态
+// 组件挂载时不需要加载AI配置状态
 onMounted(() => {
-  const savedState = localStorage.getItem('showAiSettings');
-  if (savedState === 'true') {
-    showAiSettings.value = true;
-  }
+  // AI配置已移至设置页面，无需在此处理
 });
 
 // 处理菜单容器点击事件
@@ -78,11 +68,10 @@ function handleContainerClick(event) {
     clickCount++;
     lastClickTime = now;
     
-    // 达到所需点击次数，切换显示状态
+    // 达到所需点击次数，显示提示信息
     if (clickCount >= REQUIRED_CLICKS) {
-      showAiSettings.value = !showAiSettings.value;
-      // 保存状态到localStorage
-      localStorage.setItem('showAiSettings', showAiSettings.value.toString());
+      // AI配置已移至设置页面，显示提示信息
+      alert("AI配置已移至设置页面，请在设置中找到AI配置选项");
       clickCount = 0; // 重置计数
     }
   }
@@ -99,8 +88,6 @@ function setActiveMenu(name) {
     window.location.href = '#/profile';
   } else if (name === 'settings') {
     // 设置页面处理
-  } else if (name === 'aiSettings' && showAiSettings.value) {
-    // AI设置页面处理
   }
 }
 </script>
