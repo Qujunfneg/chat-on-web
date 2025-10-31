@@ -479,7 +479,7 @@ export default {
     let versionClickTimer = null;
     
     // 应用版本号
-    const appVersion = ref(import.meta.env.VUE_APP_VERSION || '1.0.0');
+    const appVersion = ref(import.meta.env.VITE_APP_VERSION);
     
     // AI配置数据模型
     const aiConfig = reactive({
