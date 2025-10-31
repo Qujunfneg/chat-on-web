@@ -10,14 +10,16 @@ try {
   console.error('[starReplyService] 读取 stars.json 失败：', e);
 }
 
-// 读取 AI 配置（可选）
-let aiConfig = { enabled: false };
-try {
-  const rawAi = fs.readFileSync(path.join(__dirname, '..', 'config', 'aiConfig.json'), 'utf-8');
-  aiConfig = JSON.parse(rawAi);
-} catch (e) {
-  // 不强制要求存在配置文件
-  // console.warn('[starReplyService] 无 aiConfig.json，跳过 AI 集成（如果需要，请创建 src/config/aiConfig.json）');
+// 读取 AI 配置（每次调用时重新读取）
+function getAiConfig() {
+  try {
+    const rawAi = fs.readFileSync(path.join(__dirname, '..', 'config', 'aiConfig.json'), 'utf-8');
+    return JSON.parse(rawAi);
+  } catch (e) {
+    // 不强制要求存在配置文件
+    // console.warn('[starReplyService] 无 aiConfig.json，跳过 AI 集成（如果需要，请创建 src/config/aiConfig.json）');
+    return { enabled: false };
+  }
 }
 
 function pickRandom(arr) {
@@ -74,7 +76,7 @@ function pickStar() {
 }
 
 // 调用 OpenAI 兼容或自定义 endpoint
-async function aiRequestJson(endpoint, apiKey, body, extraHeaders = {}, timeout = 15000) {
+async function aiRequestJson(endpoint, apiKey, body, extraHeaders = {}, timeout = 60000) {
   return new Promise((resolve, reject) => {
     try {
       const url = new URL(endpoint);
@@ -105,25 +107,34 @@ async function aiRequestJson(endpoint, apiKey, body, extraHeaders = {}, timeout 
             const parsed = JSON.parse(buf);
             resolve(parsed);
           } catch (parseErr) {
+            console.error('[starReplyService] 解析响应失败:', parseErr);
             // 返回非 JSON 的情况，直接返回原始文本
             resolve({ raw: buf });
           }
         });
       });
 
-      req.on('error', (err) => reject(err));
+      req.on('error', (err) => {
+        console.error('[starReplyService] 请求错误:', err);
+        reject(err);
+      });
+      
       req.setTimeout(timeout, () => {
+        console.error('[starReplyService] 请求超时，超时时间:', timeout + 'ms');
         req.destroy(new Error('AI request timeout'));
       });
+      
       req.write(data);
       req.end();
     } catch (err) {
+      console.error('[starReplyService] 创建请求失败:', err);
       reject(err);
     }
   });
 }
 
 async function callAiForReply(topic) {
+  const aiConfig = getAiConfig(); // 每次调用时重新读取配置
 
   const endpoint = aiConfig.endpoint;
   const apiKey = process.env[aiConfig.apiKeyEnv] || aiConfig.apiKey || '';
@@ -180,5 +191,5 @@ module.exports = {
   generateLocalStarReply,
   pickStar,
   _config: config,
-  _aiConfig: aiConfig
+  getAiConfig
 };

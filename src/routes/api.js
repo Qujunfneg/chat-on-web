@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require('path');
-const { DATA_DIR } = require('../config/constants');
+const { DATA_DIR, NOTICE_FILE_PATH } = require('../config/constants');
 const { validateUserId } = require('../middleware/auth');
 
 // 获取临时签名URL接口
