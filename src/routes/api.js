@@ -325,51 +325,43 @@ router.get('/api/ai-config', validateUserId, (req, res) => {
 // 添加AI配置更新API
 router.post('/api/ai-config', validateUserId, (req, res) => {
   try {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
+    const data = req.body;
+    if (!data) {
+      return res.status(400).json({ success: false, message: '请求数据格式错误' });
+    }
+    
+    const aiConfigPath = path.join(__dirname, '..', 'config', 'aiConfig.json');
+    
+    // 读取现有配置
+    let existingConfig = {};
+    if (fs.existsSync(aiConfigPath)) {
+      const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
+      existingConfig = JSON.parse(rawConfig);
+    }
+
+    // 更新指定的三个字段
+    existingConfig.enable_enhancement = data.enable_enhancement || false;
+    existingConfig.systemPrompt = data.systemPrompt || '';
+    existingConfig.customParams = existingConfig.customParams || {};
+    // 更新模型
+    existingConfig.model = data.model || 'hunyuan-turbos-latest';
+    const temperature = parseFloat(data.temperature);
+    existingConfig.customParams.temperature = isNaN(temperature) ? 0.8 : Math.max(0, Math.min(2, temperature));
+
+    // 写回配置文件
+    fs.writeFileSync(aiConfigPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
+
+    // 通知所有客户端配置已更新
+    const io = req.app.get('io');
+    console.log(existingConfig)
+    io.emit('ai-config-updated', {
+      enable_enhancement: existingConfig.enable_enhancement,
+      systemPrompt: existingConfig.systemPrompt,
+      temperature: existingConfig.customParams.temperature,
+      model: existingConfig.model || 'hunyuan-turbos-latest'
     });
 
-    req.on('end', () => {
-      try {
-        const data = JSON.parse(body);
-        const aiConfigPath = path.join(__dirname, '..', 'config', 'aiConfig.json');
-        
-        // 读取现有配置
-        let existingConfig = {};
-        if (fs.existsSync(aiConfigPath)) {
-          const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
-          existingConfig = JSON.parse(rawConfig);
-        }
-
-        // 更新指定的三个字段
-        existingConfig.enable_enhancement = data.enable_enhancement || false;
-        existingConfig.systemPrompt = data.systemPrompt || '';
-        existingConfig.customParams = existingConfig.customParams || {};
-        // 更新模型
-        existingConfig.model = data.model || 'hunyuan-turbos-latest';
-        const temperature = parseFloat(data.temperature);
-        existingConfig.customParams.temperature = isNaN(temperature) ? 0.8 : Math.max(0, Math.min(2, temperature));
-
-        // 写回配置文件
-        fs.writeFileSync(aiConfigPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
-
-        // 通知所有客户端配置已更新
-        const io = req.app.get('io');
-        console.log(existingConfig)
-        io.emit('ai-config-updated', {
-          enable_enhancement: existingConfig.enable_enhancement,
-          systemPrompt: existingConfig.systemPrompt,
-          temperature: existingConfig.customParams.temperature,
-          model: existingConfig.model || 'hunyuan-turbos-latest'
-        });
-
-        res.json({ success: true, message: '配置更新成功' });
-      } catch (error) {
-        console.error('解析请求数据失败:', error);
-        res.status(400).json({ success: false, message: '请求数据格式错误' });
-      }
-    });
+    res.json({ success: true, message: '配置更新成功' });
   } catch (error) {
     console.error('更新AI配置失败:', error);
     res.status(500).json({ success: false, message: '更新配置失败' });

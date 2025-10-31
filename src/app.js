@@ -28,6 +28,9 @@ setTimeout(storageService.checkDirectorySize, 10000);
 const app = express();
 const server = http.createServer(app);
 
+// 添加JSON中间件，用于解析JSON请求体
+app.use(express.json());
+
 // 创建WebSocket服务器
 const io = new Server(server, {
   cors: {
