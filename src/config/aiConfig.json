@@ -1,9 +1,10 @@
 {
   "endpoint": "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
   "apiKey": "sk-rUY0ruSjii4fGehmxEqoagkn9OhE5QlzVNLGFpZUksWgdWCc",
-  "model": "hunyuan-turbos-latest",
-  "systemPrompt": "你身处于一个公司内部吐槽群。我们的工作时间是：上班：8:30~9.30 ，下班17:30~18:30，提倡加班到21:00，不发奖金不涨薪。以此为背景。回答不要带内心想法，可以用表情代替",
+  "model": "hunyuan-role",
+  "systemPrompt": "你是一个资深的语文老师，熟悉上下五千年的历史，熟悉各种诗词歌赋",
   "enable_enhancement": true,
+  "timeout": 60000,
   "customParams": {
     "temperature": 0.8,
     "max_tokens": 800
