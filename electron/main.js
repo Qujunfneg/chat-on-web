@@ -99,6 +99,9 @@ const PORT = 9999;
 // 设置静态文件目录
 staticApp.use(express.static(path.join(__dirname, '../public')));
 
+// 添加JSON解析中间件
+staticApp.use(express.json());
+
 // 设置代理转发
 staticApp.use('/socket.io', createProxyMiddleware({
   target: serverUrl,
@@ -110,156 +113,138 @@ staticApp.use('/socket.io', createProxyMiddleware({
 // 本地API处理器 - 处理AI配置请求
 staticApp.get('/api/ai-config', (req, res) => {
   try {
-    const fs = require('fs');
-    const path = require('path');
+    // 从服务器获取AI配置，而不是从本地文件读取
+    const http = require(serverUrl.startsWith('https') ? 'https' : 'http');
     
-    // 根据是否打包环境确定配置文件路径
-    let aiConfigPath;
-    if (app.isPackaged) {
-      // 打包环境下，配置文件放在用户数据目录
-      const userDataPath = app.getPath('userData');
-      aiConfigPath = path.join(userDataPath, 'aiConfig.json');
-      console.log('打包模式 - 用户数据目录:', userDataPath);
-      console.log('AI配置文件路径:', aiConfigPath);
+    // 构建请求选项
+    const url = new URL(serverUrl);
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (serverUrl.startsWith('https') ? 443 : 80),
+      path: '/api/ai-config',
+      method: 'GET',
+      headers: {}
+    };
+    
+    // 如果原始请求有用户ID，则传递给服务器
+    if (req.headers['x-user-id']) {
+      options.headers['x-user-id'] = req.headers['x-user-id'];
+    } else {
+      // 如果没有用户ID，返回错误
+      return res.status(401).json({
+        success: false,
+        message: '未提供用户ID'
+      });
+    }
+    
+    // 发送HTTP请求到服务器
+    const proxyReq = http.request(options, (proxyRes) => {
+      let responseData = '';
       
-      // 如果用户数据目录中没有配置文件，从资源目录复制默认配置
-      if (!fs.existsSync(aiConfigPath)) {
-        const defaultConfigPath = path.join(process.resourcesPath, 'aiConfig.json');
-        console.log('默认配置文件路径:', defaultConfigPath);
-        console.log('默认配置文件是否存在:', fs.existsSync(defaultConfigPath));
-        
-        if (fs.existsSync(defaultConfigPath)) {
-          // 确保用户数据目录存在
-          if (!fs.existsSync(userDataPath)) {
-            fs.mkdirSync(userDataPath, { recursive: true });
-            console.log('创建用户数据目录:', userDataPath);
-          }
-          // 复制默认配置到用户数据目录
-          fs.copyFileSync(defaultConfigPath, aiConfigPath);
-          console.log('已复制默认配置到用户数据目录');
-        }
-      }
-    } else {
-      // 开发环境下，使用源码目录中的配置文件
-      aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
-      console.log('开发模式 - AI配置文件路径:', aiConfigPath);
-    }
-    
-    console.log('AI配置文件是否存在:', fs.existsSync(aiConfigPath));
-    
-    if (fs.existsSync(aiConfigPath)) {
-      const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
-      const config = JSON.parse(rawConfig);
-      console.log('读取到的AI配置:', config);
-      // 返回完整的配置数据，确保与前端期望的数据结构一致
-      res.json({
-        success: true,
-        data: {
-          enable_enhancement: config.enable_enhancement !== undefined ? config.enable_enhancement : false,
-          systemPrompt: config.systemPrompt || '',
-          temperature: config.customParams?.temperature || 0.8,
-          model: config.model || 'hunyuan-turbos-latest',
+      proxyRes.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      proxyRes.on('end', () => {
+        try {
+          // 将服务器的响应直接返回给客户端
+          const response = JSON.parse(responseData);
+          console.log('从服务器获取的AI配置:', response);
+          res.status(proxyRes.statusCode).json(response);
+        } catch (error) {
+          console.error('解析服务器响应失败:', error);
+          res.status(500).json({
+            success: false,
+            message: '解析服务器响应失败'
+          });
         }
       });
-    } else {
-      // 如果配置文件不存在，返回默认值
-      console.log('配置文件不存在，返回默认值');
-      res.json({
-        success: true,
-        data: {
-          enable_enhancement: false,
-          systemPrompt: '',
-          temperature: 0.8,
-          model: 'hunyuan-turbos-latest',
-        }
-      });
-    }
-  } catch (error) {
-    console.error('读取AI配置失败:', error);
-    res.status(500).json({
-      success: false,
-      message: '读取配置失败'
     });
+    
+    proxyReq.on('error', (error) => {
+      console.error('请求服务器获取AI配置失败:', error);
+      res.status(500).json({
+        success: false,
+        message: '无法连接到服务器获取AI配置'
+      });
+    });
+    
+    proxyReq.end();
+  } catch (error) {
+    console.error('获取AI配置失败:', error);
+    res.status(500).json({ success: false, message: '获取配置失败' });
   }
 });
 
 // 本地API处理器 - 处理AI配置更新
 staticApp.post('/api/ai-config', (req, res) => {
   try {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
-    });
-
-    req.on('end', () => {
-      try {
-        const fs = require('fs');
-        const path = require('path');
-        const data = JSON.parse(body);
-        console.log('接收到的AI配置更新请求:', data);
-        
-        // 根据是否打包环境确定配置文件路径
-        let aiConfigPath;
-        if (app.isPackaged) {
-          // 打包环境下，配置文件放在用户数据目录
-          const userDataPath = app.getPath('userData');
-          aiConfigPath = path.join(userDataPath, 'aiConfig.json');
-          console.log('打包模式 - 用户数据目录:', userDataPath);
-          console.log('AI配置文件路径:', aiConfigPath);
-          
-          // 确保用户数据目录存在
-          if (!fs.existsSync(userDataPath)) {
-            fs.mkdirSync(userDataPath, { recursive: true });
-            console.log('创建用户数据目录:', userDataPath);
-          }
-        } else {
-          // 开发环境下，使用源码目录中的配置文件
-          aiConfigPath = path.join(__dirname, '..', 'src', 'config', 'aiConfig.json');
-          console.log('开发模式 - AI配置文件路径:', aiConfigPath);
-        }
-        
-        // 读取现有配置
-        let existingConfig = {};
-        if (fs.existsSync(aiConfigPath)) {
-          const rawConfig = fs.readFileSync(aiConfigPath, 'utf-8');
-          existingConfig = JSON.parse(rawConfig);
-          console.log('读取到的现有配置:', existingConfig);
-        } else {
-          console.log('配置文件不存在，将创建新配置文件');
-        }
-
-        // 更新指定的字段
-        existingConfig.enable_enhancement = data.enable_enhancement !== undefined ? data.enable_enhancement : false;
-        existingConfig.systemPrompt = data.systemPrompt || '';
-        existingConfig.customParams = existingConfig.customParams || {};
-        // 更新模型
-        existingConfig.model = data.model || 'hunyuan-turbos-latest';
-        const temperature = parseFloat(data.temperature);
-        existingConfig.customParams.temperature = isNaN(temperature) ? 0.8 : Math.max(0, Math.min(2, temperature));
-
-        // 写回配置文件
-        fs.writeFileSync(aiConfigPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
-        console.log('已更新AI配置文件:', existingConfig);
-
-        // 通知所有客户端配置已更新（如果有WebSocket连接）
-        console.log('AI配置已更新:', existingConfig);
-
-        // 返回成功响应
-        res.json({ 
-          success: true, 
-          message: '配置更新成功',
-          data: {
-            enable_enhancement: existingConfig.enable_enhancement,
-            systemPrompt: existingConfig.systemPrompt,
-            temperature: existingConfig.customParams.temperature,
-            model: existingConfig.model
-          }
-        });
-      } catch (error) {
-        console.error('解析请求数据失败:', error);
-        res.status(400).json({ success: false, message: '请求数据格式错误' });
+    // 使用Express的JSON解析中间件已经解析了请求体
+    const data = req.body;
+    console.log('接收到的AI配置更新请求:', data);
+    
+    const http = require(serverUrl.startsWith('https') ? 'https' : 'http');
+    
+    // 构建请求选项
+    const url = new URL(serverUrl);
+    const requestBody = JSON.stringify(data);
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (serverUrl.startsWith('https') ? 443 : 80),
+      path: '/api/ai-config',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestBody)
       }
+    };
+    
+    // 如果原始请求有用户ID，则传递给服务器
+    if (req.headers['x-user-id']) {
+      options.headers['x-user-id'] = req.headers['x-user-id'];
+    } else {
+      // 如果没有用户ID，返回错误
+      return res.status(401).json({
+        success: false,
+        message: '未提供用户ID'
+      });
+    }
+    
+    // 发送HTTP请求到服务器
+    const proxyReq = http.request(options, (proxyRes) => {
+      let responseData = '';
+      
+      proxyRes.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      proxyRes.on('end', () => {
+        try {
+          // 将服务器的响应直接返回给客户端
+          const response = JSON.parse(responseData);
+          console.log('服务器AI配置更新响应:', response);
+          res.status(proxyRes.statusCode).json(response);
+        } catch (error) {
+          console.error('解析服务器响应失败:', error);
+          res.status(500).json({
+            success: false,
+            message: '解析服务器响应失败'
+          });
+        }
+      });
     });
+    
+    proxyReq.on('error', (error) => {
+      console.error('请求服务器更新AI配置失败:', error);
+      res.status(500).json({
+        success: false,
+        message: '无法连接到服务器更新AI配置'
+      });
+    });
+    
+    // 发送请求体
+    proxyReq.write(requestBody);
+    proxyReq.end();
   } catch (error) {
     console.error('更新AI配置失败:', error);
     res.status(500).json({ success: false, message: '更新配置失败' });

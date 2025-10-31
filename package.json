@@ -50,6 +50,13 @@
         ]
       },
       {
+        "from": "src/config/aiConfig.json",
+        "to": "aiConfig.json",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
         "from": "data/emojis",
         "to": "emojis",
         "filter": [
